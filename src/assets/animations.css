@@ -1,0 +1,435 @@
+/* 炫酷的CSS动画库 */
+
+/* 1. 霓虹灯效果 */
+.neon-text {
+    color: #00d4ff;
+    text-shadow:
+        0 0 5px #00d4ff,
+        0 0 10px #00d4ff,
+        0 0 15px #00d4ff,
+        0 0 20px #00d4ff,
+        0 0 35px #00d4ff,
+        0 0 40px #00d4ff;
+    animation: neon-flicker 2s infinite alternate;
+}
+
+@keyframes neon-flicker {
+
+    0%,
+    18%,
+    22%,
+    25%,
+    53%,
+    57%,
+    100% {
+        text-shadow:
+            0 0 5px #00d4ff,
+            0 0 10px #00d4ff,
+            0 0 15px #00d4ff,
+            0 0 20px #00d4ff,
+            0 0 35px #00d4ff,
+            0 0 40px #00d4ff;
+    }
+
+    20%,
+    24%,
+    55% {
+        text-shadow: none;
+    }
+}
+
+/* 2. 渐变边框动画 */
+.gradient-border {
+    position: relative;
+    background: linear-gradient(45deg, #1a1a2e, #16213e);
+    border-radius: 15px;
+    padding: 2px;
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 15px;
+    padding: 2px;
+    background: linear-gradient(45deg, #00d4ff, #ff3366, #00ff88, #8b5cf6);
+    background-size: 400% 400%;
+    animation: gradient-rotate 4s ease infinite;
+    z-index: -1;
+}
+
+@keyframes gradient-rotate {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* 3. 玻璃态效果 */
+.glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 4. 悬浮动画 */
+.floating {
+    animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* 5. 脉冲效果 */
+.pulse-glow {
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.8), 0 0 30px rgba(0, 212, 255, 0.6);
+    }
+
+    100% {
+        box-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+    }
+}
+
+/* 6. 3D翻转卡片 */
+.flip-card {
+    background-color: transparent;
+    perspective: 1000px;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 15px;
+}
+
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+
+/* 7. 波浪动画 */
+.wave-animation {
+    position: relative;
+    overflow: hidden;
+}
+
+.wave-animation::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: wave-slide 2s infinite;
+}
+
+@keyframes wave-slide {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* 8. 打字机效果 */
+.typewriter {
+    overflow: hidden;
+    border-right: 2px solid #00d4ff;
+    white-space: nowrap;
+    animation:
+        typing 3.5s steps(40, end),
+        blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes blink-caret {
+
+    from,
+    to {
+        border-color: transparent;
+    }
+
+    50% {
+        border-color: #00d4ff;
+    }
+}
+
+/* 9. 粒子爆炸效果 */
+.particle-explosion {
+    position: relative;
+}
+
+.particle-explosion::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: #00d4ff;
+    border-radius: 50%;
+    animation: particle-explode 1s ease-out infinite;
+}
+
+@keyframes particle-explode {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(20);
+        opacity: 0;
+    }
+}
+
+/* 10. 液体按钮效果 */
+.liquid-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.liquid-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.liquid-button:hover::before {
+    left: 100%;
+}
+
+/* 11. 磁性悬浮效果 */
+.magnetic-hover {
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.magnetic-hover:hover {
+    transform: scale(1.05) rotate(2deg);
+}
+
+/* 12. 彩虹文字效果 */
+.rainbow-text {
+    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-animation 3s ease-in-out infinite;
+}
+
+@keyframes rainbow-animation {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* 13. 故障效果 */
+.glitch {
+    position: relative;
+    animation: glitch-animation 2s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.glitch::before {
+    animation: glitch-animation-1 0.5s infinite;
+    color: #ff0000;
+    z-index: -1;
+}
+
+.glitch::after {
+    animation: glitch-animation-2 0.5s infinite;
+    color: #00ffff;
+    z-index: -2;
+}
+
+@keyframes glitch-animation {
+
+    0%,
+    99% {
+        transform: translate(0);
+    }
+
+    1% {
+        transform: translate(2px, -2px);
+    }
+
+    2% {
+        transform: translate(-2px, 2px);
+    }
+
+    3% {
+        transform: translate(2px, 2px);
+    }
+
+    4% {
+        transform: translate(-2px, -2px);
+    }
+}
+
+@keyframes glitch-animation-1 {
+
+    0%,
+    99% {
+        transform: translate(0);
+    }
+
+    1% {
+        transform: translate(2px, -2px);
+    }
+
+    2% {
+        transform: translate(-2px, 2px);
+    }
+}
+
+@keyframes glitch-animation-2 {
+
+    0%,
+    99% {
+        transform: translate(0);
+    }
+
+    1% {
+        transform: translate(-2px, 2px);
+    }
+
+    2% {
+        transform: translate(2px, -2px);
+    }
+}
+
+/* 14. 呼吸灯效果 */
+.breathing {
+    animation: breathing 3s ease-in-out infinite;
+}
+
+@keyframes breathing {
+
+    0%,
+    100% {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+/* 15. 旋转立方体 */
+.rotating-cube {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotate-cube 4s infinite linear;
+}
+
+.rotating-cube::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #00d4ff, #ff3366);
+    transform: rotateY(0deg) translateZ(25px);
+}
+
+.rotating-cube::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #ff3366, #00ff88);
+    transform: rotateY(90deg) translateZ(25px);
+}
+
+@keyframes rotate-cube {
+    0% {
+        transform: rotateX(0deg) rotateY(0deg);
+    }
+
+    100% {
+        transform: rotateX(360deg) rotateY(360deg);
+    }
+}
