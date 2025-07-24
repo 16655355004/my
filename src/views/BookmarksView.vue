@@ -31,6 +31,7 @@ const filteredWebsites = computed(() => {
   }
 
   return filtered;
+  
 });
 
 const openWebsite = (url: string) => {
