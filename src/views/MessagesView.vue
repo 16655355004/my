@@ -10,7 +10,7 @@ const submitting = ref(false);
 // 表单数据
 const form = ref<MessageInput>({
   name: "",
-  content: ""
+  content: "",
 });
 
 // 表单验证
@@ -27,8 +27,12 @@ const loadMessages = async () => {
     const response = await messageService.getAllMessages();
 
     if (response.success && response.data) {
-      messages.value = response.data.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      // API 返回的数据结构是 {messages: [...]}
+      const messagesData = response.data.messages || [];
+
+      messages.value = messagesData.sort(
+        (a: Message, b: Message) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } else {
       error.value = response.error || "加载留言失败";
@@ -50,10 +54,10 @@ const submitMessage = async () => {
 
   try {
     submitting.value = true;
-    
+
     const response = await messageService.addMessage({
       name: form.value.name.trim(),
-      content: form.value.content.trim()
+      content: form.value.content.trim(),
     });
 
     if (response.success && response.data) {
@@ -76,11 +80,11 @@ const submitMessage = async () => {
 
 // 显示成功提示
 const showSuccessMessage = () => {
-  const successEl = document.querySelector('.success-message');
+  const successEl = document.querySelector(".success-message");
   if (successEl) {
-    successEl.classList.add('show');
+    successEl.classList.add("show");
     setTimeout(() => {
-      successEl.classList.remove('show');
+      successEl.classList.remove("show");
     }, 3000);
   }
 };
@@ -90,17 +94,17 @@ const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
-  
+
   const minutes = Math.floor(diff / (1000 * 60));
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  
-  if (minutes < 1) return '刚刚';
+
+  if (minutes < 1) return "刚刚";
   if (minutes < 60) return `${minutes}分钟前`;
   if (hours < 24) return `${hours}小时前`;
   if (days < 30) return `${days}天前`;
-  
-  return date.toLocaleDateString('zh-CN');
+
+  return date.toLocaleDateString("zh-CN");
 };
 
 // 重新加载数据
@@ -140,7 +144,7 @@ onMounted(() => {
                 required
               />
             </div>
-            
+
             <div class="form-group">
               <label for="content" class="form-label">留言内容</label>
               <textarea
@@ -155,11 +159,7 @@ onMounted(() => {
               <div class="char-count">{{ form.content.length }}/500</div>
             </div>
 
-            <button
-              type="submit"
-              :disabled="!isFormValid || submitting"
-              class="submit-btn"
-            >
+            <button type="submit" :disabled="!isFormValid || submitting" class="submit-btn">
               <span v-if="submitting">提交中...</span>
               <span v-else>发送留言</span>
             </button>
@@ -178,9 +178,18 @@ onMounted(() => {
       <!-- 留言列表 -->
       <div class="messages-section">
         <div class="section-header">
-          <h2 class="section-title"> 所有留言</h2>
+          <h2 class="section-title">所有留言</h2>
           <button @click="refreshMessages" class="refresh-btn" :disabled="loading">
-            <svg class="refresh-icon" :class="{ spinning: loading }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              class="refresh-icon"
+              :class="{ spinning: loading }"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="m20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
@@ -205,11 +214,7 @@ onMounted(() => {
 
         <!-- 留言列表 -->
         <div v-else-if="messages.length > 0" class="messages-list">
-          <div
-            v-for="message in messages"
-            :key="message.id"
-            class="message-card"
-          >
+          <div v-for="message in messages" :key="message.id" class="message-card">
             <div class="message-header">
               <div class="message-author">
                 <div class="author-avatar">{{ message.name.charAt(0).toUpperCase() }}</div>
@@ -253,6 +258,7 @@ onMounted(() => {
   font-size: 3.5rem;
   font-weight: 700;
   background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
@@ -446,8 +452,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .messages-list {

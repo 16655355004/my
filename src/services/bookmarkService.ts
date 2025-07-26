@@ -17,6 +17,15 @@ export interface ApiResponse<T> {
   error?: string
 }
 
+// 留言 API 响应的特殊结构
+export interface MessagesApiResponse {
+  success: boolean
+  data?: {
+    messages: Message[]
+  }
+  error?: string
+}
+
 class BookmarkService {
   private baseUrl: string
   private adminToken: string | null = null
@@ -249,14 +258,14 @@ class MessageService {
   }
 
   // 获取所有留言
-  async getAllMessages(): Promise<ApiResponse<Message[]>> {
+  async getAllMessages(): Promise<MessagesApiResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/api/messages`, {
         method: 'GET',
         headers: this.getHeaders()
       })
 
-      return await this.handleResponse<Message[]>(response)
+      return await this.handleResponse<{ messages: Message[] }>(response)
     } catch (error) {
       console.error('Failed to fetch messages:', error)
       return {
