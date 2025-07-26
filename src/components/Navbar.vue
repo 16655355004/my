@@ -188,6 +188,10 @@ watch(route, () => {
           <li class="nav-item" @click="isMenuOpen = false">
             <RouterLink to="/bookmarks" class="nav-link">网站收藏</RouterLink>
           </li>
+
+          <li class="nav-item" @click="isMenuOpen = false">
+            <RouterLink to="/messages" class="nav-link">留言板</RouterLink>
+          </li>
         </ul>
       </nav>
     </div>

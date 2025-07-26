@@ -1,4 +1,4 @@
-import{d as y,g as r,S as v,r as d,o as x,c as p,a as e,b as m,e as f,w,f as C,v as k,t as c,n as S,E as P,h as b,_ as A}from"./index-G3AMSdA9.js";const $={class:"playground-page"},h={class:"container"},V={class:"playground-content"},q={class:"editor-section"},E={class:"editor-header"},O={class:"preset-buttons"},G={class:"editor-controls"},M=["disabled"],N=y({__name:"PlaygroundView",setup(T){r.registerPlugin(v);const i=d(`// 欢迎使用GSAP动画实验室！
+import{d as y,g as r,S as v,r as d,o as x,c as p,a as e,b as m,e as f,w,f as C,v as k,t as c,n as S,E as P,h as b,_ as A}from"./index-BMSAQD6l.js";const $={class:"playground-page"},h={class:"container"},V={class:"playground-content"},q={class:"editor-section"},E={class:"editor-header"},O={class:"preset-buttons"},G={class:"editor-controls"},M=["disabled"],N=y({__name:"PlaygroundView",setup(T){r.registerPlugin(v);const i=d(`// 欢迎使用GSAP动画实验室！
 // 这里是一个基础动画示例
 gsap.to(".playground-box", {
   x: 200,

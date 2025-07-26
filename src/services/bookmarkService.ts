@@ -186,7 +186,7 @@ class BookmarkService {
       })
 
       const result = await response.json()
-      
+
       // 如果验证成功，删除测试数据
       if (result.success && result.data) {
         await fetch(`${this.baseUrl}/api/bookmarks/${result.data.id}`, {
@@ -197,7 +197,7 @@ class BookmarkService {
         })
         return true
       }
-      
+
       return false
     } catch (error) {
       console.error('Failed to verify admin password:', error)
@@ -206,5 +206,86 @@ class BookmarkService {
   }
 }
 
+// 留言接口定义
+export interface Message {
+  id: string
+  name: string
+  content: string
+  createdAt: string
+}
+
+export interface MessageInput {
+  name: string
+  content: string
+}
+
+// 留言服务类
+class MessageService {
+  private baseUrl: string
+
+  constructor() {
+    // 使用与书签服务相同的基础URL
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://your-worker.your-subdomain.workers.dev'
+  }
+
+  // 获取请求头
+  private getHeaders(): HeadersInit {
+    return {
+      'Content-Type': 'application/json',
+    }
+  }
+
+  // 处理 API 响应
+  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    try {
+      const data = await response.json()
+      return data
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to parse response'
+      }
+    }
+  }
+
+  // 获取所有留言
+  async getAllMessages(): Promise<ApiResponse<Message[]>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/messages`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
+
+      return await this.handleResponse<Message[]>(response)
+    } catch (error) {
+      console.error('Failed to fetch messages:', error)
+      return {
+        success: false,
+        error: 'Network error'
+      }
+    }
+  }
+
+  // 添加新留言
+  async addMessage(message: MessageInput): Promise<ApiResponse<Message>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/messages`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(message)
+      })
+
+      return await this.handleResponse<Message>(response)
+    } catch (error) {
+      console.error('Failed to add message:', error)
+      return {
+        success: false,
+        error: 'Network error'
+      }
+    }
+  }
+}
+
 // 导出单例实例
 export const bookmarkService = new BookmarkService()
+export const messageService = new MessageService()
