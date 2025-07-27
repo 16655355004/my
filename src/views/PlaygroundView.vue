@@ -173,26 +173,33 @@ gsap.to(".playground-box, .clone-box", {
   ease: "back.out"
 });`,
 
-    path: `// 路径动画
-// 定义一个SVG路径 (看不见的)
-const path = "M0,0 C50,-50 150,-50 200,0 C250,50 350,50 400,0";
+    path: `// 曲线路径动画 (使用基础动画模拟)
 const box = document.querySelector(".playground-box");
-
-// 将盒子绝对定位以便沿路径移动
 box.style.position = "absolute";
 
-// 沿路径动画
-gsap.to(".playground-box", {
-  duration: 3,
-  ease: "power1.inOut",
-  motionPath: {
-    path: path,
-    align: ".playground-box",
-    autoRotate: true,
-    alignOrigin: [0.5, 0.5]
-  },
-  repeat: 1,
-  yoyo: true
+// 创建曲线路径动画时间轴
+const tl = gsap.timeline({ repeat: 1, yoyo: true });
+
+tl.to(".playground-box", {
+  x: 100,
+  y: -50,
+  rotation: 45,
+  duration: 1,
+  ease: "power1.inOut"
+})
+.to(".playground-box", {
+  x: 200,
+  y: 0,
+  rotation: 90,
+  duration: 1,
+  ease: "power1.inOut"
+})
+.to(".playground-box", {
+  x: 300,
+  y: 50,
+  rotation: 135,
+  duration: 1,
+  ease: "power1.inOut"
 });`,
 
     elastic: `// 弹性缓动动画

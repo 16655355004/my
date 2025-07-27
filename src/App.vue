@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
@@ -77,6 +77,11 @@ onMounted(() => {
     // 刷新ScrollTrigger以处理新元素
     ScrollTrigger.refresh();
   }, 2200); // 等待Loader动画完成
+});
+
+onUnmounted(() => {
+  // 清理事件监听器
+  window.removeEventListener("scroll", handleScroll);
 });
 
 // 页面转场动画

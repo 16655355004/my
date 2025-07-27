@@ -30,6 +30,11 @@ const router = createRouter({
       name: 'messages',
       component: () => import('../views/MessagesView.vue')
     },
+    {
+      path: '/tutorial',
+      name: 'tutorial',
+      component: () => import('../views/TutorialView.vue')
+    },
 
 
   ]
@@ -40,10 +45,10 @@ router.beforeEach((to, from, next) => {
   // 如果不是首次加载页面，触发页面转场动画
   if (from.name) {
     document.dispatchEvent(new Event('page-transition'))
-    // 给动画一些时间执行
+    // 减少延迟时间，提升用户体验
     setTimeout(() => {
       next()
-    }, 500)
+    }, 200)
   } else {
     next()
   }

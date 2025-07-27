@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, nextTick, ref } from "vue";
 import { useRouter } from "vue-router";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
@@ -337,15 +337,15 @@ onMounted(() => {
     }
   );
 
-  // 初始化代码雨位置 - 延迟执行确保DOM渲染完成
-  setTimeout(() => {
+  // 初始化代码雨位置 - 使用nextTick确保DOM渲染完成
+  nextTick(() => {
     document.querySelectorAll(".code-line").forEach((line) => {
       const element = line as HTMLElement;
       element.style.left = Math.random() * 100 + "%";
       element.style.animationDelay = Math.random() * 15 + "s";
       element.style.top = Math.random() * -100 + "vh"; // 确保从屏幕上方开始
     });
-  }, 100);
+  });
 
   // Parallax background elements
   gsap.utils.toArray(".parallax-bg").forEach((bg) => {

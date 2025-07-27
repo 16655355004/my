@@ -192,6 +192,10 @@ watch(route, () => {
           <li class="nav-item" @click="isMenuOpen = false">
             <RouterLink to="/messages" class="nav-link">留言板</RouterLink>
           </li>
+
+          <li class="nav-item" @click="isMenuOpen = false">
+            <RouterLink to="/tutorial" class="nav-link">KV教程</RouterLink>
+          </li>
         </ul>
       </nav>
     </div>
