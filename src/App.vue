@@ -84,30 +84,44 @@ onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
 });
 
-// 页面转场动画
+// 页面转场动画 - 新的实现方式
 const initPageTransitions = () => {
-  // 监听路由变化
-  document.addEventListener("page-transition", () => {
-    const tl = gsap.timeline();
+  // 监听转场开始事件
+  document.addEventListener("page-transition-start", (e: any) => {
+    const { direction } = e.detail;
+    const overlay = document.querySelector(".page-transition-overlay");
+    
+    if (overlay) {
+      // 根据方向设置不同的转场效果
+      if (direction === 'forward') {
+        gsap.fromTo(overlay, 
+          { x: "100%", opacity: 0 },
+          { x: "0%", opacity: 1, duration: 0.3, ease: "power2.out" }
+        );
+      } else {
+        gsap.fromTo(overlay,
+          { x: "-100%", opacity: 0 },
+          { x: "0%", opacity: 1, duration: 0.3, ease: "power2.out" }
+        );
+      }
+    }
+  });
 
-    // 页面离开动画
-    tl.to(".page-transition-overlay", {
-      y: 0,
-      duration: 0.5,
-      ease: "power2.inOut",
-    });
-
-    // 页面进入动画
-    tl.to(".page-transition-overlay", {
-      y: "-100%",
-      duration: 0.5,
-      delay: 0.2,
-      ease: "power2.inOut",
-      onComplete: () => {
-        // 刷新ScrollTrigger以确保新页面的动画正常工作
-        ScrollTrigger.refresh();
-      },
-    });
+  // 监听转场结束事件
+  document.addEventListener("page-transition-end", () => {
+    const overlay = document.querySelector(".page-transition-overlay");
+    if (overlay) {
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: 0.3,
+        delay: 0.1,
+        ease: "power2.in",
+        onComplete: () => {
+          gsap.set(overlay, { x: "100%" });
+          ScrollTrigger.refresh();
+        }
+      });
+    }
   });
 };
 </script>
@@ -283,35 +297,72 @@ a {
   box-shadow: 0 10px 20px rgba(0, 173, 181, 0.3);
 }
 
-/* 页面转场动画 */
+/* 页面转场动画 - 滑动效果 */
 .page-transition-enter-active,
 .page-transition-leave-active {
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform, opacity;
 }
 
-.page-transition-enter-from {
+/* 前进动画 */
+[data-transition-direction="forward"] .page-transition-enter-from {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateX(30px) scale(0.98);
 }
 
-.page-transition-leave-to {
+[data-transition-direction="forward"] .page-transition-leave-to {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateX(-30px) scale(0.98);
 }
 
-/* 页面转场遮罩 */
+/* 后退动画 */
+[data-transition-direction="backward"] .page-transition-enter-from {
+  opacity: 0;
+  transform: translateX(-30px) scale(0.98);
+}
+
+[data-transition-direction="backward"] .page-transition-leave-to {
+  opacity: 0;
+  transform: translateX(30px) scale(0.98);
+}
+
+/* 页面转场遮罩 - 现代滑动效果 */
 .page-transition-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--background-color);
-  transform: translateY(-100%);
+  background: linear-gradient(135deg, 
+    rgba(0, 212, 255, 0.1) 0%, 
+    rgba(26, 26, 46, 0.95) 50%, 
+    rgba(139, 92, 246, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  transform: translateX(100%);
+  opacity: 0;
   z-index: 1000;
   pointer-events: none;
-  will-change: transform;
+  will-change: transform, opacity;
+}
+
+/* 添加一些装饰效果 */
+.page-transition-overlay::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--primary-color);
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 /* 返回顶部按钮 */

@@ -40,18 +40,34 @@ const router = createRouter({
   ]
 })
 
-// 页面转场动画触发
+// 页面转场动画 - 使用更现代的方式
 router.beforeEach((to, from, next) => {
-  // 如果不是首次加载页面，触发页面转场动画
-  if (from.name) {
-    document.dispatchEvent(new Event('page-transition'))
-    // 减少延迟时间，提升用户体验
-    setTimeout(() => {
-      next()
-    }, 200)
-  } else {
-    next()
+  // 为页面添加转场方向信息
+  if (from.name && to.name) {
+    // 根据路由顺序确定转场方向
+    const routeOrder = ['home', 'bookmarks', 'playground', 'messages', 'tutorial', 'admin'];
+    const fromIndex = routeOrder.indexOf(from.name as string);
+    const toIndex = routeOrder.indexOf(to.name as string);
+    
+    // 设置转场方向
+    const direction = toIndex > fromIndex ? 'forward' : 'backward';
+    document.documentElement.setAttribute('data-transition-direction', direction);
+    
+    // 触发转场开始事件
+    document.dispatchEvent(new CustomEvent('page-transition-start', {
+      detail: { from: from.name, to: to.name, direction }
+    }));
   }
-})
+  
+  next();
+});
+
+// 转场完成后的处理
+router.afterEach((to, from) => {
+  // 转场完成事件
+  document.dispatchEvent(new CustomEvent('page-transition-end', {
+    detail: { from: from?.name, to: to.name }
+  }));
+});
 
 export default router
