@@ -187,6 +187,43 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 欢迎提交 Issue 和 Pull Request！
 
+## 🚀 部署到 Cloudflare Pages
+
+### 方法 1: GitHub 集成部署（推荐）
+
+1. 将代码推送到 GitHub 仓库
+2. 在 Cloudflare Pages 控制台中连接 GitHub 仓库
+3. 配置构建设置：
+   - **构建命令**: `npm run build`
+   - **构建输出目录**: `dist`
+   - **Node.js 版本**: `18` 或更高
+
+### 方法 2: 直接上传
+
+1. 运行构建命令：
+   ```bash
+   npm run build
+   ```
+2. 将 `dist` 目录中的所有文件上传到 Cloudflare Pages
+
+### 重要配置文件
+
+- `public/_headers`: 配置正确的 MIME 类型，解决模块加载问题
+- `public/_redirects`: 配置 SPA 路由重定向
+- `vite.config.ts`: Vite 构建配置，优化了 Cloudflare Pages 部署
+
+### 故障排除
+
+如果遇到 "Failed to load module script" 错误：
+
+1. 确保 `public/_headers` 文件存在并正确配置
+2. 检查构建输出的文件名是否与 HTML 中的引用匹配
+3. 清理缓存后重新构建：
+   ```bash
+   rm -rf dist node_modules/.vite
+   npm run build
+   ```
+
 ## 📞 联系方式
 
 - 作者：空空
