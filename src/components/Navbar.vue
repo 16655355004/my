@@ -67,9 +67,110 @@ const handleScroll = () => {
   }
 };
 
+// 微交互动画函数
+const addMicroInteractions = () => {
+  // 导航链接悬停动画
+  const navLinks = document.querySelectorAll(".nav-link");
+  navLinks.forEach((link) => {
+    link.addEventListener("mouseenter", () => {
+      gsap.to(link, {
+        scale: 1.05,
+        color: "#00d4ff",
+        textShadow: "0 0 10px rgba(0, 212, 255, 0.5)",
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    });
+
+    link.addEventListener("mouseleave", () => {
+      gsap.to(link, {
+        scale: 1,
+        color: "var(--text-color)",
+        textShadow: "none",
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    });
+
+    // 点击反馈动画
+    link.addEventListener("click", () => {
+      gsap.to(link, {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut",
+      });
+    });
+  });
+
+  // Logo 悬停动画
+  const logo = document.querySelector(".logo");
+  if (logo) {
+    logo.addEventListener("mouseenter", () => {
+      gsap.to(logo, {
+        scale: 1.1,
+        rotation: 5,
+        duration: 0.4,
+        ease: "back.out(1.7)",
+      });
+
+      // Logo 文字发光效果
+      gsap.to(logo.querySelector("span"), {
+        textShadow: "0 0 20px rgba(0, 212, 255, 0.8), 0 0 30px rgba(0, 212, 255, 0.6)",
+        duration: 0.3,
+      });
+    });
+
+    logo.addEventListener("mouseleave", () => {
+      gsap.to(logo, {
+        scale: 1,
+        rotation: 0,
+        duration: 0.4,
+        ease: "power2.out",
+      });
+
+      gsap.to(logo.querySelector("span"), {
+        textShadow: "none",
+        duration: 0.3,
+      });
+    });
+  }
+
+  // 汉堡菜单按钮动画
+  const hamburger = document.querySelector(".hamburger");
+  if (hamburger) {
+    hamburger.addEventListener("mouseenter", () => {
+      gsap.to(hamburger, {
+        scale: 1.1,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    });
+
+    hamburger.addEventListener("mouseleave", () => {
+      gsap.to(hamburger, {
+        scale: 1,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    });
+  }
+};
+
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
   document.body.style.overflow = isMenuOpen.value ? "hidden" : "";
+
+  // 汉堡菜单按钮点击动画
+  const hamburger = document.querySelector(".hamburger");
+  gsap.to(hamburger, {
+    scale: 0.9,
+    duration: 0.1,
+    yoyo: true,
+    repeat: 1,
+    ease: "power2.inOut",
+  });
 
   // 添加菜单打开/关闭的动画 - 优化速度
   if (isMenuOpen.value) {
@@ -89,14 +190,15 @@ const toggleMenu = () => {
       ease: "power2.out",
     });
 
-    // 菜单项依次显示 - 更快的动画
+    // 菜单项依次显示 - 更快的动画，添加弹跳效果
     gsap.from(".nav-item", {
       opacity: 0,
-      y: 20,
-      stagger: 0.05,
-      duration: 0.25,
+      y: 30,
+      scale: 0.8,
+      stagger: 0.08,
+      duration: 0.4,
       delay: 0.1,
-      ease: "power2.out",
+      ease: "back.out(1.7)",
     });
   } else {
     // 关闭菜单 - 更快的关闭动画
@@ -149,6 +251,11 @@ onMounted(() => {
     delay: 2.8, // 在logo之后显示
     ease: "power2.out",
   });
+
+  // 添加微交互动画
+  setTimeout(() => {
+    addMicroInteractions();
+  }, 3000); // 等待初始动画完成后添加交互
 });
 
 onUnmounted(() => {
@@ -324,6 +431,14 @@ watch(route, () => {
   height: 20px;
   position: relative;
   z-index: 101;
+  transition: all 0.3s ease;
+  will-change: transform;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.hamburger:hover {
+  background-color: rgba(0, 212, 255, 0.1);
 }
 
 .hamburger-line {
@@ -389,6 +504,8 @@ watch(route, () => {
   padding: 0.3rem 0;
   cursor: pointer;
   text-decoration: none;
+  transition: all 0.3s ease;
+  will-change: transform, color, text-shadow;
 }
 
 .nav-link::after {
@@ -398,14 +515,36 @@ watch(route, () => {
   left: 0;
   width: 0;
   height: 2px;
-  background-color: var(--primary-color);
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
   transition: width var(--transition-medium);
   will-change: width;
+  border-radius: 1px;
 }
 
 .nav-link:hover::after,
 .router-link-active::after {
   width: 100%;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* 添加点击波纹效果 */
+.nav-link::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.nav-link:active::before {
+  width: 200px;
+  height: 200px;
 }
 
 .nav-background {

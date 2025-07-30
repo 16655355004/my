@@ -48,17 +48,17 @@ router.beforeEach((to, from, next) => {
     const routeOrder = ['home', 'bookmarks', 'playground', 'messages', 'tutorial', 'admin'];
     const fromIndex = routeOrder.indexOf(from.name as string);
     const toIndex = routeOrder.indexOf(to.name as string);
-    
+
     // 设置转场方向
     const direction = toIndex > fromIndex ? 'forward' : 'backward';
     document.documentElement.setAttribute('data-transition-direction', direction);
-    
+
     // 触发转场开始事件
     document.dispatchEvent(new CustomEvent('page-transition-start', {
       detail: { from: from.name, to: to.name, direction }
     }));
   }
-  
+
   next();
 });
 
