@@ -328,9 +328,12 @@ async function getAllMessages(env, headers) {
 
     return new Response(JSON.stringify({
       success: true,
-      data: messages
+      data: {
+        messages: messages
+      }
     }), { headers });
   } catch (error) {
+    console.error('Failed to fetch messages:', error);
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to fetch messages'
