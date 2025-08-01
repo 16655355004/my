@@ -625,9 +625,9 @@ onMounted(() => {
 
 .code-line {
   position: absolute;
-  color: rgba(0, 212, 255, 0.3);
+  color: rgba(0, 212, 255, 0.5);
   font-family: "Courier New", monospace;
-  font-size: 12px;
+  font-size: 15px;
   white-space: nowrap;
   animation: codeRain 15s linear infinite;
   top: -100vh; /* 确保初始位置在屏幕上方 */
@@ -636,12 +636,12 @@ onMounted(() => {
 
 .code-line:nth-child(odd) {
   animation-delay: -5s;
-  color: rgba(139, 92, 246, 0.3);
+  color: rgba(139, 92, 246, 0.5);
 }
 
 .code-line:nth-child(3n) {
   animation-delay: -10s;
-  color: rgba(0, 255, 136, 0.3);
+  color: rgba(0, 255, 136, 0.5);
 }
 
 @keyframes codeRain {

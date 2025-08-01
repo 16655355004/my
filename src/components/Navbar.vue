@@ -15,7 +15,8 @@ const router = useRouter();
 
 // 导航到锚点的函数
 const navigateToSection = (sectionId: string) => {
-  isMenuOpen.value = false;
+  // 立即关闭菜单
+  closeMenu();
 
   // 如果不在首页，先跳转到首页
   if (route.path !== "/") {
@@ -34,6 +35,34 @@ const navigateToSection = (sectionId: string) => {
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
+  }
+};
+
+// 关闭菜单的函数
+const closeMenu = () => {
+  if (isMenuOpen.value) {
+    isMenuOpen.value = false;
+    document.body.style.overflow = "";
+
+    // 关闭菜单动画
+    gsap.to(".nav-menu", {
+      opacity: 0,
+      x: "100%",
+      duration: 0.25,
+      ease: "power2.in",
+      onComplete: () => {
+        gsap.set(".nav-menu", { visibility: "hidden" });
+      },
+    });
+
+    // 隐藏背景
+    gsap.to(".nav-background", {
+      opacity: 0,
+      duration: 0.2,
+      onComplete: () => {
+        gsap.set(".nav-background", { visibility: "hidden" });
+      },
+    });
   }
 };
 
@@ -288,19 +317,19 @@ watch(route, () => {
             <a @click="navigateToSection('home')" class="nav-link">首页</a>
           </li>
 
-          <li class="nav-item" @click="isMenuOpen = false">
+          <li class="nav-item" @click="closeMenu">
             <RouterLink to="/playground" class="nav-link">动画实验室</RouterLink>
           </li>
 
-          <li class="nav-item" @click="isMenuOpen = false">
+          <li class="nav-item" @click="closeMenu">
             <RouterLink to="/bookmarks" class="nav-link">网站收藏</RouterLink>
           </li>
 
-          <li class="nav-item" @click="isMenuOpen = false">
+          <li class="nav-item" @click="closeMenu">
             <RouterLink to="/messages" class="nav-link">留言板</RouterLink>
           </li>
 
-          <li class="nav-item" @click="isMenuOpen = false">
+          <li class="nav-item" @click="closeMenu">
             <RouterLink to="/tutorial" class="nav-link">KV教程</RouterLink>
           </li>
         </ul>
@@ -352,36 +381,44 @@ watch(route, () => {
     text-shadow: none;
     filter: brightness(1);
   }
+
   45% {
     text-shadow: none;
     filter: brightness(1);
   }
+
   46% {
     text-shadow: 0 0 5px rgba(0, 212, 255, 0.7), 0 0 10px rgba(0, 212, 255, 0.7);
     filter: brightness(1.2);
   }
+
   47% {
     text-shadow: none;
     filter: brightness(1);
   }
+
   48% {
     text-shadow: 0 0 5px rgba(0, 212, 255, 0.7), 0 0 15px rgba(0, 212, 255, 0.7),
       0 0 25px rgba(0, 212, 255, 0.7);
     filter: brightness(1.5);
   }
+
   50% {
     text-shadow: none;
     filter: brightness(1);
   }
+
   52% {
     text-shadow: 0 0 5px rgba(0, 212, 255, 0.7), 0 0 10px rgba(0, 212, 255, 0.7),
       0 0 15px rgba(0, 212, 255, 0.7), 0 0 30px rgba(0, 212, 255, 0.7);
     filter: brightness(1.8);
   }
+
   54% {
     text-shadow: none;
     filter: brightness(1);
   }
+
   100% {
     text-shadow: none;
     filter: brightness(1);
@@ -406,18 +443,22 @@ watch(route, () => {
     height: 0;
     opacity: 0;
   }
+
   46% {
     height: 0;
     opacity: 0;
   }
+
   48% {
     height: 20px;
     opacity: 0.6;
   }
+
   52% {
     height: 0;
     opacity: 0;
   }
+
   100% {
     height: 0;
     opacity: 0;
