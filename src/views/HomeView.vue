@@ -248,6 +248,13 @@ onMounted(() => {
     },
   });
 
+  // 备用动画，确保统计数据可见
+  setTimeout(() => {
+    gsap.set(".stat-item", { opacity: 1, scale: 1 });
+    gsap.set(".stat-number", { opacity: 1 });
+    gsap.set(".stat-label", { opacity: 1 });
+  }, 2000);
+
   // Skills progress animation - 简化确保显示
   gsap.from(".skill-item", {
     opacity: 0,
@@ -1260,6 +1267,42 @@ onMounted(() => {
     font-size: 2.5rem;
   }
 
+  /* 统计数据移动端样式 */
+  .stats-section {
+    padding: 4rem 0;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    display: grid !important;
+  }
+
+  .stat-item {
+    padding: 1.5rem 1rem;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: var(--primary-color) !important;
+  }
+
+  .stat-label {
+    font-size: 1rem;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
   .bg-circle-1 {
     width: 70vw;
     height: 70vw;
@@ -1278,6 +1321,27 @@ onMounted(() => {
   .demo-container {
     width: 250px;
     height: 250px;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .stat-item {
+    padding: 2rem 1rem;
+  }
+
+  .stat-number {
+    font-size: 3rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .stat-label {
+    font-size: 1.1rem;
   }
 }
 </style>
