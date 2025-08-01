@@ -294,7 +294,7 @@ onUnmounted(() => {
 // 监听路由变化，自动关闭菜单
 watch(route, () => {
   if (isMenuOpen.value) {
-    isMenuOpen.value = false;
+    closeMenu();
   }
 });
 </script>
@@ -302,7 +302,7 @@ watch(route, () => {
 <template>
   <header :class="['navbar', { scrolled: isScrolled }]">
     <div class="container navbar-container">
-      <RouterLink to="/" class="logo">
+      <RouterLink to="/" class="logo" @click="closeMenu">
         <span ref="logoRef">空空</span>
       </RouterLink>
 
