@@ -34,7 +34,7 @@ onMounted(() => {
     <div class="container">
       <div class="footer-content">
         <div class="footer-logo">
-          <span>空空</span>
+          <span>kong</span>
         </div>
 
         <div class="footer-links">
@@ -42,85 +42,26 @@ onMounted(() => {
             <h4>导航</h4>
             <ul>
               <li><router-link to="/">首页</router-link></li>
-              <li><router-link to="/about">关于我</router-link></li>
-              <li><router-link to="/projects">项目展示</router-link></li>
-              <li><router-link to="/skills">技能专长</router-link></li>
-              <li><router-link to="/contact">联系方式</router-link></li>
+              <li><router-link to="/playground">动画实验室</router-link></li>
+              <li><router-link to="/bookmarks">网站收藏</router-link></li>
+              <li><router-link to="/messages">留言板</router-link></li>
+              <li><router-link to="/tutorial">KV教程</router-link></li>
             </ul>
           </div>
 
           <div class="footer-link-group">
-            <h4>联系我</h4>
+            <h4>关于</h4>
             <ul>
-              <li><a href="mailto:kongkong@example.com">kongkong@example.com</a></li>
-              <li>+86 123 4567 8910</li>
-              <li>中国上海市</li>
+              <li>一个简洁的个人网站</li>
+              <li>基于 Vue 3 + GSAP</li>
+              <li>持续更新中...</li>
             </ul>
-          </div>
-
-          <div class="footer-link-group">
-            <h4>社交媒体</h4>
-            <div class="footer-social">
-              <a href="#" class="social-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
-                  ></path>
-                </svg>
-              </a>
-              <a href="#" class="social-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                </svg>
-              </a>
-              <a href="#" class="social-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
-                  ></path>
-                  <rect x="2" y="9" width="4" height="12"></rect>
-                  <circle cx="4" cy="4" r="2"></circle>
-                </svg>
-              </a>
-            </div>
           </div>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; {{ getCurrentYear() }} 空空. 保留所有权利</p>
+        <p>&copy; {{ getCurrentYear() }} kong. 保留所有权利</p>
       </div>
 
       <button class="scroll-top-btn" @click="scrollToTop" title="返回顶部">
@@ -170,7 +111,7 @@ onMounted(() => {
 
 .footer-links {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
 }
 
@@ -209,29 +150,6 @@ onMounted(() => {
 .footer-link-group a:hover {
   color: var(--primary-color);
   opacity: 1;
-}
-
-.footer-social {
-  display: flex;
-  gap: 1rem;
-}
-
-.social-icon {
-  width: 40px;
-  height: 40px;
-  background-color: rgba(57, 62, 70, 0.5);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-color);
-  transition: all 0.3s ease;
-  border: 1px solid rgba(238, 238, 238, 0.1);
-}
-
-.social-icon:hover {
-  background-color: var(--primary-color);
-  transform: translateY(-3px);
 }
 
 .footer-bottom {

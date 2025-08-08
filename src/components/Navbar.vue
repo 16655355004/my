@@ -303,7 +303,7 @@ watch(route, () => {
   <header :class="['navbar', { scrolled: isScrolled }]">
     <div class="container navbar-container">
       <RouterLink to="/" class="logo" @click="closeMenu">
-        <span ref="logoRef">空空</span>
+        <span ref="logoRef">KONG</span>
       </RouterLink>
 
       <div class="hamburger" @click="toggleMenu">
@@ -354,6 +354,7 @@ watch(route, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  
 }
 
 .logo {
@@ -363,6 +364,7 @@ watch(route, () => {
   position: relative;
   z-index: 101;
   will-change: transform, opacity;
+ 
 }
 
 .logo span {
@@ -373,17 +375,19 @@ watch(route, () => {
   will-change: transform, opacity;
   position: relative;
   animation: lightning 4s infinite;
+  /* 确保文字始终可见的备用颜色 */
+  color: var(--primary-color);
 }
 
 /* 闪烁雷电动画 */
 @keyframes lightning {
   0% {
-    text-shadow: none;
+    text-shadow: 0 0 2px rgba(0, 212, 255, 1);
     filter: brightness(1);
   }
 
   45% {
-    text-shadow: none;
+    text-shadow: 0 0 2px rgba(0, 212, 255, 0.3);
     filter: brightness(1);
   }
 
@@ -393,34 +397,34 @@ watch(route, () => {
   }
 
   47% {
-    text-shadow: none;
+    text-shadow: 0 0 2px rgba(0, 212, 255, 0.3);
     filter: brightness(1);
   }
 
   48% {
-    text-shadow: 0 0 5px rgba(0, 212, 255, 0.7), 0 0 15px rgba(0, 212, 255, 0.7),
+    text-shadow: 0 0 1px rgba(0, 212, 255, 0.7), 0 0 15px rgba(0, 212, 255, 0.7),
       0 0 25px rgba(0, 212, 255, 0.7);
     filter: brightness(1.5);
   }
 
   50% {
-    text-shadow: none;
+    text-shadow: 0 0 2px rgba(0, 212, 255, 0.3);
     filter: brightness(1);
   }
 
   52% {
-    text-shadow: 0 0 5px rgba(0, 212, 255, 0.7), 0 0 10px rgba(0, 212, 255, 0.7),
+    text-shadow: 0 0 2px rgba(0, 212, 255, 0.7), 0 0 10px rgba(0, 212, 255, 0.7),
       0 0 15px rgba(0, 212, 255, 0.7), 0 0 30px rgba(0, 212, 255, 0.7);
     filter: brightness(1.8);
   }
 
   54% {
-    text-shadow: none;
+    text-shadow: 0 0 2px rgba(0, 212, 255, 0.3);
     filter: brightness(1);
   }
 
   100% {
-    text-shadow: none;
+    text-shadow: 0 0 2px rgba(0, 212, 255, 0.3);
     filter: brightness(1);
   }
 }
