@@ -7,8 +7,12 @@ import ScrollToPlugin from "gsap/ScrollToPlugin";
 import SplitText from "gsap/SplitText";
 import Navbar from "./components/Navbar.vue";
 import Loader from "./components/Loader.vue";
+import { useVisitorTracking } from "./composables/useVisitorTracking";
 
 const showBackToTop = ref(false);
+
+// 初始化访问者跟踪
+const { isTracking, visitorId, getSessionStats } = useVisitorTracking();
 
 // 注册GSAP插件
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, SplitText);
@@ -90,16 +94,18 @@ const initPageTransitions = () => {
   document.addEventListener("page-transition-start", (e: any) => {
     const { direction } = e.detail;
     const overlay = document.querySelector(".page-transition-overlay");
-    
+
     if (overlay) {
       // 根据方向设置不同的转场效果
-      if (direction === 'forward') {
-        gsap.fromTo(overlay, 
+      if (direction === "forward") {
+        gsap.fromTo(
+          overlay,
           { x: "100%", opacity: 0 },
           { x: "0%", opacity: 1, duration: 0.3, ease: "power2.out" }
         );
       } else {
-        gsap.fromTo(overlay,
+        gsap.fromTo(
+          overlay,
           { x: "-100%", opacity: 0 },
           { x: "0%", opacity: 1, duration: 0.3, ease: "power2.out" }
         );
@@ -119,7 +125,7 @@ const initPageTransitions = () => {
         onComplete: () => {
           gsap.set(overlay, { x: "100%" });
           ScrollTrigger.refresh();
-        }
+        },
       });
     }
   });
@@ -333,10 +339,12 @@ a {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, 
-    rgba(0, 212, 255, 0.1) 0%, 
-    rgba(26, 26, 46, 0.95) 50%, 
-    rgba(139, 92, 246, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 212, 255, 0.1) 0%,
+    rgba(26, 26, 46, 0.95) 50%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
   backdrop-filter: blur(10px);
   transform: translateX(100%);
   opacity: 0;
@@ -347,7 +355,7 @@ a {
 
 /* 添加一些装饰效果 */
 .page-transition-overlay::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -361,8 +369,12 @@ a {
 }
 
 @keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 /* 返回顶部按钮 */

@@ -5,6 +5,7 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import TextPlugin from "gsap/TextPlugin";
 import ElementInspector from "../components/ElementInspector.vue";
+import WebsiteStatistics from "../components/WebsiteStatistics.vue";
 
 // 注册GSAP插件
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
@@ -439,49 +440,9 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Demo Animation Area -->
-        <div class="hero-demo">
-          <div class="demo-container">
-            <div class="floating-demo demo-box-1" @click="animateBox1"></div>
-            <div class="floating-demo demo-box-2" @click="animateBox2"></div>
-            <div class="floating-demo demo-box-3" @click="animateBox3"></div>
-            <div class="floating-demo demo-circle" @click="animateCircle"></div>
-
-            <!-- 新增动画元素 -->
-            <div class="demo-triangle" @click="animateTriangle"></div>
-            <div class="demo-hexagon" @click="animateHexagon"></div>
-            <div class="demo-star" @click="animateStar">⭐</div>
-
-            <!-- 连接线动画 -->
-            <svg class="connection-lines" viewBox="0 0 300 300">
-              <path
-                class="line-1"
-                d="M50,50 Q150,100 250,50"
-                stroke="url(#gradient1)"
-                stroke-width="2"
-                fill="none"
-              />
-              <path
-                class="line-2"
-                d="M50,150 Q150,200 250,150"
-                stroke="url(#gradient2)"
-                stroke-width="2"
-                fill="none"
-              />
-              <defs>
-                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" style="stop-color: var(--primary-color); stop-opacity: 0" />
-                  <stop offset="50%" style="stop-color: var(--primary-color); stop-opacity: 1" />
-                  <stop offset="100%" style="stop-color: var(--primary-color); stop-opacity: 0" />
-                </linearGradient>
-                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" style="stop-color: var(--purple-accent); stop-opacity: 0" />
-                  <stop offset="50%" style="stop-color: var(--purple-accent); stop-opacity: 1" />
-                  <stop offset="100%" style="stop-color: var(--purple-accent); stop-opacity: 0" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+        <!-- 网站统计区域 -->
+        <div class="hero-statistics">
+          <WebsiteStatistics />
         </div>
       </div>
     </section>
@@ -908,11 +869,12 @@ onMounted(() => {
   gap: 1.5rem;
 }
 
-.hero-demo {
+.hero-statistics {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 400px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: auto;
+  padding: 0;
 }
 
 .demo-container {
@@ -1247,6 +1209,11 @@ onMounted(() => {
     grid-template-columns: 1fr;
     gap: 2rem;
     text-align: center;
+  }
+
+  .hero-statistics {
+    min-height: auto;
+    padding: 1rem 0;
   }
 
   .hero-title {

@@ -27,6 +27,11 @@ export default {
         return await handleMessagesAPI(request, env, corsHeaders);
       }
 
+      // 统计 API 路由
+      if (path.startsWith('/api/statistics')) {
+        return await handleStatisticsAPI(request, env, corsHeaders);
+      }
+
       return new Response('Not Found', { status: 404, headers: corsHeaders });
     } catch (error) {
       console.error('Worker error:', error);
@@ -402,6 +407,258 @@ async function addMessage(request, env, headers) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to add message'
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 处理统计 API 请求
+async function handleStatisticsAPI(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const method = request.method;
+  const pathParts = url.pathname.split('/');
+
+  const headers = {
+    ...corsHeaders,
+    'Content-Type': 'application/json'
+  };
+
+  switch (method) {
+    case 'GET':
+      // 获取统计数据
+      return await getStatistics(env, headers);
+
+    case 'POST':
+      // 记录访问者
+      if (pathParts[3] === 'visit') {
+        return await recordVisit(request, env, headers);
+      }
+      // 记录响应时间
+      if (pathParts[3] === 'response-time') {
+        return await recordResponseTime(request, env, headers);
+      }
+      break;
+
+    default:
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers
+      });
+  }
+
+  return new Response(JSON.stringify({ error: 'Invalid endpoint' }), {
+    status: 400,
+    headers
+  });
+}
+
+// 获取统计数据
+async function getStatistics(env, headers) {
+  try {
+    // 获取网站启动时间
+    let siteStartTime = await env.BOOKMARKS_KV.get('site_start_time');
+    if (!siteStartTime) {
+      siteStartTime = new Date().toISOString();
+      await env.BOOKMARKS_KV.put('site_start_time', siteStartTime);
+    }
+
+    // 检查启动时间是否合理（不能超过30天前）
+    const checkStartTime = new Date(siteStartTime);
+    const checkNow = new Date();
+    const maxDays = 30;
+    const maxMs = maxDays * 24 * 60 * 60 * 1000;
+
+    if (checkNow.getTime() - checkStartTime.getTime() > maxMs) {
+      // 如果超过30天，重置为当前时间
+      siteStartTime = new Date().toISOString();
+      await env.BOOKMARKS_KV.put('site_start_time', siteStartTime);
+    }
+
+    // 获取访问者数据
+    const visitorsData = await env.BOOKMARKS_KV.get('visitors_data');
+    const visitors = visitorsData ? JSON.parse(visitorsData) : {
+      totalVisitors: 0,
+      todayVisitors: 0,
+      lastResetDate: new Date().toISOString().split('T')[0]
+    };
+
+    // 检查是否需要重置今日访问者数量
+    const today = new Date().toISOString().split('T')[0];
+    if (visitors.lastResetDate !== today) {
+      visitors.todayVisitors = 0;
+      visitors.lastResetDate = today;
+      await env.BOOKMARKS_KV.put('visitors_data', JSON.stringify(visitors));
+    }
+
+    // 获取平均响应时间
+    const responseTimeData = await env.BOOKMARKS_KV.get('response_times');
+    const responseTimes = responseTimeData ? JSON.parse(responseTimeData) : [];
+    const avgResponseTime = responseTimes.length > 0
+      ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
+      : 0;
+
+    // 计算运行时间
+    const startTime = new Date(siteStartTime);
+    const now = new Date();
+    const uptimeMs = now.getTime() - startTime.getTime();
+
+    const days = Math.floor(uptimeMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((uptimeMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((uptimeMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    const statistics = {
+      totalVisitors: visitors.totalVisitors,
+      todayVisitors: visitors.todayVisitors,
+      responseTime: avgResponseTime,
+      uptime: {
+        days,
+        hours,
+        minutes,
+        formatted: `${days}天 ${hours}小时 ${minutes}分钟`
+      },
+      lastUpdated: new Date().toISOString()
+    };
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: statistics
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to fetch statistics:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to fetch statistics'
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 记录访问者
+async function recordVisit(request, env, headers) {
+  try {
+    const visitData = await request.json();
+    const { visitorId, isNewVisitor } = visitData;
+
+    if (!visitorId) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Visitor ID is required'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    // 获取当前访问者数据
+    const visitorsData = await env.BOOKMARKS_KV.get('visitors_data');
+    const visitors = visitorsData ? JSON.parse(visitorsData) : {
+      totalVisitors: 0,
+      todayVisitors: 0,
+      lastResetDate: new Date().toISOString().split('T')[0]
+    };
+
+    // 检查是否需要重置今日访问者数量
+    const today = new Date().toISOString().split('T')[0];
+    if (visitors.lastResetDate !== today) {
+      visitors.todayVisitors = 0;
+      visitors.lastResetDate = today;
+    }
+
+    // 检查是否是新访问者
+    const visitorKey = `visitor:${visitorId}`;
+    const existingVisitor = await env.BOOKMARKS_KV.get(visitorKey);
+
+    if (!existingVisitor && isNewVisitor) {
+      // 新访问者
+      visitors.totalVisitors += 1;
+      visitors.todayVisitors += 1;
+
+      // 记录访问者信息（24小时过期）
+      await env.BOOKMARKS_KV.put(visitorKey, JSON.stringify({
+        firstVisit: new Date().toISOString(),
+        lastVisit: new Date().toISOString()
+      }), {
+        expirationTtl: 86400 // 24小时
+      });
+    } else if (existingVisitor) {
+      // 更新现有访问者的最后访问时间
+      const visitorInfo = JSON.parse(existingVisitor);
+      visitorInfo.lastVisit = new Date().toISOString();
+
+      await env.BOOKMARKS_KV.put(visitorKey, JSON.stringify(visitorInfo), {
+        expirationTtl: 86400 // 24小时
+      });
+    }
+
+    // 保存更新后的访问者数据
+    await env.BOOKMARKS_KV.put('visitors_data', JSON.stringify(visitors));
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        totalVisitors: visitors.totalVisitors,
+        todayVisitors: visitors.todayVisitors
+      }
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to record visit:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to record visit'
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 记录响应时间
+async function recordResponseTime(request, env, headers) {
+  try {
+    const { responseTime } = await request.json();
+
+    if (typeof responseTime !== 'number' || responseTime < 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Valid response time is required'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    // 获取现有响应时间数据
+    const responseTimeData = await env.BOOKMARKS_KV.get('response_times');
+    const responseTimes = responseTimeData ? JSON.parse(responseTimeData) : [];
+
+    // 添加新的响应时间（只保留最近100个记录）
+    responseTimes.push(responseTime);
+    if (responseTimes.length > 100) {
+      responseTimes.shift(); // 移除最旧的记录
+    }
+
+    // 保存更新后的响应时间数据
+    await env.BOOKMARKS_KV.put('response_times', JSON.stringify(responseTimes));
+
+    // 计算平均响应时间
+    const avgResponseTime = Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length);
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        averageResponseTime: avgResponseTime,
+        currentResponseTime: responseTime
+      }
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to record response time:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to record response time'
     }), {
       status: 500,
       headers
