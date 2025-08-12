@@ -8,10 +8,23 @@ export function useVisitorTracking() {
   const sessionStartTime = ref<number>(0)
   const pageViewCount = ref(0)
   const heartbeatInterval = ref<number | null>(null)
+  const lastVisibilityChange = ref<number>(0)
 
   // 初始化访问者跟踪
   const initializeTracking = async () => {
     if (isTracking.value) return
+
+    // 在开发环境中禁用统计跟踪
+    if (import.meta.env.DEV) {
+      console.log('Visitor tracking disabled in development mode')
+      return
+    }
+
+    // 临时禁用统计跟踪（如果需要完全停止）
+    // if (true) {
+    //   console.log('Visitor tracking temporarily disabled')
+    //   return
+    // }
 
     try {
       isTracking.value = true
@@ -21,7 +34,7 @@ export function useVisitorTracking() {
       // 记录页面访问
       await recordPageView()
 
-      // 启动心跳检测（每5分钟发送一次）
+      // 启动心跳检测（每30分钟发送一次）
       startHeartbeat()
 
       // 监听页面可见性变化
@@ -41,10 +54,10 @@ export function useVisitorTracking() {
   const recordPageView = async () => {
     try {
       pageViewCount.value++
-      
+
       // 记录访问到后端
       const result = await statisticsService.recordVisit()
-      
+
       if (result.success) {
         console.log('Page view recorded successfully')
       } else {
@@ -60,7 +73,7 @@ export function useVisitorTracking() {
 
   // 启动心跳检测
   const startHeartbeat = () => {
-    // 每5分钟发送一次心跳
+    // 每30分钟发送一次心跳（减少频率）
     heartbeatInterval.value = window.setInterval(async () => {
       if (document.visibilityState === 'visible') {
         try {
@@ -70,7 +83,7 @@ export function useVisitorTracking() {
           console.error('Heartbeat failed:', error)
         }
       }
-    }, 5 * 60 * 1000) // 5分钟
+    }, 30 * 60 * 1000) // 30分钟
   }
 
   // 停止心跳检测
@@ -84,8 +97,12 @@ export function useVisitorTracking() {
   // 处理页面可见性变化
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
-      // 页面变为可见时，记录访问
-      recordPageView()
+      const now = Date.now()
+      // 防抖：至少间隔5分钟才记录新的访问
+      if (now - lastVisibilityChange.value > 5 * 60 * 1000) {
+        lastVisibilityChange.value = now
+        recordPageView()
+      }
     }
   }
 
@@ -93,7 +110,7 @@ export function useVisitorTracking() {
   const handlePageUnload = () => {
     // 记录会话结束时间
     const sessionDuration = Date.now() - sessionStartTime.value
-    
+
     // 使用 sendBeacon 发送最后的统计数据（如果支持）
     if (navigator.sendBeacon && statisticsService.getVisitorId()) {
       const data = JSON.stringify({
@@ -139,7 +156,7 @@ export function useVisitorTracking() {
       const sessionData = localStorage.getItem('visitor_session')
       if (sessionData) {
         const data = JSON.parse(sessionData)
-        
+
         // 检查会话是否过期（超过30分钟）
         const now = Date.now()
         const lastActivity = data.lastActivity || 0
@@ -163,7 +180,7 @@ export function useVisitorTracking() {
   const getSessionStats = () => {
     const now = Date.now()
     const sessionDuration = now - sessionStartTime.value
-    
+
     return {
       visitorId: visitorId.value,
       sessionDuration,
