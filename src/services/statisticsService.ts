@@ -43,6 +43,10 @@ class StatisticsService {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
+
+
+
+
   // 获取请求头
   private getHeaders(): HeadersInit {
     return {
@@ -83,6 +87,14 @@ class StatisticsService {
 
   // 获取统计数据
   async getStatistics(): Promise<ApiResponse<Statistics>> {
+    // 如果API未配置，直接返回失败
+    if (this.baseUrl.includes('your-worker.your-subdomain.workers.dev')) {
+      return {
+        success: false,
+        error: 'API未配置'
+      }
+    }
+
     try {
       const startTime = performance.now()
 
@@ -104,39 +116,14 @@ class StatisticsService {
       return result
     } catch (error) {
       console.error('Failed to fetch statistics:', error)
-
-      // 如果网络错误，返回模拟数据作为后备
-      console.log('Using fallback mock statistics data due to network error')
-      return this.getMockStatistics()
-    }
-  }
-
-  // 获取模拟统计数据（用于开发环境）
-  private getMockStatistics(): ApiResponse<Statistics> {
-    const now = new Date()
-    const startTime = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)) // 7天前
-    const uptimeMs = now.getTime() - startTime.getTime()
-
-    const days = Math.floor(uptimeMs / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((uptimeMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    const minutes = Math.floor((uptimeMs % (1000 * 60 * 60)) / (1000 * 60))
-
-    return {
-      success: true,
-      data: {
-        totalVisitors: 1234,
-        todayVisitors: 56,
-        responseTime: Math.round(Math.random() * 200 + 50), // 50-250ms
-        uptime: {
-          days,
-          hours,
-          minutes,
-          formatted: `${days}天 ${hours}小时 ${minutes}分钟`
-        },
-        lastUpdated: now.toISOString()
+      return {
+        success: false,
+        error: '网络错误'
       }
     }
   }
+
+
 
   // 记录访问
   async recordVisit(): Promise<ApiResponse<{ totalVisitors: number; todayVisitors: number }>> {

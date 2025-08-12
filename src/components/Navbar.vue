@@ -354,7 +354,6 @@ watch(route, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
 }
 
 .logo {
@@ -364,7 +363,6 @@ watch(route, () => {
   position: relative;
   z-index: 101;
   will-change: transform, opacity;
- 
 }
 
 .logo span {

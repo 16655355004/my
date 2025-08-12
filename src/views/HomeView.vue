@@ -426,24 +426,27 @@ onMounted(() => {
     <!-- Hero Section -->
     <section class="hero-section" id="home">
       <div class="container">
+        <!-- 主要内容居中 -->
         <div class="hero-content">
           <h1 class="hero-title">空空</h1>
-          <p class="hero-subtitle animated-text">前端开发者 & 动画爱好者</p>
+          <p class="hero-subtitle animated-text">专注于前端优雅的数字体验</p>
           <p class="hero-description">
-            你好！我是空空，一名热爱前端开发和动画设计的程序员。
-            专注于使用现代技术栈创建流畅、优雅的用户界面和交互体验。
-            擅长Vue.js、React、Python，以及使用GSAP制作精美动画。
+            你好！我是空空，一名热爱前端开发和动画设计的程序员。专注于使
+            用现代技术栈创建流畅的体验，让每个用户界面都充满活力。擅长Vue.js、
+            React、Python，以及使用GSAP制作精美动画。
           </p>
           <div class="hero-buttons">
             <button class="btn btn-primary" @click="router.push('/playground')">动画实验室</button>
             <button class="btn btn-outline" @click="navigateToSection('about')">了解更多</button>
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- 网站统计区域 -->
-        <div class="hero-statistics">
-          <WebsiteStatistics />
-        </div>
+    <!-- 网站统计区域 - 独立的section，横向排列 -->
+    <section class="statistics-section">
+      <div class="container">
+        <WebsiteStatistics />
       </div>
     </section>
 
@@ -703,23 +706,46 @@ onMounted(() => {
 
 /* Hero Section */
 .hero-section {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
+  justify-content: center;
   position: relative;
   z-index: 2;
-  padding: 8rem 0 4rem;
+  padding: 0;
 }
 
 .hero-section .container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
 }
 
 .hero-content {
-  max-width: 600px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Statistics Section */
+.statistics-section {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  padding: 4rem 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+}
+
+.statistics-section .container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
 /* 标题雷电效果 */
@@ -1206,14 +1232,16 @@ onMounted(() => {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .hero-section .container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    text-align: center;
+    padding: 0 1rem;
   }
 
-  .hero-statistics {
+  .statistics-section {
     min-height: auto;
-    padding: 1rem 0;
+    padding: 2rem 0;
+  }
+
+  .statistics-section .container {
+    padding: 0 1rem;
   }
 
   .hero-title {
