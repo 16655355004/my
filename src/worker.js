@@ -439,6 +439,10 @@ async function handleStatisticsAPI(request, env, corsHeaders) {
       if (pathParts[3] === 'response-time') {
         return await recordResponseTime(request, env, headers);
       }
+      // 重置响应时间数据
+      if (pathParts[3] === 'reset-response-time') {
+        return await resetResponseTimeData(env, headers);
+      }
       break;
 
     default:
@@ -681,4 +685,28 @@ async function verifyAdmin(request, env) {
   }
 
   return { success: true };
+}
+
+// 重置响应时间数据
+async function resetResponseTimeData(env, headers) {
+  try {
+    // 清除KV中的响应时间数据
+    await env.BOOKMARKS_KV.delete('response_times');
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        message: 'Response time data has been reset successfully'
+      }
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to reset response time data:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to reset response time data'
+    }), {
+      status: 500,
+      headers
+    });
+  }
 }

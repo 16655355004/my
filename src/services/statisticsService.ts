@@ -108,9 +108,16 @@ class StatisticsService {
 
       const result = await this.handleResponse<Statistics>(response)
 
-      // 记录响应时间
+      // 记录响应时间（异步，不阻塞返回）
       if (result.success && this.lastResponseTime > 0) {
-        this.recordResponseTime(this.lastResponseTime)
+        this.recordResponseTime(this.lastResponseTime).catch(error => {
+          console.warn('Failed to record response time:', error)
+        })
+      }
+
+      // 如果获取成功，用当前测量的响应时间覆盖服务器返回的平均值
+      if (result.success && result.data && this.lastResponseTime > 0) {
+        result.data.responseTime = this.lastResponseTime
       }
 
       return result
@@ -203,6 +210,24 @@ class StatisticsService {
     const lastVisitDate = localStorage.getItem('last_visit_date')
     const today = new Date().toISOString().split('T')[0]
     return !lastVisitDate || lastVisitDate !== today
+  }
+
+  // 重置响应时间数据（清除KV中的历史数据）
+  async resetResponseTimeData(): Promise<ApiResponse<{ message: string }>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/statistics/reset-response-time`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+      })
+
+      return await this.handleResponse<{ message: string }>(response)
+    } catch (error) {
+      console.error('Failed to reset response time data:', error)
+      return {
+        success: false,
+        error: 'Network error'
+      }
+    }
   }
 }
 

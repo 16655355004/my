@@ -24,6 +24,12 @@ const fetchStatistics = async () => {
     if (response.success && response.data) {
       statistics.value = response.data;
       error.value = null;
+      // 调试信息：记录响应时间更新
+      console.log(
+        `Response time updated: ${
+          response.data.responseTime
+        }ms at ${new Date().toLocaleTimeString()}`
+      );
     } else {
       error.value = response.error || "获取统计数据失败";
       console.log("Statistics API failed, hiding component");
@@ -103,6 +109,22 @@ const getResponseTimeStatus = (time: number): string => {
   if (time < 300) return "good";
   if (time < 500) return "fair";
   return "poor";
+};
+
+// 重置响应时间数据（调试用）
+const resetResponseTime = async () => {
+  try {
+    const result = await statisticsService.resetResponseTimeData();
+    if (result.success) {
+      console.log("Response time data reset successfully");
+      // 重新获取统计数据
+      await fetchStatistics();
+    } else {
+      console.error("Failed to reset response time data:", result.error);
+    }
+  } catch (error) {
+    console.error("Error resetting response time data:", error);
+  }
 };
 </script>
 
