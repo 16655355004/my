@@ -6,6 +6,8 @@ const isActive = ref(false);
 const highlightBox = ref<HTMLElement>();
 const tooltip = ref<HTMLElement>();
 const currentElement = ref<HTMLElement | null>(null);
+const isTooltipLocked = ref(false); // 新增：工具提示锁定状态
+const lockedPosition = ref({ x: 0, y: 0 }); // 新增：锁定时的位置
 
 // 高亮框的位置和尺寸
 const boxStyle = ref({
@@ -70,22 +72,25 @@ const toggleInspector = () => {
   if (isActive.value) {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("click", handleClick);
+    document.addEventListener("keydown", handleKeyDown); // 添加键盘事件监听
     document.addEventListener("scroll", handleScroll, true); // 监听所有滚动事件
     window.addEventListener("resize", handleResize); // 监听窗口大小变化
     document.body.style.cursor = "crosshair";
   } else {
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("click", handleClick);
+    document.removeEventListener("keydown", handleKeyDown); // 移除键盘事件监听
     document.removeEventListener("scroll", handleScroll, true);
     window.removeEventListener("resize", handleResize);
     document.body.style.cursor = "";
+    isTooltipLocked.value = false; // 重置锁定状态
     hideHighlight();
   }
 };
 
 // 处理鼠标移动
 const handleMouseMove = (event: MouseEvent) => {
-  if (!isActive.value) return;
+  if (!isActive.value || isTooltipLocked.value) return;
 
   // 获取相对于视口的坐标
   const clientX = event.clientX;
@@ -117,7 +122,15 @@ const handleClick = (event: MouseEvent) => {
   event.stopPropagation();
 
   if (currentElement.value) {
-    // 可以在这里添加点击后的操作，比如复制选择器、显示详细信息等
+    // 如果已经锁定，则切换到新元素
+    if (isTooltipLocked.value) {
+      // 切换到新元素
+      switchToNewElement(event);
+    } else {
+      // 首次锁定
+      lockTooltip(event);
+    }
+
     console.log("Selected element:", currentElement.value);
 
     // 添加点击动画效果
@@ -133,9 +146,166 @@ const handleClick = (event: MouseEvent) => {
   }
 };
 
+// 锁定工具提示到当前元素
+const lockTooltip = (event: MouseEvent) => {
+  // 计算锁定位置
+  calculateLockedPosition(event);
+
+  // 锁定工具提示，使其可滚动
+  isTooltipLocked.value = true;
+
+  // 使工具提示可交互并应用锁定位置
+  if (tooltip.value) {
+    tooltip.value.style.pointerEvents = "auto";
+    applyLockedPosition();
+  }
+};
+
+// 切换到新元素
+const switchToNewElement = (event: MouseEvent) => {
+  // 获取点击位置的新元素
+  const element = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement;
+
+  // 忽略检查器自身的元素
+  if (
+    !element ||
+    element.closest(".element-inspector") ||
+    element.closest(".highlight-box") ||
+    element.closest(".element-tooltip")
+  ) {
+    return;
+  }
+
+  // 更新到新元素
+  currentElement.value = element;
+  updateHighlight(element);
+
+  // 重新计算位置并应用
+  calculateLockedPosition(event);
+  applyLockedPosition();
+
+  // 添加切换动画效果
+  if (tooltip.value) {
+    gsap.fromTo(
+      tooltip.value,
+      { scale: 0.95, opacity: 0.8 },
+      { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }
+    );
+  }
+};
+
+// 计算锁定位置
+const calculateLockedPosition = (event: MouseEvent) => {
+  const scrollX =
+    window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
+  const scrollY =
+    window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
+  // 工具提示的预估尺寸
+  const tooltipWidth = 500; // 锁定时的宽度
+  const tooltipHeight = Math.min(600, window.innerHeight * 0.8); // 锁定时的高度
+
+  // 视口尺寸
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  // 初始位置基于点击位置
+  let x = event.clientX + scrollX;
+  let y = event.clientY + scrollY;
+
+  // 水平位置调整 - 确保不超出右边界
+  if (event.clientX + tooltipWidth > viewportWidth) {
+    x = event.clientX + scrollX - tooltipWidth;
+  }
+
+  // 确保不超出左边界
+  if (x < scrollX + 10) {
+    x = scrollX + 10;
+  }
+
+  // 垂直位置调整 - 确保不超出下边界
+  if (event.clientY + tooltipHeight > viewportHeight) {
+    y = event.clientY + scrollY - tooltipHeight;
+  }
+
+  // 确保不超出上边界
+  if (y < scrollY + 10) {
+    y = scrollY + 10;
+  }
+
+  // 如果在移动设备上，使用视口坐标居中显示以获得更好的体验
+  if (viewportWidth <= 768) {
+    x = (viewportWidth - Math.min(tooltipWidth, viewportWidth * 0.9)) / 2;
+    y = (viewportHeight - tooltipHeight) / 2;
+  }
+
+  lockedPosition.value = { x, y };
+};
+
+// 应用锁定位置
+const applyLockedPosition = () => {
+  if (tooltip.value) {
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      // 移动设备使用固定定位
+      tooltip.value.style.position = "fixed";
+      tooltip.value.style.left = lockedPosition.value.x + "px";
+      tooltip.value.style.top = lockedPosition.value.y + "px";
+    } else {
+      // 桌面设备使用绝对定位
+      tooltip.value.style.position = "absolute";
+      tooltip.value.style.left = lockedPosition.value.x + "px";
+      tooltip.value.style.top = lockedPosition.value.y + "px";
+    }
+
+    tooltip.value.style.transform = "none";
+  }
+};
+
+// 解锁工具提示
+const unlockTooltip = () => {
+  isTooltipLocked.value = false;
+  if (tooltip.value) {
+    tooltip.value.style.pointerEvents = "none";
+    // 重置transform以便正常的鼠标跟随模式
+    tooltip.value.style.transform = "";
+
+    // 添加解锁动画效果
+    gsap.fromTo(
+      tooltip.value,
+      { scale: 1 },
+      {
+        scale: 0.95,
+        duration: 0.2,
+        ease: "power2.out",
+        onComplete: () => {
+          if (tooltip.value) {
+            gsap.set(tooltip.value, { scale: 1 });
+          }
+        },
+      }
+    );
+  }
+};
+
+// 处理键盘事件
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (!isActive.value) return;
+
+  // Escape键解锁工具提示
+  if (event.key === "Escape" && isTooltipLocked.value) {
+    event.preventDefault();
+    unlockTooltip();
+  }
+};
+
 // 处理滚动事件
 const handleScroll = () => {
   if (!isActive.value || !currentElement.value) return;
+
+  // 如果工具提示已锁定，不更新位置
+  if (isTooltipLocked.value) return;
 
   // 滚动时更新高亮框位置
   updateHighlight(currentElement.value);
@@ -144,6 +314,20 @@ const handleScroll = () => {
 // 处理窗口大小变化
 const handleResize = () => {
   if (!isActive.value || !currentElement.value) return;
+
+  // 如果工具提示已锁定，重新计算位置以适应新的窗口大小
+  if (isTooltipLocked.value) {
+    // 基于当前锁定位置重新计算
+    const event = {
+      clientX:
+        lockedPosition.value.x - (window.pageXOffset || document.documentElement.scrollLeft || 0),
+      clientY:
+        lockedPosition.value.y - (window.pageYOffset || document.documentElement.scrollTop || 0),
+    } as MouseEvent;
+    calculateLockedPosition(event);
+    applyLockedPosition();
+    return;
+  }
 
   // 窗口大小变化时更新高亮框位置
   updateHighlight(currentElement.value);
@@ -232,17 +416,24 @@ const updateTooltip = (element: HTMLElement, event: MouseEvent) => {
   const scrollY =
     window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
-  // 工具提示的预估尺寸
-  const tooltipWidth = 420;
-  const tooltipHeight = 600; // 预估最大高度
-
   // 视口尺寸
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
 
+  // 工具提示的预估尺寸
+  const tooltipWidth = 420;
+  const tooltipMaxHeight = Math.min(600, viewportHeight * 0.8); // 最大高度为视口的80%
+
+  let tooltipX, tooltipY;
+
+  if (isTooltipLocked.value) {
+    // 如果工具提示已锁定，保持当前位置
+    return;
+  }
+
   // 计算初始位置
-  let tooltipX = event.clientX + scrollX + 15;
-  let tooltipY = event.clientY + scrollY - 10;
+  tooltipX = event.clientX + scrollX + 15;
+  tooltipY = event.clientY + scrollY - 10;
 
   // 水平位置调整 - 避免超出右边界
   if (event.clientX + tooltipWidth > viewportWidth) {
@@ -250,8 +441,8 @@ const updateTooltip = (element: HTMLElement, event: MouseEvent) => {
   }
 
   // 垂直位置调整 - 避免超出下边界
-  if (event.clientY + tooltipHeight > viewportHeight) {
-    tooltipY = event.clientY + scrollY - tooltipHeight + 10;
+  if (event.clientY + tooltipMaxHeight > viewportHeight) {
+    tooltipY = event.clientY + scrollY - tooltipMaxHeight + 10;
   }
 
   // 确保不超出左边界
@@ -390,13 +581,46 @@ onUnmounted(() => {
   </div>
 
   <!-- 工具提示 -->
-  <div v-if="isActive" ref="tooltip" class="element-tooltip" :style="tooltipStyle">
+  <div
+    v-if="isActive"
+    ref="tooltip"
+    class="element-tooltip"
+    :style="tooltipStyle"
+    :class="{ locked: isTooltipLocked }"
+  >
     <div class="tooltip-content">
-      <!-- 选择器 -->
-      <div class="element-selector">{{ getElementSelector() }}</div>
+      <!-- 工具提示头部 -->
+      <div class="tooltip-header">
+        <div class="element-selector">{{ getElementSelector() }}</div>
+        <button
+          v-if="isTooltipLocked"
+          @click="unlockTooltip"
+          class="close-btn"
+          title="关闭详细视图 (ESC)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M18 6L6 18M6 6L18 18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 锁定状态提示 -->
+      <div v-if="isTooltipLocked" class="lock-notice">
+        🔒 已锁定 - 可滚动查看 | 点击其他元素切换 | ESC解锁
+      </div>
 
       <!-- 标签信息 -->
       <div class="element-tag" v-html="getElementDescription()"></div>
+
+      <!-- 点击提示 -->
+      <div v-if="!isTooltipLocked" class="click-hint">
+        💡 点击元素锁定面板 | 再次点击其他元素切换 | ESC解锁
+      </div>
 
       <!-- 尺寸和位置 -->
       <div class="info-section">
@@ -645,6 +869,26 @@ onUnmounted(() => {
   pointer-events: none;
   z-index: 10000;
   will-change: transform, opacity;
+  transition: all 0.3s ease;
+}
+
+.element-tooltip.locked {
+  pointer-events: auto;
+  position: absolute;
+  z-index: 10001;
+  /* Position will be set by JavaScript */
+}
+
+.element-tooltip.locked::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+  backdrop-filter: blur(3px);
 }
 
 .tooltip-content {
@@ -663,15 +907,117 @@ onUnmounted(() => {
   line-height: 1.3;
 }
 
+.element-tooltip.locked .tooltip-content {
+  max-width: 500px;
+  max-height: 80vh;
+  min-height: 400px;
+  border: 2px solid rgba(0, 255, 136, 0.6);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 136, 0.3);
+  animation: locked-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes locked-glow {
+  from {
+    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 136, 0.3);
+  }
+  to {
+    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 136, 0.5);
+  }
+}
+
+/* 工具提示头部 */
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
 .element-selector {
   color: #ff6b6b;
   font-weight: bold;
   font-size: 0.9rem;
-  margin-bottom: 0.4rem;
   padding: 0.2rem 0.4rem;
   background: rgba(255, 107, 107, 0.1);
   border-radius: 4px;
   border: 1px solid rgba(255, 107, 107, 0.3);
+  flex: 1;
+}
+
+.close-btn {
+  background: rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: 8px;
+  color: #ff6b6b;
+  cursor: pointer;
+  padding: 0.4rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+}
+
+.close-btn:hover {
+  background: rgba(255, 107, 107, 0.3);
+  border-color: rgba(255, 107, 107, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.close-btn:active {
+  transform: scale(0.95);
+}
+
+.lock-notice {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.1));
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
+  color: #00ff88;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.1);
+  animation: pulse-lock 3s ease-in-out infinite;
+}
+
+@keyframes pulse-lock {
+  0%,
+  100% {
+    border-color: rgba(0, 255, 136, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.1);
+  }
+  50% {
+    border-color: rgba(0, 255, 136, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+  }
+}
+
+.click-hint {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.65rem;
+  color: #ffc107;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-style: italic;
+  animation: pulse-hint 2s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .element-tag {
@@ -822,6 +1168,17 @@ onUnmounted(() => {
     padding: 0.75rem;
     max-width: 280px;
     max-height: 70vh;
+  }
+
+  .element-tooltip.locked .tooltip-content {
+    max-width: 90vw;
+    max-height: 85vh;
+    min-height: 300px;
+  }
+
+  /* 移动设备上的锁定工具提示使用固定定位以获得更好的体验 */
+  .element-tooltip.locked {
+    position: fixed !important;
   }
 
   .info-grid {
