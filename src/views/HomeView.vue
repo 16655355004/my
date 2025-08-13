@@ -6,6 +6,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 import TextPlugin from "gsap/TextPlugin";
 import ElementInspector from "../components/ElementInspector.vue";
 import WebsiteStatistics from "../components/WebsiteStatistics.vue";
+import ProjectLinks from "../components/ProjectLinks.vue";
 
 // 注册GSAP插件
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
@@ -148,6 +149,12 @@ const features = ref([
     description: "掌握Python后端开发，能够构建高效的API和数据处理系统",
     icon: "🐍",
   },
+  {
+    title: "团队合作",
+    description: "善于与团队协作，能够快速适应新的工作环境和项目需求",
+    icon: "🤝",
+  },
+
   {
     title: "持续学习",
     description: "保持对新技术的热情，不断学习和探索前沿技术",
@@ -450,6 +457,9 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- Project Links Section -->
+    <ProjectLinks />
+
     <!-- Features Section -->
     <section class="features-section section">
       <div class="container">
@@ -465,7 +475,7 @@ onMounted(() => {
     </section>
 
     <!-- Stats Section -->
-    <section class="stats-section section">
+    <!-- <section class="stats-section section">
       <div class="container">
         <div class="stats-grid">
           <div v-for="stat in stats" :key="stat.label" class="stat-item">
@@ -474,7 +484,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- Skills Progress Section -->
     <section class="skills-progress section">
@@ -731,7 +741,6 @@ onMounted(() => {
 
 /* Statistics Section */
 .statistics-section {
-  min-height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;

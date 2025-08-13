@@ -4,12 +4,17 @@ import { statisticsService, type Statistics } from "../services/statisticsServic
 
 // 响应式数据
 const statistics = ref<Statistics | null>(null);
-const loading = ref(true);
+const loading = ref(false); // 改为false，不自动加载
 const error = ref<string | null>(null);
 const updateInterval = ref<number | null>(null);
+const isVisible = ref(false); // 控制统计数据是否显示
+const hasLoaded = ref(false); // 标记是否已经加载过数据
 
 // 获取统计数据
 const fetchStatistics = async () => {
+  loading.value = true;
+  error.value = null;
+
   try {
     // 设置加载超时，避免无限加载
     const timeoutPromise = new Promise((_, reject) => {
@@ -24,6 +29,7 @@ const fetchStatistics = async () => {
     if (response.success && response.data) {
       statistics.value = response.data;
       error.value = null;
+      hasLoaded.value = true;
       // 调试信息：记录响应时间更新
       console.log(
         `Response time updated: ${
@@ -32,12 +38,11 @@ const fetchStatistics = async () => {
       );
     } else {
       error.value = response.error || "获取统计数据失败";
-      console.log("Statistics API failed, hiding component");
+      console.log("Statistics API failed");
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : "网络错误";
     console.error("Failed to fetch statistics:", err);
-    console.log("Statistics loading failed, hiding component");
   } finally {
     loading.value = false;
   }
@@ -66,26 +71,28 @@ const stopRealTimeUpdates = () => {
   }
 };
 
+// 手动加载统计数据
+const loadStatistics = async () => {
+  if (!isVisible.value) {
+    isVisible.value = true;
+    if (!hasLoaded.value) {
+      await fetchStatistics();
+      // 只有在成功加载后才启动实时更新
+      if (statistics.value && !error.value) {
+        startRealTimeUpdates();
+      }
+    }
+  } else {
+    // 如果已经显示，则隐藏
+    isVisible.value = false;
+    stopRealTimeUpdates();
+  }
+};
+
 // 组件挂载时的操作
 onMounted(async () => {
-  // 记录访问
+  // 只记录访问，不自动加载统计数据
   await recordVisit();
-
-  // 获取初始统计数据
-  await fetchStatistics();
-
-  // 启动实时更新
-  startRealTimeUpdates();
-
-  // 添加入场动画
-  gsap.from(".stat-card", {
-    opacity: 0,
-    y: 30,
-    stagger: 0.1,
-    duration: 0.6,
-    ease: "back.out(1.7)",
-    delay: 0.2,
-  });
 });
 
 // 组件卸载时清理
@@ -129,143 +136,185 @@ const resetResponseTime = async () => {
 </script>
 
 <template>
-  <div v-if="statistics && !loading && !error" class="website-statistics">
+  <div class="website-statistics">
     <div class="container">
-      <!-- 标题 -->
-      <div class="stats-header">
-        <h2 class="stats-title">网站统计</h2>
-        <p class="stats-subtitle">实时数据展示</p>
+      <!-- 统计数据触发按钮 -->
+      <div class="stats-trigger">
+        <button @click="loadStatistics" class="stats-toggle-btn" :class="{ active: isVisible }">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M9 19C9 20.1046 9.89543 21 11 21H13C14.1046 21 15 20.1046 15 19V5C15 3.89543 14.1046 3 13 3H11C9.89543 3 9 3.89543 9 5V19Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M3 13C3 14.1046 3.89543 15 5 15H7C8.10457 15 9 14.1046 9 13V11C9 9.89543 8.10457 9 7 9H5C3.89543 9 3 9.89543 3 11V13Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M15 17C15 18.1046 15.8954 19 17 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H17C15.8954 5 15 5.89543 15 7V17Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </svg>
+          <span>{{ isVisible ? "隐藏统计" : "查看网站统计" }}</span>
+          <svg
+            class="chevron-icon"
+            :class="{ rotated: isVisible }"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 9L12 15L18 9"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
       </div>
 
-      <div v-if="loading" class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>加载统计数据中...</p>
-      </div>
-
-      <div v-else-if="error" class="error-state">
-        <div class="error-icon">⚠️</div>
-        <p>{{ error }}</p>
-        <button @click="fetchStatistics" class="retry-btn">重试</button>
-      </div>
-
-      <div v-else-if="statistics" class="stats-grid">
-        <!-- 总访问量 -->
-        <div class="stat-card total-visitors">
-          <div class="stat-icon-wrapper">
-            <svg
-              class="stat-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ formatNumber(statistics.totalVisitors) }}</div>
-            <div class="stat-label">总访问量</div>
-          </div>
+      <!-- 统计数据内容区域 -->
+      <div v-if="isVisible" class="stats-content">
+        <div v-if="loading" class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>加载统计数据中...</p>
         </div>
 
-        <!-- 今日访问量 -->
-        <div class="stat-card today-visitors">
-          <div class="stat-icon-wrapper">
-            <svg
-              class="stat-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ formatNumber(statistics.todayVisitors) }}</div>
-            <div class="stat-label">今日访问</div>
-          </div>
+        <div v-else-if="error" class="error-state">
+          <div class="error-icon">⚠️</div>
+          <p>{{ error }}</p>
+          <button @click="fetchStatistics" class="retry-btn">重试</button>
         </div>
 
-        <!-- 响应时间 -->
-        <div
-          class="stat-card response-time"
-          :class="getResponseTimeStatus(statistics.responseTime)"
-        >
-          <div class="stat-icon-wrapper">
-            <svg
-              class="stat-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M13 2L3 14H12L11 22L21 10H12L13 2Z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+        <div v-else-if="statistics" class="stats-grid">
+          <!-- 总访问量 -->
+          <div class="stat-card total-visitors">
+            <div class="stat-icon-wrapper">
+              <svg
+                class="stat-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(statistics.totalVisitors) }}</div>
+              <div class="stat-label">总访问量</div>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ statistics.responseTime }}<span class="unit">ms</span></div>
-            <div class="stat-label">响应时间</div>
-          </div>
-          <div class="stat-status">
-            <div class="status-indicator"></div>
-          </div>
-        </div>
 
-        <!-- 运行时间 -->
-        <div class="stat-card uptime">
-          <div class="stat-icon-wrapper">
-            <svg
-              class="stat-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4.5 16.5C3 15 3 12.5 3 12S3 9 4.5 7.5C6 6 8.5 6 12 6S18 6 19.5 7.5C21 9 21 12.5 21 12S21 15 19.5 16.5C18 18 15.5 18 12 18S6 18 4.5 16.5Z"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <path
-                d="M12 8V12L15 15"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+          <!-- 今日访问量 -->
+          <div class="stat-card today-visitors">
+            <div class="stat-icon-wrapper">
+              <svg
+                class="stat-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(statistics.todayVisitors) }}</div>
+              <div class="stat-label">今日访问</div>
+            </div>
           </div>
-          <div class="stat-content">
-            <div class="stat-number">{{ statistics.uptime.days }}<span class="unit">天</span></div>
-            <div class="stat-label">运行时间</div>
-            <div class="stat-detail">
-              {{ statistics.uptime.hours }}小时 {{ statistics.uptime.minutes }}分钟
+
+          <!-- 响应时间 -->
+          <div
+            class="stat-card response-time"
+            :class="getResponseTimeStatus(statistics.responseTime)"
+          >
+            <div class="stat-icon-wrapper">
+              <svg
+                class="stat-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M13 2L3 14H12L11 22L21 10H12L13 2Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">
+                {{ statistics.responseTime }}<span class="unit">ms</span>
+              </div>
+              <div class="stat-label">响应时间</div>
+            </div>
+            <div class="stat-status">
+              <div class="status-indicator"></div>
+            </div>
+          </div>
+
+          <!-- 运行时间 -->
+          <div class="stat-card uptime">
+            <div class="stat-icon-wrapper">
+              <svg
+                class="stat-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.5 16.5C3 15 3 12.5 3 12S3 9 4.5 7.5C6 6 8.5 6 12 6S18 6 19.5 7.5C21 9 21 12.5 21 12S21 15 19.5 16.5C18 18 15.5 18 12 18S6 18 4.5 16.5Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M12 8V12L15 15"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">
+                {{ statistics.uptime.days }}<span class="unit">天</span>
+              </div>
+              <div class="stat-label">运行时间</div>
+              <div class="stat-detail">
+                {{ statistics.uptime.hours }}小时 {{ statistics.uptime.minutes }}分钟
+              </div>
             </div>
           </div>
         </div>
+        <!-- Close stats-grid -->
       </div>
+      <!-- Close stats-content -->
     </div>
   </div>
 </template>
@@ -275,6 +324,78 @@ const resetResponseTime = async () => {
   width: 100%;
   margin: 0 auto;
   padding: 0;
+}
+
+/* 统计数据触发按钮 */
+.stats-trigger {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.stats-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(156, 39, 176, 0.1));
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  color: #00d4ff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.1);
+}
+
+.stats-toggle-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(156, 39, 176, 0.2));
+  border-color: rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
+}
+
+.stats-toggle-btn.active {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(156, 39, 176, 0.2));
+  border-color: rgba(0, 212, 255, 0.6);
+  color: #ffffff;
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.chevron-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.chevron-icon.rotated {
+  transform: rotate(180deg);
+}
+
+/* 统计数据内容区域 */
+.stats-content {
+  animation: slideDown 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 500px;
+  }
 }
 
 /* 统计标题 */
@@ -389,6 +510,32 @@ const resetResponseTime = async () => {
   gap: 1rem;
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+  /* 入场动画 */
+  animation: slideInUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+/* 为每个卡片设置不同的延迟 */
+.stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.stat-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes slideInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .stat-card:hover {
@@ -574,6 +721,20 @@ const resetResponseTime = async () => {
     padding: 1rem;
   }
 
+  .stats-trigger {
+    margin-bottom: 1.5rem;
+  }
+
+  .stats-toggle-btn {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-icon {
+    width: 18px;
+    height: 18px;
+  }
+
   .stats-header {
     margin-bottom: 2rem;
   }
@@ -604,6 +765,12 @@ const resetResponseTime = async () => {
 }
 
 @media (max-width: 480px) {
+  .stats-toggle-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
