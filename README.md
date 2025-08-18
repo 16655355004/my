@@ -86,20 +86,25 @@ src/
 ├── components/          # 组件
 │   ├── Navbar.vue      # 导航栏
 │   ├── Loader.vue      # 加载动画
-│   ├── ThemeToggle.vue # 主题切换
-│   ├── GlobalSearch.vue # 全站搜索
-│   └── ElementInspector.vue # 元素检查器
+│   ├── ElementInspector.vue # 元素检查器
+│   ├── ParticleBackground.vue # 粒子背景
+│   ├── FloatingCard3D.vue # 3D悬浮卡片
+│   ├── TypewriterEffect.vue # 打字机效果
+│   ├── ProjectLinks.vue # 项目链接
+│   └── WebsiteStatistics.vue # 网站统计
 ├── views/              # 页面
 │   ├── HomeView.vue    # 首页
 │   ├── PlaygroundView.vue # 动画实验室
-│   ├── SkillsDetailView.vue # 技能详情
-│   ├── BlogView.vue    # 技术博客
-│   └── BookmarksView.vue # 网站收藏
+│   ├── BookmarksView.vue # 网站收藏
+│   ├── MessagesView.vue # 留言板
+│   ├── TutorialView.vue # KV教程
+│   └── AdminView.vue   # 管理后台
 ├── composables/        # 组合式函数
-│   ├── useTheme.ts     # 主题管理
-│   └── useIntersectionObserver.ts # 交叉观察器
-├── utils/              # 工具函数
-│   └── performance.ts  # 性能优化工具
+│   └── useVisitorTracking.ts # 访问者跟踪
+├── services/           # 服务层
+│   ├── bookmarkService.ts # 书签服务
+│   ├── statisticsService.ts # 统计服务
+│   └── tutorialService.ts # 教程服务
 ├── router/             # 路由配置
 └── assets/             # 静态资源
 ```

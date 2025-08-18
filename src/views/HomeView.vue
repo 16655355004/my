@@ -7,6 +7,9 @@ import TextPlugin from "gsap/TextPlugin";
 import ElementInspector from "../components/ElementInspector.vue";
 import WebsiteStatistics from "../components/WebsiteStatistics.vue";
 import ProjectLinks from "../components/ProjectLinks.vue";
+import ParticleBackground from "../components/ParticleBackground.vue";
+import FloatingCard3D from "../components/FloatingCard3D.vue";
+import TypewriterEffect from "../components/TypewriterEffect.vue";
 
 // 注册GSAP插件
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
@@ -138,28 +141,41 @@ const features = ref([
     title: "前端开发",
     description: "精通Vue.js、React等现代前端框架，擅长构建响应式用户界面",
     icon: "💻",
+    color: "#00d4ff",
   },
   {
     title: "动画设计",
     description: "熟练使用GSAP创建流畅的动画效果，提升用户体验",
     icon: "✨",
+    color: "#8b5cf6",
   },
   {
     title: "Python编程",
     description: "掌握Python后端开发，能够构建高效的API和数据处理系统",
     icon: "🐍",
+    color: "#00ff88",
   },
   {
     title: "团队合作",
     description: "善于与团队协作，能够快速适应新的工作环境和项目需求",
     icon: "🤝",
+    color: "#ff3366",
   },
-
   {
     title: "持续学习",
     description: "保持对新技术的热情，不断学习和探索前沿技术",
     icon: "📚",
+    color: "#ffd700",
   },
+]);
+
+// 打字机文本数组
+const typewriterTexts = ref([
+  "专注于创造优雅的数字体验",
+  "Vue.js & React 开发专家",
+  "GSAP 动画设计师",
+  "Python 全栈工程师",
+  "用户体验优化师",
 ]);
 
 const stats = ref([
@@ -404,6 +420,9 @@ onMounted(() => {
 
 <template>
   <div class="home-page">
+    <!-- 新的背景效果组件 -->
+    <ParticleBackground />
+
     <!-- 背景装饰 -->
     <div class="background-decorations">
       <!-- 网格背景 -->
@@ -436,7 +455,15 @@ onMounted(() => {
         <!-- 主要内容居中 -->
         <div class="hero-content">
           <h1 class="hero-title">空空</h1>
-          <p class="hero-subtitle animated-text">专注于前端优雅的数字体验</p>
+          <div class="hero-subtitle-container">
+            <TypewriterEffect
+              :texts="typewriterTexts"
+              :speed="80"
+              :delete-speed="40"
+              :pause-duration="2500"
+              class="hero-subtitle"
+            />
+          </div>
           <p class="hero-description">
             你好！我是空空，一名热爱前端开发和动画设计的程序员。专注于使
             用现代技术栈创建流畅的体验，让每个用户界面都充满活力。擅长Vue.js、
@@ -465,11 +492,15 @@ onMounted(() => {
       <div class="container">
         <h2 class="section-title">我的专业技能</h2>
         <div class="features-grid">
-          <div v-for="feature in features" :key="feature.title" class="feature-card">
-            <div class="feature-icon">{{ feature.icon }}</div>
-            <h3 class="feature-title">{{ feature.title }}</h3>
-            <p class="feature-description">{{ feature.description }}</p>
-          </div>
+          <FloatingCard3D
+            v-for="(feature, index) in features"
+            :key="feature.title"
+            :title="feature.title"
+            :description="feature.description"
+            :icon="feature.icon"
+            :color="feature.color"
+            :delay="index * 0.2"
+          />
         </div>
       </div>
     </section>
@@ -490,6 +521,8 @@ onMounted(() => {
     <section class="skills-progress section">
       <div class="container">
         <h2 class="section-title">技能熟练度</h2>
+
+        <!-- 技能条展示 -->
         <div class="skills-grid">
           <div v-for="skill in skills" :key="skill.name" class="skill-item">
             <div class="skill-header">
@@ -884,12 +917,18 @@ onMounted(() => {
   }
 }
 
+.hero-subtitle-container {
+  margin-bottom: 1.5rem;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .hero-subtitle {
   font-size: 1.5rem;
-  color: var(--primary-color);
-  margin-bottom: 1.5rem;
   font-weight: 600;
-  min-height: 2rem;
+  text-align: center;
 }
 
 .hero-description {
@@ -1031,8 +1070,9 @@ onMounted(() => {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2.5rem;
+  perspective: 1000px;
 }
 
 .feature-card {
