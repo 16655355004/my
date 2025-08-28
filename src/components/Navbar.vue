@@ -330,7 +330,7 @@ watch(route, () => {
           </li>
 
           <li class="nav-item" @click="closeMenu">
-            <RouterLink to="/tutorial" class="nav-link">KV教程</RouterLink>
+            <RouterLink to="/tutorial" class="nav-link">教程</RouterLink>
           </li>
         </ul>
       </nav>

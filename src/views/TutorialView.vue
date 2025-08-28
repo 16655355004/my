@@ -9,6 +9,7 @@ const password = ref("");
 const loading = ref(false);
 const error = ref<string | null>(null);
 const activeSection = ref("introduction");
+const selectedTutorial = ref<"kv" | "github-cli">("kv");
 
 // 验证教程密码
 const authenticate = async () => {
@@ -47,6 +48,21 @@ const logout = () => {
   isAuthenticated.value = false;
   password.value = "";
   activeSection.value = "introduction";
+};
+
+// 切换教程类型
+const setSelectedTutorial = (tutorial: "kv" | "github-cli") => {
+  selectedTutorial.value = tutorial;
+  activeSection.value = "introduction";
+
+  // 添加切换动画
+  nextTick(() => {
+    gsap.fromTo(
+      ".tutorial-main",
+      { opacity: 0, x: 30 },
+      { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" }
+    );
+  });
 };
 
 // 切换章节
@@ -122,8 +138,8 @@ const initAnimations = () => {
   );
 };
 
-// 教程章节
-const sections = [
+// KV 教程章节
+const kvSections = [
   { id: "introduction", title: "简介", icon: "📚" },
   { id: "setup", title: "环境设置", icon: "⚙️" },
   { id: "basic-operations", title: "基础操作", icon: "🔧" },
@@ -131,6 +147,22 @@ const sections = [
   { id: "best-practices", title: "最佳实践", icon: "💡" },
   { id: "examples", title: "实战示例", icon: "💻" },
 ];
+
+// GitHub CLI 教程章节
+const githubCliSections = [
+  { id: "introduction", title: "简介", icon: "📚" },
+  { id: "installation", title: "安装配置", icon: "⚙️" },
+  { id: "authentication", title: "身份认证", icon: "🔐" },
+  { id: "basic-commands", title: "基础命令", icon: "🔧" },
+  { id: "repository-management", title: "仓库管理", icon: "📁" },
+  { id: "push-pull", title: "推送拉取", icon: "🔄" },
+  { id: "advanced-features", title: "高级功能", icon: "🚀" },
+];
+
+// 获取当前教程的章节
+const getCurrentSections = () => {
+  return selectedTutorial.value === "kv" ? kvSections : githubCliSections;
+};
 </script>
 
 <template>
@@ -141,7 +173,7 @@ const sections = [
         <div class="login-card">
           <div class="login-header">
             <div class="tutorial-icon">📖</div>
-            <h1 class="login-title">Cloudflare KV 教程</h1>
+            <h1 class="login-title">技术教程</h1>
             <p class="login-subtitle">请输入访问密码以查看教程内容</p>
           </div>
 
@@ -173,11 +205,37 @@ const sections = [
         <!-- 头部 -->
         <div class="tutorial-header">
           <div class="header-left">
-            <h1 class="page-title">Cloudflare KV 教程</h1>
-            <p class="page-subtitle">全面掌握 Cloudflare Key-Value 存储的使用</p>
+            <h1 class="page-title">技术教程</h1>
+            <p class="page-subtitle">
+              {{
+                selectedTutorial === "kv"
+                  ? "全面掌握 Cloudflare Key-Value 存储的使用"
+                  : "掌握 GitHub CLI 的强大功能"
+              }}
+            </p>
           </div>
           <div class="header-right">
             <button @click="logout" class="logout-btn">退出</button>
+          </div>
+        </div>
+
+        <!-- 教程选择器 -->
+        <div class="tutorial-selector">
+          <div class="selector-tabs">
+            <button
+              :class="['tab-btn', { active: selectedTutorial === 'kv' }]"
+              @click="setSelectedTutorial('kv')"
+            >
+              <span class="tab-icon">🗄️</span>
+              <span class="tab-text">Cloudflare KV</span>
+            </button>
+            <button
+              :class="['tab-btn', { active: selectedTutorial === 'github-cli' }]"
+              @click="setSelectedTutorial('github-cli')"
+            >
+              <span class="tab-icon">🐙</span>
+              <span class="tab-text">GitHub CLI</span>
+            </button>
           </div>
         </div>
 
@@ -188,7 +246,7 @@ const sections = [
             <h3 class="nav-title">目录</h3>
             <ul class="nav-list">
               <li
-                v-for="section in sections"
+                v-for="section in getCurrentSections()"
                 :key="section.id"
                 :class="['nav-item', { active: activeSection === section.id }]"
                 @click="setActiveSection(section.id)"
@@ -201,111 +259,113 @@ const sections = [
 
           <!-- 主要内容区域 -->
           <main class="tutorial-main">
-            <!-- 简介章节 -->
-            <div v-if="activeSection === 'introduction'" class="content-section">
-              <h2 class="section-title">📚 Cloudflare KV 简介</h2>
+            <!-- KV 教程内容 -->
+            <template v-if="selectedTutorial === 'kv'">
+              <!-- 简介章节 -->
+              <div v-if="activeSection === 'introduction'" class="content-section">
+                <h2 class="section-title">📚 Cloudflare KV 简介</h2>
 
-              <div class="intro-card">
-                <h3>什么是 Cloudflare KV？</h3>
-                <p>
-                  Cloudflare KV (Key-Value)
-                  是一个全球分布式的键值存储系统，专为高性能和低延迟而设计。它允许你在 Cloudflare
-                  的边缘网络中存储和检索数据。
-                </p>
-              </div>
-
-              <div class="features-grid">
-                <div class="feature-card">
-                  <div class="feature-icon">🌍</div>
-                  <h4>全球分布</h4>
-                  <p>数据在全球 200+ 个数据中心中复制，确保低延迟访问</p>
+                <div class="intro-card">
+                  <h3>什么是 Cloudflare KV？</h3>
+                  <p>
+                    Cloudflare KV (Key-Value)
+                    是一个全球分布式的键值存储系统，专为高性能和低延迟而设计。它允许你在 Cloudflare
+                    的边缘网络中存储和检索数据。
+                  </p>
                 </div>
-                <div class="feature-card">
-                  <div class="feature-icon">⚡</div>
-                  <h4>高性能</h4>
-                  <p>亚毫秒级的读取性能，适合高频访问的数据</p>
-                </div>
-                <div class="feature-card">
-                  <div class="feature-icon">💰</div>
-                  <h4>成本效益</h4>
-                  <p>按使用量付费，免费套餐包含 100,000 次读取操作</p>
-                </div>
-                <div class="feature-card">
-                  <div class="feature-icon">🔧</div>
-                  <h4>易于使用</h4>
-                  <p>简单的 API 接口，与 Workers 无缝集成</p>
-                </div>
-              </div>
 
-              <div class="use-cases">
-                <h3>常见使用场景</h3>
-                <ul class="use-case-list">
-                  <li><strong>配置存储：</strong>应用程序配置、功能开关</li>
-                  <li><strong>缓存数据：</strong>API 响应、计算结果缓存</li>
-                  <li><strong>用户数据：</strong>用户偏好设置、会话数据</li>
-                  <li><strong>内容管理：</strong>静态内容、模板数据</li>
-                  <li><strong>计数器：</strong>访问统计、限流计数</li>
-                </ul>
-              </div>
-            </div>
-
-            <!-- 环境设置章节 -->
-            <div v-if="activeSection === 'setup'" class="content-section">
-              <h2 class="section-title">⚙️ 环境设置</h2>
-
-              <div class="setup-steps">
-                <div class="step-card">
-                  <div class="step-number">1</div>
-                  <div class="step-content">
-                    <h3>创建 Cloudflare 账户</h3>
-                    <p>
-                      访问
-                      <a href="https://cloudflare.com" target="_blank" class="external-link"
-                        >cloudflare.com</a
-                      >
-                      注册免费账户
-                    </p>
+                <div class="features-grid">
+                  <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h4>全球分布</h4>
+                    <p>数据在全球 200+ 个数据中心中复制，确保低延迟访问</p>
+                  </div>
+                  <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h4>高性能</h4>
+                    <p>亚毫秒级的读取性能，适合高频访问的数据</p>
+                  </div>
+                  <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h4>成本效益</h4>
+                    <p>按使用量付费，免费套餐包含 100,000 次读取操作</p>
+                  </div>
+                  <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h4>易于使用</h4>
+                    <p>简单的 API 接口，与 Workers 无缝集成</p>
                   </div>
                 </div>
 
-                <div class="step-card">
-                  <div class="step-number">2</div>
-                  <div class="step-content">
-                    <h3>安装 Wrangler CLI</h3>
-                    <div class="code-block">
-                      <pre><code>npm install -g wrangler</code></pre>
+                <div class="use-cases">
+                  <h3>常见使用场景</h3>
+                  <ul class="use-case-list">
+                    <li><strong>配置存储：</strong>应用程序配置、功能开关</li>
+                    <li><strong>缓存数据：</strong>API 响应、计算结果缓存</li>
+                    <li><strong>用户数据：</strong>用户偏好设置、会话数据</li>
+                    <li><strong>内容管理：</strong>静态内容、模板数据</li>
+                    <li><strong>计数器：</strong>访问统计、限流计数</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 环境设置章节 -->
+              <div v-if="activeSection === 'setup'" class="content-section">
+                <h2 class="section-title">⚙️ 环境设置</h2>
+
+                <div class="setup-steps">
+                  <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                      <h3>创建 Cloudflare 账户</h3>
+                      <p>
+                        访问
+                        <a href="https://cloudflare.com" target="_blank" class="external-link"
+                          >cloudflare.com</a
+                        >
+                        注册免费账户
+                      </p>
                     </div>
-                    <p>Wrangler 是 Cloudflare Workers 的官方 CLI 工具</p>
                   </div>
-                </div>
 
-                <div class="step-card">
-                  <div class="step-number">3</div>
-                  <div class="step-content">
-                    <h3>登录 Wrangler</h3>
-                    <div class="code-block">
-                      <pre><code>wrangler login</code></pre>
+                  <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                      <h3>安装 Wrangler CLI</h3>
+                      <div class="code-block">
+                        <pre><code>npm install -g wrangler</code></pre>
+                      </div>
+                      <p>Wrangler 是 Cloudflare Workers 的官方 CLI 工具</p>
                     </div>
-                    <p>这将打开浏览器进行身份验证</p>
                   </div>
-                </div>
 
-                <div class="step-card">
-                  <div class="step-number">4</div>
-                  <div class="step-content">
-                    <h3>创建 KV 命名空间</h3>
-                    <div class="code-block">
-                      <pre><code>wrangler kv:namespace create "MY_KV"</code></pre>
+                  <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                      <h3>登录 Wrangler</h3>
+                      <div class="code-block">
+                        <pre><code>wrangler login</code></pre>
+                      </div>
+                      <p>这将打开浏览器进行身份验证</p>
                     </div>
-                    <p>记录返回的命名空间 ID，稍后会用到</p>
+                  </div>
+
+                  <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                      <h3>创建 KV 命名空间</h3>
+                      <div class="code-block">
+                        <pre><code>wrangler kv:namespace create "MY_KV"</code></pre>
+                      </div>
+                      <p>记录返回的命名空间 ID，稍后会用到</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="config-example">
-                <h3>wrangler.toml 配置示例</h3>
-                <div class="code-block">
-                  <pre><code>name = "my-worker"
+                <div class="config-example">
+                  <h3>wrangler.toml 配置示例</h3>
+                  <div class="code-block">
+                    <pre><code>name = "my-worker"
 main = "src/index.js"
 compatibility_date = "2024-01-15"
 
@@ -313,19 +373,19 @@ compatibility_date = "2024-01-15"
 binding = "MY_KV"
 id = "your-namespace-id-here"
 preview_id = "your-preview-namespace-id-here"</code></pre>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 基础操作章节 -->
-            <div v-if="activeSection === 'basic-operations'" class="content-section">
-              <h2 class="section-title">🔧 基础操作</h2>
+              <!-- 基础操作章节 -->
+              <div v-if="activeSection === 'basic-operations'" class="content-section">
+                <h2 class="section-title">🔧 基础操作</h2>
 
-              <div class="operation-section">
-                <h3>📝 写入数据 (PUT)</h3>
-                <p>向 KV 存储中写入键值对数据</p>
-                <div class="code-block">
-                  <pre><code>// 在 Worker 中写入数据
+                <div class="operation-section">
+                  <h3>📝 写入数据 (PUT)</h3>
+                  <p>向 KV 存储中写入键值对数据</p>
+                  <div class="code-block">
+                    <pre><code>// 在 Worker 中写入数据
 await MY_KV.put("user:123", JSON.stringify({
   name: "张三",
   email: "zhangsan@example.com",
@@ -336,14 +396,14 @@ await MY_KV.put("user:123", JSON.stringify({
 await MY_KV.put("session:abc123", "session-data", {
   expirationTtl: 3600 // 1小时后过期
 });</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="operation-section">
-                <h3>📖 读取数据 (GET)</h3>
-                <p>从 KV 存储中读取数据</p>
-                <div class="code-block">
-                  <pre><code>// 读取字符串数据
+                <div class="operation-section">
+                  <h3>📖 读取数据 (GET)</h3>
+                  <p>从 KV 存储中读取数据</p>
+                  <div class="code-block">
+                    <pre><code>// 读取字符串数据
 const userData = await MY_KV.get("user:123");
 if (userData) {
   const user = JSON.parse(userData);
@@ -355,27 +415,27 @@ const user = await MY_KV.get("user:123", "json");
 
 // 读取为 ArrayBuffer
 const binaryData = await MY_KV.get("file:image.jpg", "arrayBuffer");</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="operation-section">
-                <h3>🗑️ 删除数据 (DELETE)</h3>
-                <p>从 KV 存储中删除指定的键</p>
-                <div class="code-block">
-                  <pre><code>// 删除单个键
+                <div class="operation-section">
+                  <h3>🗑️ 删除数据 (DELETE)</h3>
+                  <p>从 KV 存储中删除指定的键</p>
+                  <div class="code-block">
+                    <pre><code>// 删除单个键
 await MY_KV.delete("user:123");
 
 // 批量删除
 const keysToDelete = ["user:123", "user:456", "user:789"];
 await Promise.all(keysToDelete.map(key => MY_KV.delete(key)));</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="operation-section">
-                <h3>📋 列出键 (LIST)</h3>
-                <p>列出 KV 存储中的键</p>
-                <div class="code-block">
-                  <pre><code>// 列出所有键
+                <div class="operation-section">
+                  <h3>📋 列出键 (LIST)</h3>
+                  <p>列出 KV 存储中的键</p>
+                  <div class="code-block">
+                    <pre><code>// 列出所有键
 const allKeys = await MY_KV.list();
 console.log(allKeys.keys); // 键的数组
 
@@ -388,32 +448,32 @@ const nextPage = await MY_KV.list({
   limit: 10,
   cursor: firstPage.cursor
 });</code></pre>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 高级特性章节 -->
-            <div v-if="activeSection === 'advanced-features'" class="content-section">
-              <h2 class="section-title">🚀 高级特性</h2>
+              <!-- 高级特性章节 -->
+              <div v-if="activeSection === 'advanced-features'" class="content-section">
+                <h2 class="section-title">🚀 高级特性</h2>
 
-              <div class="feature-section">
-                <h3>⏰ 数据过期 (TTL)</h3>
-                <p>KV 支持自动过期功能，可以设置数据的生存时间</p>
-                <div class="code-block">
-                  <pre><code>// 设置绝对过期时间 (Unix 时间戳)
+                <div class="feature-section">
+                  <h3>⏰ 数据过期 (TTL)</h3>
+                  <p>KV 支持自动过期功能，可以设置数据的生存时间</p>
+                  <div class="code-block">
+                    <pre><code>// 设置绝对过期时间 (Unix 时间戳)
 const expireAt = Math.floor(Date.now() / 1000) + 3600; // 1小时后
 await MY_KV.put("temp-data", "value", { expiration: expireAt });
 
 // 设置相对过期时间 (秒)
 await MY_KV.put("cache-data", "value", { expirationTtl: 1800 }); // 30分钟</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="feature-section">
-                <h3>🏷️ 元数据存储</h3>
-                <p>每个键可以存储额外的元数据信息</p>
-                <div class="code-block">
-                  <pre><code>// 写入带元数据的数据
+                <div class="feature-section">
+                  <h3>🏷️ 元数据存储</h3>
+                  <p>每个键可以存储额外的元数据信息</p>
+                  <div class="code-block">
+                    <pre><code>// 写入带元数据的数据
 await MY_KV.put("user:123", userData, {
   metadata: {
     version: "1.0",
@@ -426,14 +486,14 @@ await MY_KV.put("user:123", userData, {
 const result = await MY_KV.getWithMetadata("user:123");
 console.log(result.value);    // 数据内容
 console.log(result.metadata); // 元数据对象</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="feature-section">
-                <h3>🔄 条件写入</h3>
-                <p>使用 ETag 实现乐观锁，避免并发写入冲突</p>
-                <div class="code-block">
-                  <pre><code>// 读取数据和 ETag
+                <div class="feature-section">
+                  <h3>🔄 条件写入</h3>
+                  <p>使用 ETag 实现乐观锁，避免并发写入冲突</p>
+                  <div class="code-block">
+                    <pre><code>// 读取数据和 ETag
 const result = await MY_KV.getWithMetadata("counter");
 const currentValue = parseInt(result.value || "0");
 const etag = result.metadata?.etag;
@@ -447,14 +507,14 @@ try {
   // 处理并发冲突
   console.log("数据已被其他进程修改");
 }</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="feature-section">
-                <h3>📊 批量操作</h3>
-                <p>高效处理多个键值对操作</p>
-                <div class="code-block">
-                  <pre><code>// 批量写入
+                <div class="feature-section">
+                  <h3>📊 批量操作</h3>
+                  <p>高效处理多个键值对操作</p>
+                  <div class="code-block">
+                    <pre><code>// 批量写入
 const operations = [
   MY_KV.put("key1", "value1"),
   MY_KV.put("key2", "value2"),
@@ -467,87 +527,87 @@ const keys = ["key1", "key2", "key3"];
 const values = await Promise.all(
   keys.map(key => MY_KV.get(key))
 );</code></pre>
-                </div>
-              </div>
-            </div>
-
-            <!-- 最佳实践章节 -->
-            <div v-if="activeSection === 'best-practices'" class="content-section">
-              <h2 class="section-title">💡 最佳实践</h2>
-
-              <div class="practice-section">
-                <h3>🔑 键命名规范</h3>
-                <div class="practice-card good">
-                  <h4>✅ 推荐做法</h4>
-                  <ul>
-                    <li>使用有意义的前缀：<code>user:123</code>, <code>cache:api:users</code></li>
-                    <li>保持键名简短但描述性强</li>
-                    <li>使用一致的分隔符（如冒号）</li>
-                    <li>避免特殊字符和空格</li>
-                  </ul>
-                </div>
-                <div class="practice-card bad">
-                  <h4>❌ 避免做法</h4>
-                  <ul>
-                    <li>过长的键名（超过 512 字节）</li>
-                    <li>包含敏感信息的键名</li>
-                    <li>随机或无意义的键名</li>
-                    <li>频繁变化的键名模式</li>
-                  </ul>
+                  </div>
                 </div>
               </div>
 
-              <div class="practice-section">
-                <h3>📈 性能优化</h3>
-                <div class="tip-card">
-                  <h4>缓存策略</h4>
-                  <p>合理设置 TTL，避免存储过期数据</p>
-                  <div class="code-block">
-                    <pre><code>// 根据数据更新频率设置不同的 TTL
+              <!-- 最佳实践章节 -->
+              <div v-if="activeSection === 'best-practices'" class="content-section">
+                <h2 class="section-title">💡 最佳实践</h2>
+
+                <div class="practice-section">
+                  <h3>🔑 键命名规范</h3>
+                  <div class="practice-card good">
+                    <h4>✅ 推荐做法</h4>
+                    <ul>
+                      <li>使用有意义的前缀：<code>user:123</code>, <code>cache:api:users</code></li>
+                      <li>保持键名简短但描述性强</li>
+                      <li>使用一致的分隔符（如冒号）</li>
+                      <li>避免特殊字符和空格</li>
+                    </ul>
+                  </div>
+                  <div class="practice-card bad">
+                    <h4>❌ 避免做法</h4>
+                    <ul>
+                      <li>过长的键名（超过 512 字节）</li>
+                      <li>包含敏感信息的键名</li>
+                      <li>随机或无意义的键名</li>
+                      <li>频繁变化的键名模式</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="practice-section">
+                  <h3>📈 性能优化</h3>
+                  <div class="tip-card">
+                    <h4>缓存策略</h4>
+                    <p>合理设置 TTL，避免存储过期数据</p>
+                    <div class="code-block">
+                      <pre><code>// 根据数据更新频率设置不同的 TTL
 await MY_KV.put("config", data, { expirationTtl: 86400 }); // 配置数据：1天
 await MY_KV.put("cache", data, { expirationTtl: 3600 });   // 缓存数据：1小时</code></pre>
+                    </div>
                   </div>
-                </div>
 
-                <div class="tip-card">
-                  <h4>数据压缩</h4>
-                  <p>对大型数据进行压缩以节省存储空间</p>
-                  <div class="code-block">
-                    <pre><code>// 压缩 JSON 数据
+                  <div class="tip-card">
+                    <h4>数据压缩</h4>
+                    <p>对大型数据进行压缩以节省存储空间</p>
+                    <div class="code-block">
+                      <pre><code>// 压缩 JSON 数据
 const compressed = JSON.stringify(data);
 await MY_KV.put("large-data", compressed);</code></pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="practice-section">
+                  <h3>🛡️ 安全考虑</h3>
+                  <div class="security-tips">
+                    <div class="security-tip">
+                      <h4>🔐 数据加密</h4>
+                      <p>敏感数据在存储前进行加密</p>
+                    </div>
+                    <div class="security-tip">
+                      <h4>🚫 访问控制</h4>
+                      <p>使用 Worker 实现访问权限验证</p>
+                    </div>
+                    <div class="security-tip">
+                      <h4>📝 审计日志</h4>
+                      <p>记录重要操作的日志信息</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div class="practice-section">
-                <h3>🛡️ 安全考虑</h3>
-                <div class="security-tips">
-                  <div class="security-tip">
-                    <h4>🔐 数据加密</h4>
-                    <p>敏感数据在存储前进行加密</p>
-                  </div>
-                  <div class="security-tip">
-                    <h4>🚫 访问控制</h4>
-                    <p>使用 Worker 实现访问权限验证</p>
-                  </div>
-                  <div class="security-tip">
-                    <h4>📝 审计日志</h4>
-                    <p>记录重要操作的日志信息</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <!-- 实战示例章节 -->
+              <div v-if="activeSection === 'examples'" class="content-section">
+                <h2 class="section-title">💻 实战示例</h2>
 
-            <!-- 实战示例章节 -->
-            <div v-if="activeSection === 'examples'" class="content-section">
-              <h2 class="section-title">💻 实战示例</h2>
-
-              <div class="example-section">
-                <h3>📚 示例 1：用户会话管理</h3>
-                <p>实现一个简单的用户会话存储系统</p>
-                <div class="code-block">
-                  <pre><code>// 创建会话
+                <div class="example-section">
+                  <h3>📚 示例 1：用户会话管理</h3>
+                  <p>实现一个简单的用户会话存储系统</p>
+                  <div class="code-block">
+                    <pre><code>// 创建会话
 async function createSession(userId, sessionData) {
   const sessionId = crypto.randomUUID();
   const session = {
@@ -573,14 +633,14 @@ async function validateSession(sessionId) {
 async function destroySession(sessionId) {
   await MY_KV.delete(`session:${sessionId}`);
 }</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="example-section">
-                <h3>🔢 示例 2：访问计数器</h3>
-                <p>实现一个分布式访问计数器</p>
-                <div class="code-block">
-                  <pre><code>// 增加访问计数
+                <div class="example-section">
+                  <h3>🔢 示例 2：访问计数器</h3>
+                  <p>实现一个分布式访问计数器</p>
+                  <div class="code-block">
+                    <pre><code>// 增加访问计数
 async function incrementCounter(key) {
   const current = await MY_KV.get(`counter:${key}`);
   const count = parseInt(current || "0") + 1;
@@ -599,14 +659,14 @@ async function getCounter(key) {
 async function resetCounter(key) {
   await MY_KV.delete(`counter:${key}`);
 }</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="example-section">
-                <h3>⚙️ 示例 3：配置管理</h3>
-                <p>动态配置管理系统</p>
-                <div class="code-block">
-                  <pre><code>// 获取配置
+                <div class="example-section">
+                  <h3>⚙️ 示例 3：配置管理</h3>
+                  <p>动态配置管理系统</p>
+                  <div class="code-block">
+                    <pre><code>// 获取配置
 async function getConfig(key, defaultValue = null) {
   const config = await MY_KV.get(`config:${key}`);
   return config ? JSON.parse(config) : defaultValue;
@@ -633,14 +693,14 @@ async function getBatchConfig(keys) {
     configs.map(({ key, value }) => [key, value])
   );
 }</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="example-section">
-                <h3>🎯 完整的 Worker 示例</h3>
-                <p>一个完整的 Cloudflare Worker 示例，展示 KV 的综合使用</p>
-                <div class="code-block">
-                  <pre><code>export default {
+                <div class="example-section">
+                  <h3>🎯 完整的 Worker 示例</h3>
+                  <p>一个完整的 Cloudflare Worker 示例，展示 KV 的综合使用</p>
+                  <div class="code-block">
+                    <pre><code>export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -676,9 +736,512 @@ async function handleAPI(request, env) {
 
   return new Response('Not Found', { status: 404 });
 }</code></pre>
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
+
+            <!-- GitHub CLI 教程内容 -->
+            <template v-else-if="selectedTutorial === 'github-cli'">
+              <!-- 简介章节 -->
+              <div v-if="activeSection === 'introduction'" class="content-section">
+                <h2 class="section-title">📚 GitHub CLI 简介</h2>
+
+                <div class="intro-card">
+                  <h3>什么是 GitHub CLI？</h3>
+                  <p>
+                    GitHub CLI (gh) 是 GitHub 官方提供的命令行工具，让您可以直接在终端中操作
+                    GitHub。 它提供了完整的 GitHub 功能，包括仓库管理、Issue 处理、Pull Request
+                    操作等。
+                  </p>
+                </div>
+
+                <div class="feature-grid">
+                  <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>高效操作</h3>
+                    <p>无需切换到浏览器，直接在命令行完成所有 GitHub 操作</p>
+                  </div>
+                  <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>安全认证</h3>
+                    <p>支持多种认证方式，包括 OAuth、SSH 密钥等</p>
+                  </div>
+                  <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>强大功能</h3>
+                    <p>涵盖仓库、Issue、PR、Actions 等所有 GitHub 功能</p>
+                  </div>
+                  <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>无缝集成</h3>
+                    <p>与 Git 命令完美配合，提升开发效率</p>
+                  </div>
+                </div>
+
+                <div class="benefits-section">
+                  <h3>🎯 主要优势</h3>
+                  <ul class="benefits-list">
+                    <li>✅ 提高开发效率，减少上下文切换</li>
+                    <li>✅ 支持脚本自动化，适合 CI/CD 流程</li>
+                    <li>✅ 丰富的 API 调用能力</li>
+                    <li>✅ 跨平台支持（Windows、macOS、Linux）</li>
+                    <li>✅ 活跃的社区和持续更新</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 安装配置章节 -->
+              <div v-if="activeSection === 'installation'" class="content-section">
+                <h2 class="section-title">⚙️ 安装配置</h2>
+
+                <div class="installation-section">
+                  <h3>📦 安装方法</h3>
+
+                  <div class="install-options">
+                    <div class="install-card">
+                      <h4>🪟 Windows</h4>
+                      <div class="code-block">
+                        <pre><code># 使用 Winget
+winget install --id GitHub.cli
+
+# 使用 Chocolatey
+choco install gh
+
+# 使用 Scoop
+scoop install gh</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="install-card">
+                      <h4>🍎 macOS</h4>
+                      <div class="code-block">
+                        <pre><code># 使用 Homebrew
+brew install gh
+
+# 使用 MacPorts
+sudo port install gh</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="install-card">
+                      <h4>🐧 Linux</h4>
+                      <div class="code-block">
+                        <pre><code># Ubuntu/Debian
+sudo apt install gh
+
+# CentOS/RHEL/Fedora
+sudo dnf install gh
+
+# Arch Linux
+sudo pacman -S github-cli</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="verification-section">
+                  <h3>✅ 验证安装</h3>
+                  <div class="code-block">
+                    <pre><code># 检查版本
+gh --version
+
+# 查看帮助
+gh --help</code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 身份认证章节 -->
+              <div v-if="activeSection === 'authentication'" class="content-section">
+                <h2 class="section-title">🔐 身份认证</h2>
+
+                <div class="auth-section">
+                  <h3>🚀 首次登录</h3>
+                  <div class="code-block">
+                    <pre><code># 登录到 GitHub
+gh auth login</code></pre>
+                  </div>
+                  <p>执行后会出现交互式选项：</p>
+                  <ul class="auth-steps">
+                    <li>选择 GitHub.com 或 GitHub Enterprise</li>
+                    <li>选择认证方式（HTTPS 或 SSH）</li>
+                    <li>选择认证方法（浏览器或令牌）</li>
+                    <li>完成浏览器授权或输入令牌</li>
+                  </ul>
+                </div>
+
+                <div class="auth-commands">
+                  <h3>🔍 认证管理命令</h3>
+                  <div class="command-grid">
+                    <div class="command-card">
+                      <h4>查看认证状态</h4>
+                      <div class="code-block">
+                        <pre><code>gh auth status</code></pre>
+                      </div>
+                    </div>
+                    <div class="command-card">
+                      <h4>刷新认证</h4>
+                      <div class="code-block">
+                        <pre><code>gh auth refresh</code></pre>
+                      </div>
+                    </div>
+                    <div class="command-card">
+                      <h4>退出登录</h4>
+                      <div class="code-block">
+                        <pre><code>gh auth logout</code></pre>
+                      </div>
+                    </div>
+                    <div class="command-card">
+                      <h4>设置 Git 协议</h4>
+                      <div class="code-block">
+                        <pre><code>gh config set git_protocol https</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 基础命令章节 -->
+              <div v-if="activeSection === 'basic-commands'" class="content-section">
+                <h2 class="section-title">🔧 基础命令</h2>
+
+                <div class="commands-section">
+                  <h3>📋 常用命令概览</h3>
+                  <div class="command-grid">
+                    <div class="command-card">
+                      <h4>查看帮助</h4>
+                      <div class="code-block">
+                        <pre><code># 查看总体帮助
+gh --help
+
+# 查看特定命令帮助
+gh repo --help
+gh pr --help</code></pre>
+                      </div>
+                    </div>
+                    <div class="command-card">
+                      <h4>查看版本</h4>
+                      <div class="code-block">
+                        <pre><code>gh --version</code></pre>
+                      </div>
+                    </div>
+                    <div class="command-card">
+                      <h4>配置管理</h4>
+                      <div class="code-block">
+                        <pre><code># 查看配置
+gh config list
+
+# 设置配置
+gh config set editor "code"</code></pre>
+                      </div>
+                    </div>
+                    <div class="command-card">
+                      <h4>别名管理</h4>
+                      <div class="code-block">
+                        <pre><code># 查看别名
+gh alias list
+
+# 创建别名
+gh alias set pv 'pr view'</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="workflow-section">
+                  <h3>🔄 基本工作流程</h3>
+                  <div class="workflow-steps">
+                    <div class="step-card">
+                      <div class="step-number">1</div>
+                      <div class="step-content">
+                        <h4>查看仓库信息</h4>
+                        <div class="code-block">
+                          <pre><code>gh repo view</code></pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="step-card">
+                      <div class="step-number">2</div>
+                      <div class="step-content">
+                        <h4>查看 Issues</h4>
+                        <div class="code-block">
+                          <pre><code>gh issue list</code></pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="step-card">
+                      <div class="step-number">3</div>
+                      <div class="step-content">
+                        <h4>查看 Pull Requests</h4>
+                        <div class="code-block">
+                          <pre><code>gh pr list</code></pre>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="step-card">
+                      <div class="step-number">4</div>
+                      <div class="step-content">
+                        <h4>在浏览器中打开</h4>
+                        <div class="code-block">
+                          <pre><code>gh browse</code></pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 仓库管理章节 -->
+              <div v-if="activeSection === 'repository-management'" class="content-section">
+                <h2 class="section-title">📁 仓库管理</h2>
+
+                <div class="repo-operations">
+                  <h3>🏗️ 仓库操作</h3>
+                  <div class="operation-grid">
+                    <div class="operation-card">
+                      <h4>查看仓库列表</h4>
+                      <div class="code-block">
+                        <pre><code># 查看自己的仓库
+gh repo list
+
+# 查看指定用户的仓库
+gh repo list username
+
+# 限制显示数量
+gh repo list --limit 10</code></pre>
+                      </div>
+                    </div>
+                    <div class="operation-card">
+                      <h4>创建仓库</h4>
+                      <div class="code-block">
+                        <pre><code># 创建公开仓库
+gh repo create my-repo --public
+
+# 创建私有仓库
+gh repo create my-repo --private
+
+# 带描述创建
+gh repo create my-repo --description "我的项目"</code></pre>
+                      </div>
+                    </div>
+                    <div class="operation-card">
+                      <h4>克隆仓库</h4>
+                      <div class="code-block">
+                        <pre><code># 克隆仓库
+gh repo clone username/repo-name
+
+# 克隆到指定目录
+gh repo clone username/repo-name ./my-dir</code></pre>
+                      </div>
+                    </div>
+                    <div class="operation-card">
+                      <h4>Fork 仓库</h4>
+                      <div class="code-block">
+                        <pre><code># Fork 仓库
+gh repo fork username/repo-name
+
+# Fork 并克隆
+gh repo fork username/repo-name --clone</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="repo-info">
+                  <h3>📊 仓库信息</h3>
+                  <div class="info-commands">
+                    <div class="command-example">
+                      <h4>查看仓库详情</h4>
+                      <div class="code-block">
+                        <pre><code># 查看当前仓库
+gh repo view
+
+# 查看指定仓库
+gh repo view username/repo-name
+
+# 在浏览器中打开
+gh repo view --web</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 推送拉取章节 -->
+              <div v-if="activeSection === 'push-pull'" class="content-section">
+                <h2 class="section-title">🔄 推送拉取</h2>
+
+                <div class="git-integration">
+                  <h3>🤝 与 Git 的配合</h3>
+                  <p>GitHub CLI 与传统 Git 命令完美配合，提供更强大的功能。</p>
+
+                  <div class="workflow-example">
+                    <h4>📝 完整的开发工作流程</h4>
+                    <div class="code-block">
+                      <pre><code># 1. 克隆仓库
+gh repo clone username/my-project
+cd my-project
+
+# 2. 创建新分支
+git checkout -b feature/new-feature
+
+# 3. 进行开发...
+# 编辑文件...
+
+# 4. 提交更改
+git add .
+git commit -m "添加新功能"
+
+# 5. 推送分支
+git push -u origin feature/new-feature
+
+# 6. 创建 Pull Request
+gh pr create --title "添加新功能" --body "功能描述"</code></pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="push-pull-commands">
+                  <h3>🚀 推送和拉取技巧</h3>
+
+                  <div class="tip-grid">
+                    <div class="tip-card">
+                      <h4>🔧 解决推送问题</h4>
+                      <div class="code-block">
+                        <pre><code># 检查远程仓库配置
+git remote -v
+
+# 设置为 HTTPS（推荐）
+git remote set-url origin https://github.com/user/repo.git
+
+# 强制推送（谨慎使用）
+git push --force-with-lease</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="tip-card">
+                      <h4>📥 拉取最新更改</h4>
+                      <div class="code-block">
+                        <pre><code># 拉取最新更改
+git pull origin main
+
+# 拉取并变基
+git pull --rebase origin main
+
+# 获取所有分支
+git fetch --all</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="tip-card">
+                      <h4>🔄 同步 Fork</h4>
+                      <div class="code-block">
+                        <pre><code># 同步 Fork（GitHub CLI 方式）
+gh repo sync
+
+# 传统方式
+git remote add upstream https://github.com/original/repo.git
+git fetch upstream
+git merge upstream/main</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="tip-card">
+                      <h4>🏷️ 标签管理</h4>
+                      <div class="code-block">
+                        <pre><code># 创建标签
+git tag v1.0.0
+git push origin v1.0.0
+
+# 创建发布
+gh release create v1.0.0 --title "版本 1.0.0"</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="troubleshooting">
+                  <h3>🛠️ 常见问题解决</h3>
+                  <div class="problem-solutions">
+                    <div class="problem-card">
+                      <h4>❌ SSH 连接超时</h4>
+                      <p><strong>解决方案：</strong>切换到 HTTPS 协议</p>
+                      <div class="code-block">
+                        <pre><code>git remote set-url origin https://github.com/user/repo.git</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="problem-card">
+                      <h4>❌ 认证失败</h4>
+                      <p><strong>解决方案：</strong>重新登录 GitHub CLI</p>
+                      <div class="code-block">
+                        <pre><code>gh auth logout
+gh auth login</code></pre>
+                      </div>
+                    </div>
+
+                    <div class="problem-card">
+                      <h4>❌ 推送被拒绝</h4>
+                      <p><strong>解决方案：</strong>先拉取远程更改</p>
+                      <div class="code-block">
+                        <pre><code>git pull origin main
+git push origin main</code></pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 高级功能章节 -->
+              <div v-if="activeSection === 'advanced-features'" class="content-section">
+                <h2 class="section-title">🚀 高级功能</h2>
+
+                <div class="advanced-section">
+                  <h3>🔍 API 调用</h3>
+                  <p>GitHub CLI 可以直接调用 GitHub API，获取详细信息。</p>
+                  <div class="code-block">
+                    <pre><code># 调用用户 API
+gh api user
+
+# 调用仓库 API
+gh api repos/username/repo-name
+
+# 使用 jq 处理 JSON 输出
+gh api user -q ".name"</code></pre>
+                  </div>
+                </div>
+
+                <div class="automation-section">
+                  <h3>🤖 自动化脚本</h3>
+                  <p>使用 GitHub CLI 创建强大的自动化脚本。</p>
+                  <div class="code-block">
+                    <pre><code># 批量创建 Issues
+for title in "Bug修复" "功能增强" "文档更新"; do
+  gh issue create --title "$title" --body "待处理"
+done
+
+# 自动合并 PR
+gh pr merge --merge --delete-branch</code></pre>
+                  </div>
+                </div>
+
+                <div class="extensions-section">
+                  <h3>🔌 扩展功能</h3>
+                  <p>GitHub CLI 支持扩展，增加更多功能。</p>
+                  <div class="code-block">
+                    <pre><code># 查看可用扩展
+gh extension list
+
+# 安装扩展
+gh extension install github/gh-copilot
+
+# 使用扩展
+gh copilot suggest "创建一个 Vue 组件"</code></pre>
+                  </div>
+                </div>
+              </div>
+            </template>
           </main>
         </div>
       </div>
@@ -825,6 +1388,60 @@ async function handleAPI(request, env) {
 .logout-btn:hover {
   background: var(--accent-color);
   color: var(--background-color);
+}
+
+/* 教程选择器样式 */
+.tutorial-selector {
+  margin-bottom: 3rem;
+}
+
+.selector-tabs {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  color: rgba(232, 232, 240, 0.7);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  min-width: 180px;
+  justify-content: center;
+}
+
+.tab-btn:hover {
+  background: rgba(26, 26, 46, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(232, 232, 240, 0.9);
+  transform: translateY(-2px);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  border-color: var(--primary-color);
+  color: var(--background-color);
+  font-weight: 600;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+}
+
+.tab-icon {
+  font-size: 1.2rem;
+}
+
+.tab-text {
+  font-weight: inherit;
 }
 
 .tutorial-content {
@@ -1214,6 +1831,168 @@ async function handleAPI(request, env) {
   font-size: 1.3rem;
 }
 
+/* GitHub CLI 教程特有样式 */
+.command-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.command-card {
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.command-card h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.workflow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.operation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.operation-card {
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.operation-card:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.operation-card h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.tip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.tip-card {
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.tip-card h4 {
+  color: var(--success-color);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.problem-solutions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.problem-card {
+  background: rgba(255, 51, 102, 0.1);
+  border: 1px solid rgba(255, 51, 102, 0.2);
+  border-radius: 15px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.problem-card h4 {
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.problem-card p {
+  margin-bottom: 1rem;
+  color: rgba(232, 232, 240, 0.8);
+}
+
+.auth-steps {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.auth-steps li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: rgba(232, 232, 240, 0.8);
+}
+
+.auth-steps li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.install-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.install-card {
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.install-card h4 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.workflow-example {
+  margin: 2rem 0;
+}
+
+.workflow-example h4 {
+  color: var(--success-color);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .tutorial-view {
@@ -1241,6 +2020,25 @@ async function handleAPI(request, env) {
   .tutorial-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .selector-tabs {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .tab-btn {
+    min-width: 200px;
+    padding: 0.8rem 1.5rem;
+  }
+
+  .command-grid,
+  .operation-grid,
+  .tip-grid,
+  .install-options {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .features-grid {
