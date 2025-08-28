@@ -1,4 +1,4 @@
-1<script setup lang="ts">
+<script setup lang="ts">
 import { onMounted, nextTick, ref } from "vue";
 import { useRouter } from "vue-router";
 import gsap from "gsap";
@@ -15,7 +15,7 @@ import TypewriterEffect from "../components/TypewriterEffect.vue";
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
 const router = useRouter();
-
+ 
 // 导航到锚点的函数
 const navigateToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId);
@@ -51,131 +51,48 @@ const getRandomCode = () => {
   return codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
 };
 
-// 交互动画函数
-const animateBox1 = () => {
-  gsap.to(".demo-box-1", {
-    rotation: "+=360",
-    scale: 1.5,
-    duration: 0.8,
-    ease: "back.out(1.7)",
-    yoyo: true,
-    repeat: 1,
-  });
-};
-
-const animateBox2 = () => {
-  gsap.to(".demo-box-2", {
-    x: 50,
-    y: -30,
-    rotation: 180,
-    duration: 0.6,
-    ease: "power2.inOut",
-    yoyo: true,
-    repeat: 1,
-  });
-};
-
-const animateBox3 = () => {
-  gsap.to(".demo-box-3", {
-    borderRadius: "50%",
-    backgroundColor: "#ff5722",
-    scale: 1.3,
-    duration: 0.7,
-    ease: "elastic.out(1, 0.3)",
-    yoyo: true,
-    repeat: 1,
-  });
-};
-
-const animateCircle = () => {
-  gsap.to(".demo-circle", {
-    scale: 0.5,
-    rotation: 720,
-    borderRadius: "20%",
-    duration: 1,
-    ease: "power3.inOut",
-    yoyo: true,
-    repeat: 1,
-  });
-};
-
-const animateTriangle = () => {
-  gsap.to(".demo-triangle", {
-    rotation: 360,
-    scale: 1.4,
-    x: 30,
-    duration: 0.8,
-    ease: "bounce.out",
-    yoyo: true,
-    repeat: 1,
-  });
-};
-
-const animateHexagon = () => {
-  gsap.to(".demo-hexagon", {
-    rotation: 180,
-    scale: 1.2,
-    skewX: 15,
-    duration: 0.9,
-    ease: "power2.inOut",
-    yoyo: true,
-    repeat: 1,
-  });
-};
-
-const animateStar = () => {
-  gsap.to(".demo-star", {
-    rotation: 720,
-    scale: 2,
-    color: "#ffff00",
-    textShadow: "0 0 20px #ffff00",
-    duration: 1,
-    ease: "power2.out",
-    yoyo: true,
-    repeat: 1,
-  });
-};
 
 const features = ref([
   {
     title: "前端开发",
     description: "精通Vue.js、React等现代前端框架，擅长构建响应式用户界面",
-    icon: "💻",
+    icon: "[表情]",
     color: "#00d4ff",
   },
   {
     title: "动画设计",
     description: "熟练使用GSAP创建流畅的动画效果，提升用户体验",
-    icon: "✨",
+    icon: "[表情]",
     color: "#8b5cf6",
   },
   {
     title: "Python编程",
     description: "掌握Python后端开发，能够构建高效的API和数据处理系统",
-    icon: "🐍",
+    icon: "[表情]",
     color: "#00ff88",
   },
   {
     title: "团队合作",
     description: "善于与团队协作，能够快速适应新的工作环境和项目需求",
-    icon: "🤝",
+    icon: "[表情]",
     color: "#ff3366",
   },
   {
     title: "持续学习",
     description: "保持对新技术的热情，不断学习和探索前沿技术",
-    icon: "📚",
+    icon: "[表情]",
     color: "#ffd700",
   },
 ]);
 
 // 打字机文本数组
 const typewriterTexts = ref([
-  "专注于创造优雅的数字体验",
-  "Vue.js & React 开发专家",
-  "GSAP 动画设计师",
-  "Python 全栈工程师",
-  "用户体验优化师",
+  "此情可待成追忆？只是当时已惘然",
+  "车塞于途，人囚于市，鱼死于江海",
+  "孤独的夜晚，星光也显得黯淡，仿佛连它们都在为我的忧伤而沉默。",
+  "云中君不见，竟夕自悲秋",
+  "怅望千秋一洒泪，萧条异代不同时",
+  "人面不知何处去，桃花依旧笑春风。"
 ]);
 
 const stats = ref([
@@ -214,16 +131,6 @@ onMounted(() => {
         ease: "power2.out",
       },
       "-=0.6"
-    )
-    .from(
-      ".hero-description",
-      {
-        opacity: 0,
-        y: 30,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      "-=0.4"
     )
     .from(
       ".hero-buttons .btn",
@@ -415,6 +322,7 @@ onMounted(() => {
       });
     });
   });
+
 });
 </script>
 
@@ -464,11 +372,6 @@ onMounted(() => {
               class="hero-subtitle"
             />
           </div>
-          <p class="hero-description">
-            你好！我是空空，一名热爱前端开发和动画设计的程序员。专注于使
-            用现代技术栈创建流畅的体验，让每个用户界面都充满活力。擅长Vue.js、
-            React、Python，以及使用GSAP制作精美动画。
-          </p>
           <div class="hero-buttons">
             <button class="btn btn-primary" @click="router.push('/playground')">动画实验室</button>
             <button class="btn btn-outline" @click="navigateToSection('about')">了解更多</button>
@@ -931,125 +834,12 @@ onMounted(() => {
   text-align: center;
 }
 
-.hero-description {
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
-  margin-bottom: 2.5rem;
-}
 
 .hero-buttons {
   display: flex;
   gap: 1.5rem;
 }
 
-.hero-statistics {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  min-height: auto;
-  padding: 0;
-}
-
-.demo-container {
-  position: relative;
-  width: 300px;
-  height: 300px;
-}
-
-.floating-demo {
-  position: absolute;
-  border-radius: 10px;
-}
-
-.demo-box-1 {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(45deg, var(--primary-color), var(--success-color));
-  top: 50px;
-  left: 50px;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-}
-
-.demo-box-2 {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(45deg, var(--purple-accent), var(--blue-accent));
-  top: 150px;
-  right: 80px;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-}
-
-.demo-box-3 {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(45deg, var(--success-color), var(--primary-color));
-  bottom: 80px;
-  left: 80px;
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-}
-
-.demo-circle {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(45deg, var(--accent-color), #ff8a65);
-  border-radius: 50%;
-  top: 20px;
-  right: 20px;
-  box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
-  cursor: pointer;
-}
-
-/* 新增动画元素 */
-.demo-triangle {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-left: 25px solid transparent;
-  border-right: 25px solid transparent;
-  border-bottom: 45px solid var(--success-color);
-  top: 120px;
-  left: 20px;
-  cursor: pointer;
-  filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.4));
-}
-
-.demo-hexagon {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  background: var(--blue-accent);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  top: 200px;
-  right: 60px;
-  cursor: pointer;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-}
-
-.demo-star {
-  position: absolute;
-  font-size: 2rem;
-  top: 80px;
-  left: 120px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
-}
-
-.connection-lines {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-/* 为所有demo元素添加cursor pointer */
-.floating-demo {
-  cursor: pointer;
-}
 
 /* Features Section */
 .features-section {
