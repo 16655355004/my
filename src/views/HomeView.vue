@@ -15,7 +15,7 @@ import TypewriterEffect from "../components/TypewriterEffect.vue";
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
 const router = useRouter();
- 
+
 // 导航到锚点的函数
 const navigateToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId);
@@ -51,36 +51,35 @@ const getRandomCode = () => {
   return codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
 };
 
-
 const features = ref([
   {
     title: "前端开发",
     description: "精通Vue.js、React等现代前端框架，擅长构建响应式用户界面",
-    icon: "[表情]",
+    icon: "💻",
     color: "#00d4ff",
   },
   {
     title: "动画设计",
     description: "熟练使用GSAP创建流畅的动画效果，提升用户体验",
-    icon: "[表情]",
+    icon: "✨",
     color: "#8b5cf6",
   },
   {
     title: "Python编程",
     description: "掌握Python后端开发，能够构建高效的API和数据处理系统",
-    icon: "[表情]",
+    icon: "🐍",
     color: "#00ff88",
   },
   {
     title: "团队合作",
     description: "善于与团队协作，能够快速适应新的工作环境和项目需求",
-    icon: "[表情]",
+    icon: "🤝",
     color: "#ff3366",
   },
   {
     title: "持续学习",
     description: "保持对新技术的热情，不断学习和探索前沿技术",
-    icon: "[表情]",
+    icon: "📚",
     color: "#ffd700",
   },
 ]);
@@ -92,7 +91,7 @@ const typewriterTexts = ref([
   "孤独的夜晚，星光也显得黯淡，仿佛连它们都在为我的忧伤而沉默。",
   "云中君不见，竟夕自悲秋",
   "怅望千秋一洒泪，萧条异代不同时",
-  "人面不知何处去，桃花依旧笑春风。"
+  "人面不知何处去，桃花依旧笑春风。",
 ]);
 
 const stats = ref([
@@ -322,7 +321,6 @@ onMounted(() => {
       });
     });
   });
-
 });
 </script>
 
@@ -834,12 +832,10 @@ onMounted(() => {
   text-align: center;
 }
 
-
 .hero-buttons {
   display: flex;
   gap: 1.5rem;
 }
-
 
 /* Features Section */
 .features-section {
