@@ -8,7 +8,8 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+      'Access-Control-Max-Age': '86400',
     };
 
     // 处理 OPTIONS 请求（预检请求）
@@ -48,7 +49,7 @@ export default {
   },
 
   // Cron 触发器处理定时任务
-  async scheduled(event, env, ctx) {
+  async scheduled(_event, env, _ctx) {
     try {
       console.log('Cron trigger executed at:', new Date().toISOString());
       await handleScheduledEmail(env);
@@ -314,9 +315,7 @@ async function deleteBookmark(request, env, id, headers) {
 
 // 处理留言 API 请求
 async function handleMessagesAPI(request, env, corsHeaders) {
-  const url = new URL(request.url);
   const method = request.method;
-  const pathParts = url.pathname.split('/');
 
   const headers = {
     ...corsHeaders,
@@ -397,7 +396,7 @@ async function addMessage(request, env, headers) {
 
     // 生成唯一ID
     const generateId = () => {
-      return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      return Date.now().toString() + Math.random().toString(36).substring(2, 11);
     };
 
     // 创建新留言
@@ -458,6 +457,10 @@ async function handleStatisticsAPI(request, env, corsHeaders) {
       if (pathParts[3] === 'reset-response-time') {
         return await resetResponseTimeData(env, headers);
       }
+      // 重置网站启动时间
+      if (pathParts[3] === 'reset-start-time') {
+        return await resetStartTime(env, headers);
+      }
       break;
 
     default:
@@ -479,20 +482,27 @@ async function getStatistics(env, headers) {
     // 获取网站启动时间
     let siteStartTime = await env.BOOKMARKS_KV.get('site_start_time');
     if (!siteStartTime) {
-      siteStartTime = new Date().toISOString();
+      // 设置一个合理的初始启动时间（比如1天前）
+      const initialStartTime = new Date();
+      initialStartTime.setDate(initialStartTime.getDate() - 1);
+      siteStartTime = initialStartTime.toISOString();
       await env.BOOKMARKS_KV.put('site_start_time', siteStartTime);
+      console.log('Initialized site start time:', siteStartTime);
     }
 
-    // 检查启动时间是否合理（不能超过30天前）
+    // 检查启动时间是否合理（不能超过30天前，不能是未来时间）
     const checkStartTime = new Date(siteStartTime);
     const checkNow = new Date();
     const maxDays = 30;
     const maxMs = maxDays * 24 * 60 * 60 * 1000;
 
-    if (checkNow.getTime() - checkStartTime.getTime() > maxMs) {
-      // 如果超过30天，重置为当前时间
-      siteStartTime = new Date().toISOString();
+    if (checkNow.getTime() - checkStartTime.getTime() > maxMs || checkStartTime.getTime() > checkNow.getTime()) {
+      // 如果超过30天或者是未来时间，重置为1天前
+      const resetStartTime = new Date();
+      resetStartTime.setDate(resetStartTime.getDate() - 1);
+      siteStartTime = resetStartTime.toISOString();
       await env.BOOKMARKS_KV.put('site_start_time', siteStartTime);
+      console.log('Reset site start time:', siteStartTime);
     }
 
     // 获取访问者数据
@@ -719,6 +729,33 @@ async function resetResponseTimeData(env, headers) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to reset response time data'
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 重置网站启动时间
+async function resetStartTime(env, headers) {
+  try {
+    // 设置启动时间为当前时间
+    const currentTime = new Date().toISOString();
+    await env.BOOKMARKS_KV.put('site_start_time', currentTime);
+    console.log('Manual reset site start time to:', currentTime);
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        message: 'Site start time has been reset successfully',
+        newStartTime: currentTime
+      }
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to reset start time:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to reset start time'
     }), {
       status: 500,
       headers

@@ -40,7 +40,7 @@ class StatisticsService {
 
   // 生成唯一访问者ID
   private generateVisitorId(): string {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9)
+    return Date.now().toString() + Math.random().toString(36).substring(2, 11)
   }
 
 
@@ -87,13 +87,6 @@ class StatisticsService {
 
   // 获取统计数据
   async getStatistics(): Promise<ApiResponse<Statistics>> {
-    // 如果API未配置，直接返回失败
-    if (this.baseUrl.includes('your-worker.your-subdomain.workers.dev')) {
-      return {
-        success: false,
-        error: 'API未配置'
-      }
-    }
 
     try {
       const startTime = performance.now()

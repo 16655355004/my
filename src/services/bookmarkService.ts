@@ -233,8 +233,8 @@ class MessageService {
   private baseUrl: string
 
   constructor() {
-    // 使用与书签服务相同的基础URL
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://your-worker.your-subdomain.workers.dev'
+    // 使用空字符串作为baseUrl，这样API调用会使用相对路径
+    this.baseUrl = ''
   }
 
   // 获取请求头

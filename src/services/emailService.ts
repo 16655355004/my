@@ -21,9 +21,7 @@ export interface ApiResponse<T = any> {
 }
 
 class EmailService {
-  private baseUrl = import.meta.env.DEV
-    ? 'https://www.jisoolove.top/api/email'
-    : '/api/email'
+  private baseUrl = '/api/email'
 
   /**
    * 获取邮件配置
