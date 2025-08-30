@@ -1,4 +1,4 @@
-// Cloudflare Worker for Bookmarks API
+// Cloudflare Worker for Bookmarks API and Email System
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -32,6 +32,11 @@ export default {
         return await handleStatisticsAPI(request, env, corsHeaders);
       }
 
+      // 邮件系统 API 路由
+      if (path.startsWith('/api/email')) {
+        return await handleEmailAPI(request, env, corsHeaders);
+      }
+
       return new Response('Not Found', { status: 404, headers: corsHeaders });
     } catch (error) {
       console.error('Worker error:', error);
@@ -39,6 +44,16 @@ export default {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+  },
+
+  // Cron 触发器处理定时任务
+  async scheduled(event, env, ctx) {
+    try {
+      console.log('Cron trigger executed at:', new Date().toISOString());
+      await handleScheduledEmail(env);
+    } catch (error) {
+      console.error('Scheduled task error:', error);
     }
   }
 };
@@ -709,4 +724,709 @@ async function resetResponseTimeData(env, headers) {
       headers
     });
   }
+}
+
+// ==================== 邮件系统功能 ====================
+
+// 处理邮件 API 请求
+async function handleEmailAPI(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const method = request.method;
+  const pathParts = url.pathname.split('/');
+
+  const headers = {
+    ...corsHeaders,
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    switch (method) {
+      case 'GET':
+        // 获取邮件配置
+        if (pathParts[3] === 'config') {
+          return await getEmailConfig(env, headers);
+        }
+        break;
+
+      case 'POST':
+        // 保存邮件配置
+        if (pathParts[3] === 'config') {
+          return await saveEmailConfig(request, env, headers);
+        }
+        // 测试发送邮件
+        if (pathParts[3] === 'test') {
+          return await testSendEmail(request, env, headers);
+        }
+        break;
+
+      default:
+        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+          status: 405,
+          headers
+        });
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid endpoint' }), {
+      status: 400,
+      headers
+    });
+  } catch (error) {
+    console.error('Email API error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Email API error: ' + error.message
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 获取邮件配置
+async function getEmailConfig(env, headers) {
+  try {
+    const configData = await env.BOOKMARKS_KV.get('email_config');
+    const config = configData ? JSON.parse(configData) : {
+      emails: [],
+      question: '',
+      sendTime: '08:00',
+      timezone: 'Asia/Shanghai',
+      enabled: false
+    };
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: config
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to get email config:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to get email config'
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 保存邮件配置
+async function saveEmailConfig(request, env, headers) {
+  try {
+    // 验证管理员权限
+    const authResult = await verifyAdmin(request, env);
+    if (!authResult.success) {
+      return new Response(JSON.stringify(authResult), {
+        status: 401,
+        headers
+      });
+    }
+
+    const configData = await request.json();
+
+    // 验证配置数据
+    if (!configData.emails || !Array.isArray(configData.emails)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid emails array'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    if (!configData.question || typeof configData.question !== 'string') {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Question is required'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    if (!configData.sendTime || !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(configData.sendTime)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid send time format (HH:MM)'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    // 验证邮箱格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of configData.emails) {
+      if (!emailRegex.test(email)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: `Invalid email format: ${email}`
+        }), {
+          status: 400,
+          headers
+        });
+      }
+    }
+
+    const config = {
+      emails: configData.emails,
+      question: configData.question.trim(),
+      sendTime: configData.sendTime,
+      timezone: configData.timezone || 'Asia/Shanghai',
+      enabled: Boolean(configData.enabled),
+      updatedAt: new Date().toISOString()
+    };
+
+    await env.BOOKMARKS_KV.put('email_config', JSON.stringify(config));
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: config
+    }), { headers });
+  } catch (error) {
+    console.error('Failed to save email config:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to save email config'
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 测试发送邮件
+async function testSendEmail(request, env, headers) {
+  try {
+    // 验证管理员权限
+    const authResult = await verifyAdmin(request, env);
+    if (!authResult.success) {
+      return new Response(JSON.stringify(authResult), {
+        status: 401,
+        headers
+      });
+    }
+
+    // 获取邮件配置
+    const configData = await env.BOOKMARKS_KV.get('email_config');
+    if (!configData) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Email configuration not found'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    const config = JSON.parse(configData);
+    if (!config.emails || config.emails.length === 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No email addresses configured'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    if (!config.question) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'No question configured'
+      }), {
+        status: 400,
+        headers
+      });
+    }
+
+    // 发送测试邮件
+    const result = await sendDailyEmail(env, config, true);
+
+    return new Response(JSON.stringify({
+      success: result.success,
+      data: {
+        message: result.success ? 'Test email sent successfully' : 'Failed to send test email',
+        details: result.details || result.error
+      }
+    }), {
+      status: result.success ? 200 : 500,
+      headers
+    });
+  } catch (error) {
+    console.error('Failed to send test email:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to send test email: ' + error.message
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 处理定时邮件发送
+async function handleScheduledEmail(env) {
+  try {
+    console.log('Checking scheduled email task...');
+
+    // 获取邮件配置
+    const configData = await env.BOOKMARKS_KV.get('email_config');
+    if (!configData) {
+      console.log('No email configuration found');
+      return;
+    }
+
+    const config = JSON.parse(configData);
+    if (!config.enabled) {
+      console.log('Email system is disabled');
+      return;
+    }
+
+    if (!config.emails || config.emails.length === 0) {
+      console.log('No email addresses configured');
+      return;
+    }
+
+    if (!config.question) {
+      console.log('No question configured');
+      return;
+    }
+
+    // 检查是否到了发送时间
+    const now = new Date();
+    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
+    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
+      beijingTime.getMinutes().toString().padStart(2, '0');
+
+    console.log(`Current Beijing time: ${currentTime}, Scheduled time: ${config.sendTime}`);
+
+    // 检查是否已经发送过今天的邮件
+    const today = beijingTime.toISOString().split('T')[0];
+    const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
+    const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
+
+    if (lastSent && lastSent.date === today) {
+      console.log('Email already sent today');
+      return;
+    }
+
+    // 检查时间匹配（允许5分钟的误差）
+    const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
+    const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
+    const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
+
+    if (Math.abs(currentMinutes - scheduledMinutes) <= 5) {
+      console.log('Time matches, sending scheduled email...');
+      const result = await sendDailyEmail(env, config, false);
+
+      if (result.success) {
+        // 记录发送时间
+        await env.BOOKMARKS_KV.put('last_email_sent', JSON.stringify({
+          date: today,
+          time: currentTime,
+          sentAt: new Date().toISOString()
+        }));
+        console.log('Scheduled email sent successfully');
+      } else {
+        console.error('Failed to send scheduled email:', result.error);
+      }
+    } else {
+      console.log('Not time to send email yet');
+    }
+  } catch (error) {
+    console.error('Scheduled email error:', error);
+  }
+}
+
+// 发送每日邮件
+async function sendDailyEmail(env, config, isTest = false) {
+  try {
+    console.log('Starting to send daily email...');
+
+    // 获取DeepSeek AI回答
+    const aiResponse = await getDeepSeekResponse(env, config.question);
+    if (!aiResponse.success) {
+      return {
+        success: false,
+        error: 'Failed to get AI response: ' + aiResponse.error
+      };
+    }
+
+    // 生成邮件内容
+    const emailContent = generateEmailTemplate(config.question, aiResponse.answer, isTest);
+
+    // 发送邮件到所有配置的邮箱
+    const results = [];
+    for (const email of config.emails) {
+      try {
+        const result = await sendEmailViaResend(env, email, emailContent, isTest);
+        results.push({
+          email,
+          success: result.success,
+          error: result.error
+        });
+      } catch (error) {
+        results.push({
+          email,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const totalCount = results.length;
+
+    return {
+      success: successCount > 0,
+      details: {
+        totalEmails: totalCount,
+        successfulSends: successCount,
+        failedSends: totalCount - successCount,
+        results: results,
+        question: config.question,
+        aiResponse: aiResponse.answer
+      },
+      error: successCount === 0 ? 'All email sends failed' : null
+    };
+  } catch (error) {
+    console.error('Send daily email error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// 获取DeepSeek AI回答
+async function getDeepSeekResponse(env, question) {
+  try {
+    console.log('Requesting DeepSeek AI response for question:', question);
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个智慧、温暖的助手。请用简洁、积极、有启发性的语言回答问题。回答应该在200-400字之间，语言要温暖友好，富有正能量。'
+          },
+          {
+            role: 'user',
+            content: question
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('DeepSeek API error:', response.status, errorText);
+      return {
+        success: false,
+        error: `DeepSeek API error: ${response.status} - ${errorText}`
+      };
+    }
+
+    const data = await response.json();
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid DeepSeek API response:', data);
+      return {
+        success: false,
+        error: 'Invalid response from DeepSeek API'
+      };
+    }
+
+    const answer = data.choices[0].message.content.trim();
+    console.log('DeepSeek AI response received successfully');
+
+    return {
+      success: true,
+      answer: answer
+    };
+  } catch (error) {
+    console.error('DeepSeek API request error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// 通过Resend发送邮件
+async function sendEmailViaResend(env, toEmail, emailContent, isTest = false) {
+  try {
+    console.log(`Sending email to: ${toEmail}`);
+
+    const subject = isTest ?
+      `[测试] 每日智慧分享 - ${new Date().toLocaleDateString('zh-CN')}` :
+      `每日智慧分享 - ${new Date().toLocaleDateString('zh-CN')}`;
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`
+      },
+      body: JSON.stringify({
+        from: 'JisooLove Daily <noreply@jisoolove.top>',
+        to: [toEmail],
+        subject: subject,
+        html: emailContent
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Resend API error:', response.status, errorText);
+      return {
+        success: false,
+        error: `Resend API error: ${response.status} - ${errorText}`
+      };
+    }
+
+    const data = await response.json();
+    console.log(`Email sent successfully to ${toEmail}, ID: ${data.id}`);
+
+    return {
+      success: true,
+      messageId: data.id
+    };
+  } catch (error) {
+    console.error('Send email error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// 生成邮件HTML模板
+function generateEmailTemplate(question, answer, isTest = false) {
+  const currentDate = new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  });
+
+  const testBadge = isTest ? `
+    <div style="background: #ff6b6b; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-bottom: 20px; font-size: 14px; font-weight: bold;">
+      测试邮件
+    </div>
+  ` : '';
+
+  return `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日智慧分享</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .date {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .question-section {
+            margin-bottom: 30px;
+        }
+
+        .question-label {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .question {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .answer-section {
+            margin-bottom: 30px;
+        }
+
+        .answer-label {
+            color: #764ba2;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .answer {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #4a5568;
+            background: #fafafa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .website-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .website-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            margin: 30px 0;
+            border-radius: 1px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .question {
+                font-size: 18px;
+                padding: 15px;
+            }
+
+            .answer {
+                font-size: 15px;
+                padding: 20px;
+            }
+
+            .footer {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            ${testBadge}
+            <h1>每日分享</h1>
+            <div class="date">${currentDate}</div>
+        </div>
+
+        <div class="content">
+            <div class="question-section">
+                <div class="question-label">今日问题</div>
+                <div class="question">${question}</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="answer-section">
+                <div class="answer-label">AI 智慧回答</div>
+                <div class="answer">${answer.replace(/\n/g, '<br>')}</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-text">
+                感谢您订阅我们的每日智慧分享！<br>
+                希望这些内容能为您的生活带来启发和正能量。
+            </div>
+            <a href="https://www.jisoolove.top" class="website-link">
+                访问我们的网站
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+  `.trim();
 }

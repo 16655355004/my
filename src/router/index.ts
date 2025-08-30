@@ -35,6 +35,11 @@ const router = createRouter({
       name: 'tutorial',
       component: () => import('../views/TutorialView.vue')
     },
+    {
+      path: '/email',
+      name: 'email',
+      component: () => import('../views/EmailView.vue')
+    },
 
 
   ]
@@ -45,7 +50,7 @@ router.beforeEach((to, from, next) => {
   // 为页面添加转场方向信息
   if (from.name && to.name) {
     // 根据路由顺序确定转场方向
-    const routeOrder = ['home', 'bookmarks', 'playground', 'messages', 'tutorial', 'admin'];
+    const routeOrder = ['home', 'bookmarks', 'playground', 'messages', 'tutorial', 'email', 'admin'];
     const fromIndex = routeOrder.indexOf(from.name as string);
     const toIndex = routeOrder.indexOf(to.name as string);
 

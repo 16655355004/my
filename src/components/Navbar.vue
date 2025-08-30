@@ -332,6 +332,10 @@ watch(route, () => {
           <li class="nav-item" @click="closeMenu">
             <RouterLink to="/tutorial" class="nav-link">教程</RouterLink>
           </li>
+
+          <li class="nav-item" @click="closeMenu">
+            <RouterLink to="/email" class="nav-link">邮件系统</RouterLink>
+          </li>
         </ul>
       </nav>
     </div>
