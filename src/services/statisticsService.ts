@@ -24,8 +24,10 @@ class StatisticsService {
   private lastResponseTime: number = 0
 
   constructor() {
-    // 使用与书签服务相同的基础URL
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://your-worker.your-subdomain.workers.dev'
+    // 在开发环境中使用生产API，在生产环境中使用相对路径
+    this.baseUrl = import.meta.env.DEV
+      ? 'https://www.jisoolove.top/api'
+      : '/api'
     this.initializeVisitorId()
   }
 
