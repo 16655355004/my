@@ -31,8 +31,8 @@ class BookmarkService {
   private adminToken: string | null = null
 
   constructor() {
-    // 使用空字符串作为baseUrl，因为所有的API调用都已经包含了/api前缀
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+    // 直接使用空字符串，这样API调用会使用相对路径
+    this.baseUrl = ''
   }
 
   // 设置管理员令牌
