@@ -24,10 +24,8 @@ class StatisticsService {
   private lastResponseTime: number = 0
 
   constructor() {
-    // 在开发环境中使用生产API，在生产环境中使用相对路径
-    this.baseUrl = import.meta.env.DEV
-      ? 'https://www.jisoolove.top/api'
-      : '/api'
+    // 使用相对路径，这样在生产环境中会自动使用正确的域名
+    this.baseUrl = '/api'
     this.initializeVisitorId()
   }
 

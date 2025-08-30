@@ -31,10 +31,8 @@ class BookmarkService {
   private adminToken: string | null = null
 
   constructor() {
-    // 在开发环境中使用生产API，在生产环境中使用相对路径
-    this.baseUrl = import.meta.env.DEV
-      ? 'https://www.jisoolove.top/api'
-      : '/api'
+    // 在生产环境中，这应该是你的 Cloudflare Worker 域名
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
   }
 
   // 设置管理员令牌
