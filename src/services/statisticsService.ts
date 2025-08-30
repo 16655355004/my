@@ -24,8 +24,8 @@ class StatisticsService {
   private lastResponseTime: number = 0
 
   constructor() {
-    // 使用相对路径，这样在生产环境中会自动使用正确的域名
-    this.baseUrl = '/api'
+    // 使用空字符串作为baseUrl，因为所有的API调用都已经包含了/api前缀
+    this.baseUrl = ''
     this.initializeVisitorId()
   }
 

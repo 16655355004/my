@@ -31,8 +31,8 @@ class BookmarkService {
   private adminToken: string | null = null
 
   constructor() {
-    // 在生产环境中，这应该是你的 Cloudflare Worker 域名
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+    // 使用空字符串作为baseUrl，因为所有的API调用都已经包含了/api前缀
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || ''
   }
 
   // 设置管理员令牌
