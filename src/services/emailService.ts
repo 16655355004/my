@@ -250,6 +250,57 @@ class EmailService {
   }
 
   /**
+   * 获取北京时间（UTC+8）- 与Worker保持一致的算法
+   */
+  private getBeijingWallClock(date = new Date()) {
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const utcMs = date.getTime() + date.getTimezoneOffset() * 60000
+    const bjMs = utcMs + 8 * 60 * 60000
+    const bjDate = new Date(bjMs)
+    const hours = bjDate.getUTCHours()
+    const minutes = bjDate.getUTCMinutes()
+    const minutesOfDay = hours * 60 + minutes
+    const timeString = `${pad(hours)}:${pad(minutes)}`
+    const dateString = `${bjDate.getUTCFullYear()}-${pad(bjDate.getUTCMonth() + 1)}-${pad(bjDate.getUTCDate())}`
+    return { hours, minutes, minutesOfDay, timeString, dateString, date: bjDate }
+  }
+
+  /**
+   * 重置今日邮件发送记录
+   */
+  async resetTodayEmailSent(): Promise<ApiResponse<any>> {
+    try {
+      const url = `${this.baseUrl.replace('/email', '')}/debug/reset-email-sent`
+      console.log('重置今日发送记录 - 请求URL:', url)
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('重置今日发送记录 - 响应状态:', response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('重置今日发送记录 - HTTP错误:', response.status, errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('重置今日发送记录 - 成功:', result)
+      return result
+    } catch (error) {
+      console.error('重置今日发送记录失败:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }
+
+  /**
    * 计算距离下次发送的时间
    */
   getTimeUntilNextSend(sendTime: string): string {
@@ -258,7 +309,8 @@ class EmailService {
     }
 
     const now = new Date()
-    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }))
+    const bj = this.getBeijingWallClock(now)
+    const beijingTime = bj.date
 
     const [sendHour, sendMinute] = sendTime.split(':').map(Number)
 

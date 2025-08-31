@@ -72,7 +72,12 @@ export default {
   scheduled(event, env, _ctx) {
     try {
       const ts = new Date().toISOString();
-      console.log('Cron trigger executed at:', ts);
+      const bj = getBeijingWallClock();
+      console.log('=== CRON TRIGGER START ===');
+      console.log('UTC time:', ts);
+      console.log('Beijing time:', bj.dateString, bj.timeString);
+      console.log('Cron schedule: */2 * * * * (every 2 minutes)');
+
       // Use waitUntil so the runtime keeps the task alive even if this handler returns
       event.waitUntil(handleScheduledEmail(env));
     } catch (error) {
@@ -1257,28 +1262,35 @@ async function testSendEmail(request, env, headers) {
 // 处理定时邮件发送
 async function handleScheduledEmail(env) {
   try {
-    console.log('Checking scheduled email task...');
+    console.log('=== EMAIL SCHEDULE CHECK START ===');
 
     // 获取邮件配置
     const configData = await env.BOOKMARKS_KV.get('email_config');
     if (!configData) {
-      console.log('No email configuration found');
+      console.log('❌ No email configuration found');
       return;
     }
 
     const config = JSON.parse(configData);
+    console.log('📧 Email config loaded:', {
+      enabled: config.enabled,
+      emailCount: config.emails ? config.emails.length : 0,
+      hasQuestion: !!config.question,
+      sendTime: config.sendTime
+    });
+
     if (!config.enabled) {
-      console.log('Email system is disabled');
+      console.log('❌ Email system is disabled');
       return;
     }
 
     if (!config.emails || config.emails.length === 0) {
-      console.log('No email addresses configured');
+      console.log('❌ No email addresses configured');
       return;
     }
 
     if (!config.question) {
-      console.log('No question configured');
+      console.log('❌ No question configured');
       return;
     }
 
@@ -1287,18 +1299,23 @@ async function handleScheduledEmail(env) {
     const bj = getBeijingWallClock(now);
     const currentTime = bj.timeString;
 
-    console.log(`Current Beijing time: ${currentTime}, Scheduled time: ${config.sendTime}`);
-    console.log(`UTC time: ${now.toISOString()}, Beijing wall-clock: ${bj.dateString} ${currentTime}`);
+    console.log('⏰ Time check:');
+    console.log(`   Current Beijing time: ${currentTime}`);
+    console.log(`   Scheduled time: ${config.sendTime}`);
+    console.log(`   UTC time: ${now.toISOString()}`);
+    console.log(`   Beijing date: ${bj.dateString}`);
 
     // 检查是否已经发送过今天的邮件 - 使用北京时间的日期
     const today = bj.dateString;
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
-    console.log(`Today (Beijing): ${today}, Last sent: ${lastSent ? lastSent.date : 'never'}`);
+    console.log('📅 Send history check:');
+    console.log(`   Today (Beijing): ${today}`);
+    console.log(`   Last sent: ${lastSent ? `${lastSent.date} at ${lastSent.time}` : 'never'}`);
 
     if (lastSent && lastSent.date === today) {
-      console.log('Email already sent today');
+      console.log('✅ Email already sent today - skipping');
       return;
     }
 
@@ -1308,10 +1325,15 @@ async function handleScheduledEmail(env) {
     const currentMinutes = bj.minutesOfDay;
     const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
 
-    console.log(`Scheduled minutes: ${scheduledMinutes}, Current minutes: ${currentMinutes}, Difference: ${timeDifference}`);
+    console.log('🎯 Time matching check:');
+    console.log(`   Scheduled: ${config.sendTime} (${scheduledMinutes} minutes from midnight)`);
+    console.log(`   Current: ${currentTime} (${currentMinutes} minutes from midnight)`);
+    console.log(`   Difference: ${timeDifference} minutes`);
+    console.log(`   Tolerance: ±3 minutes`);
+    console.log(`   Within range: ${timeDifference <= 3 ? 'YES' : 'NO'}`);
 
     if (timeDifference <= 3) {
-      console.log('Time matches, sending scheduled email...');
+      console.log('✅ Time matches! Sending scheduled email...');
       const result = await sendDailyEmail(env, config, false);
 
       if (result.success) {
@@ -1321,15 +1343,19 @@ async function handleScheduledEmail(env) {
           time: currentTime,
           sentAt: new Date().toISOString()
         }));
-        console.log('Scheduled email sent successfully');
+        console.log('🎉 Scheduled email sent successfully!');
+        console.log(`   Sent to ${result.details.successfulSends}/${result.details.totalEmails} recipients`);
       } else {
-        console.error('Failed to send scheduled email:', result.error);
+        console.error('❌ Failed to send scheduled email:', result.error);
       }
     } else {
-      console.log('Not time to send email yet');
+      console.log('⏳ Not time to send email yet');
     }
+
+    console.log('=== EMAIL SCHEDULE CHECK END ===');
   } catch (error) {
-    console.error('Scheduled email error:', error);
+    console.error('❌ Scheduled email error:', error);
+    console.error('Error stack:', error.stack);
   }
 }
 
