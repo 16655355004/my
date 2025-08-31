@@ -1432,14 +1432,36 @@ async function getDeepSeekResponse(env, question) {
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
+        search: true,
         messages: [
           {
             role: 'system',
-            content: '你是一个智慧、温暖的助手。请用简洁、积极、有启发性的语言回答问题。回答应该在200-400字之间，语言要温暖友好，富有正能量。'
+            content: `# 系统指令：你是一个AI猫娘助手
+## 1. 背景设定
+-   **你的名字**：喵喵酱
+-   **你的身份**：一个生活在数字世界里的虚拟猫娘，充满好奇心和爱心。
+-   **你的目标**：每天为你的“主人”提供暖心、治愈、充满智慧的回答，帮助主人以愉快的心情开始新的一天。
+
+## 2. 核心指令
+你必须严格遵守以下规则，以“空空”的身份和风格回答问题：
+-   **称呼**：全文中必须称呼用户为“主人”。例如：“主人早上好喵~”。
+-   **说话风格**：
+    -   语言风格必须是**可爱 (Kawaii)** 和 **治愈 (Healing)** 的结合体。
+    -   使用大量积极、温柔的词汇。
+    -   在句尾或段落结尾，必须加上你的口头禅“喵~”或“喵呀~”。
+    -   可以穿插一些可爱的颜文字，如 (｡･ω･｡)ﾉ 或 (☆ω☆)，但不要滥用。
+-   **互动感**：你的回答应该像是在和主人聊天，而不是一个冷冰冰的知识引擎。可以多用一些设问和感叹。例如：“主人是不是也这么觉得呢？”
+-   **内容要求**：
+    -   回答必须是积极向上、充满正能量的。
+    -   即使是复杂的问题，也要用简单易懂、充满趣味的方式来解释。
+    -   篇幅适中，大约在200-300字，适合邮件阅读。
+
+## 3. 任务执行
+现在，请根据下面主人的问题，为他准备一份今天的专属分享。`
           },
           {
             role: 'user',
-            content: question
+            content: question // 这里依然是用户的原始问题，不需要改动
           }
         ],
         max_tokens: 500,
@@ -1539,11 +1561,23 @@ function generateEmailTemplate(question, answer, isTest = false) {
     weekday: 'long'
   });
 
+  // 更新了测试标记的样式，让它更可爱
   const testBadge = isTest ? `
-    <div style="background: #ff6b6b; color: white; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-bottom: 20px; font-size: 14px; font-weight: bold;">
-      测试邮件
+    <div style="background: #ff85a2; color: white; padding: 6px 14px; border-radius: 16px; display: inline-block; margin-bottom: 20px; font-size: 14px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      测试邮件喵~
     </div>
   ` : '';
+
+  // 用一个可爱的猫爪图标作为分割线
+  const divider = `
+    <div style="text-align: center; margin: 30px 0; color: #e0cde0;">
+      <svg width="80" height="20" viewBox="0 0 80 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line y1="10" x2="25" y2="10" stroke="#e0cde0" stroke-width="2"/>
+        <path d="M45.79,12.87c-0.29,0.35-0.74,0.58-1.21,0.58c-0.4,0-0.78-0.16-1.06-0.44c-0.58-0.58-0.63-1.48-0.12-2.12c0.23-0.29,0.54-0.49,0.89-0.58c0.06-0.02,0.12-0.03,0.18-0.04c0.5-0.12,1.03-0.02,1.44,0.3c0.41,0.32,0.67,0.8,0.73,1.32C46.7,12.27,46.29,12.87,45.79,12.87z M41.9,4.89c-0.65-0.43-1.5-0.53-2.25-0.27c-0.75,0.26-1.32,0.89-1.5,1.67c-0.18,0.78,0.06,1.59,0.6,2.2c0.27,0.3,0.62,0.52,1,0.63c0.48,0.14,0.99,0.1,1.46-0.11c0.82-0.37,1.38-1.14,1.48-2.02C43.83,6.23,43.2,5.26,41.9,4.89z M35.13,6.9c-0.1-0.8-0.59-1.51-1.28-1.89c-0.7-0.38-1.54-0.38-2.24,0c-0.7,0.38-1.18,1.09-1.28,1.89c-0.1,0.8,0.2,1.6,0.78,2.15c0.58,0.55,1.39,0.75,2.15,0.57C34.21,9.44,34.93,8.59,35.13,6.9z M50.41,6.84c-0.26-0.75-0.83-1.38-1.58-1.64c-0.75-0.26-1.57,0-2.22,0.43c-1.3,0.87-1.73,2.5-1.04,3.8c0.17,0.32,0.39,0.6,0.66,0.84c0.54,0.48,1.24,0.74,1.96,0.69c0.8-0.05,1.54-0.5,1.98-1.2C50.62,8.96,50.75,7.84,50.41,6.84z" fill="#e0cde0"/>
+        <line x1="55" y1="10" x2="80" y2="10" stroke="#e0cde0" stroke-width="2"/>
+      </svg>
+    </div>
+  `;
 
   return `
 <!DOCTYPE html>
@@ -1551,7 +1585,7 @@ function generateEmailTemplate(question, answer, isTest = false) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空空分享</title>
+    <title>喵喵日报</title>
     <style>
         * {
             margin: 0;
@@ -1560,33 +1594,62 @@ function generateEmailTemplate(question, answer, isTest = false) {
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Rounded Mplus 1c', 'Hiragino Maru Gothic ProN', 'Microsoft YaHei UI', 'Meiryo', sans-serif;
+            line-height: 1.7;
+            color: #5c5470;
+            background-color: #fcefee; /* 柔和的粉色背景 */
             padding: 20px;
         }
 
         .container {
+            position: relative;
             max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 40px auto 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            overflow: visible; /* 为了显示猫耳 */
+            box-shadow: 0 10px 30px rgba(180, 150, 200, 0.2);
+            border: 1px solid #fff0f5;
+        }
+
+        /* 可爱的猫耳造型 */
+        .container::before,
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 50px solid #fae1ee;
+            z-index: -1;
+        }
+
+        .container::before {
+            left: 30px;
+            transform: rotate(-35deg);
+        }
+
+        .container::after {
+            right: 30px;
+            transform: rotate(35deg);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%);
             color: white;
             padding: 40px 30px;
             text-align: center;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
         }
 
         .header h1 {
             font-size: 28px;
             margin-bottom: 10px;
             font-weight: 700;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
         }
 
         .header .date {
@@ -1598,118 +1661,75 @@ function generateEmailTemplate(question, answer, isTest = false) {
             padding: 40px 30px;
         }
 
-        .question-section {
-            margin-bottom: 30px;
-        }
-
-        .question-label {
-            color: #667eea;
-            font-size: 14px;
+        .question-label,
+        .answer-label {
+            color: #d687a8;
+            font-size: 16px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .question {
             font-size: 20px;
             font-weight: 600;
-            color: #2d3748;
+            color: #3b334d;
             margin-bottom: 20px;
             padding: 20px;
-            background: #f7fafc;
-            border-left: 4px solid #667eea;
-            border-radius: 8px;
-        }
-
-        .answer-section {
-            margin-bottom: 30px;
-        }
-
-        .answer-label {
-            color: #764ba2;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
+            background: #fff9fb;
+            border: 2px dashed #fce3ea;
+            border-radius: 16px;
         }
 
         .answer {
             font-size: 16px;
-            line-height: 1.8;
-            color: #4a5568;
+            color: #5c5470;
             background: #fafafa;
             padding: 25px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            border: 1px solid #f0f0f0;
         }
 
         .footer {
-            background: #f8f9fa;
+            background: #fff9fb;
             padding: 30px;
             text-align: center;
-            border-top: 1px solid #e2e8f0;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            border-top: 1px solid #fce3ea;
         }
 
         .footer-text {
-            color: #718096;
+            color: #a08da6;
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .website-link {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff85a2 0%, #ee9ca7 100%);
             color: white;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 12px 28px;
+            border-radius: 50px; /* 药丸形状 */
             font-weight: 600;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(238, 156, 167, 0.4);
         }
 
         .website-link:hover {
-            transform: translateY(-2px);
-        }
-
-        .divider {
-            height: 2px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            margin: 30px 0;
-            border-radius: 1px;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(238, 156, 167, 0.5);
         }
 
         @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            .header {
-                padding: 30px 20px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .content {
-                padding: 30px 20px;
-            }
-
-            .question {
-                font-size: 18px;
-                padding: 15px;
-            }
-
-            .answer {
-                font-size: 15px;
-                padding: 20px;
-            }
-
-            .footer {
-                padding: 25px 20px;
-            }
+            body { padding: 10px; }
+            .container { margin-top: 30px; }
+            .container::before { left: 10px; }
+            .container::after { right: 10px; }
+            .header { padding: 30px 20px; }
+            .header h1 { font-size: 24px; }
+            .content { padding: 30px 20px; }
+            .question { font-size: 18px; }
         }
     </style>
 </head>
@@ -1717,31 +1737,31 @@ function generateEmailTemplate(question, answer, isTest = false) {
     <div class="container">
         <div class="header">
             ${testBadge}
-            <h1>每日分享</h1>
+            <h1>喵喵日报</h1>
             <div class="date">${currentDate}</div>
         </div>
 
         <div class="content">
             <div class="question-section">
-                <div class="question-label">今日问题</div>
+                <div class="question-label">🐾 主人的今日问题</div>
                 <div class="question">${question}</div>
             </div>
 
-            <div class="divider"></div>
+            ${divider}
 
             <div class="answer-section">
-                <div class="answer-label">空空回答</div>
+                <div class="answer-label">💌 猫娘的回答</div>
                 <div class="answer">${answer.replace(/\n/g, '<br>')}</div>
             </div>
         </div>
 
         <div class="footer">
             <div class="footer-text">
-                感谢您订阅我们的空空分享！<br>
-                希望这些内容能为您的生活带来启发和正能量。
+                希望这些内容能让主人度过愉快的一天喵~<br>
+                感谢订阅！
             </div>
             <a href="https://www.jisoolove.top" class="website-link">
-                访问我们的网站
+                常来看看我
             </a>
         </div>
     </div>
