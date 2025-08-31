@@ -69,15 +69,32 @@ export default {
   },
 
   // Cron 触发器处理定时任务
-  async scheduled(_event, env, _ctx) {
+  scheduled(event, env, _ctx) {
     try {
-      console.log('Cron trigger executed at:', new Date().toISOString());
-      await handleScheduledEmail(env);
+      const ts = new Date().toISOString();
+      console.log('Cron trigger executed at:', ts);
+      // Use waitUntil so the runtime keeps the task alive even if this handler returns
+      event.waitUntil(handleScheduledEmail(env));
     } catch (error) {
       console.error('Scheduled task error:', error);
     }
   }
 };
+
+// Helper: get Beijing wall-clock time information (UTC+8) without relying on locale parsing
+function getBeijingWallClock(date = new Date()) {
+  const pad = (n) => n.toString().padStart(2, '0');
+  const utcMs = date.getTime() + date.getTimezoneOffset() * 60000;
+  const bjMs = utcMs + 8 * 60 * 60000;
+  const bjDate = new Date(bjMs);
+  const hours = bjDate.getUTCHours();
+  const minutes = bjDate.getUTCMinutes();
+  const minutesOfDay = hours * 60 + minutes;
+  const timeString = `${pad(hours)}:${pad(minutes)}`;
+  const dateString = `${bjDate.getUTCFullYear()}-${pad(bjDate.getUTCMonth() + 1)}-${pad(bjDate.getUTCDate())}`;
+  return { hours, minutes, minutesOfDay, timeString, dateString };
+}
+
 
 // 处理书签 API 请求
 async function handleBookmarksAPI(request, env, corsHeaders) {
@@ -827,14 +844,13 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
     const configData = await env.BOOKMARKS_KV.get('email_config');
     const config = configData ? JSON.parse(configData) : null;
 
-    // 时间计算 - 使用与定时任务相同的方法
+    // 时间计算 - 使用与定时任务相同的方法（避免依赖 locale 解析）
     const now = new Date();
-    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
-    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
-      beijingTime.getMinutes().toString().padStart(2, '0');
+    const bj = getBeijingWallClock(now);
+    const currentTime = bj.timeString;
 
     // 检查上次发送记录
-    const today = beijingTime.toISOString().split('T')[0];
+    const today = bj.dateString;
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
@@ -842,7 +858,7 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
     if (config && config.sendTime) {
       const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
       const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-      const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
+      const currentMinutes = bj.minutesOfDay;
       const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
 
       timeMatchInfo = {
@@ -850,8 +866,8 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
         scheduledMinutes,
         currentMinutes,
         timeDifference,
-        withinRange: timeDifference <= 5,
-        nextCheckIn: 5 - (currentMinutes % 5) // 下次cron检查的分钟数
+        withinRange: timeDifference <= 3,
+        nextCheckIn: (2 - (currentMinutes % 2)) % 2 // cron 每2分钟
       };
     }
 
@@ -859,7 +875,7 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
       success: true,
       data: {
         utcTime: now.toISOString(),
-        beijingTime: beijingTime.toISOString(),
+        beijingTime: bj.dateString + 'T' + currentTime + ':00.000+08:00',
         currentTime,
         today,
         emailConfig: config ? {
@@ -871,7 +887,7 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
         lastSent,
         alreadySentToday: lastSent && lastSent.date === today,
         timeMatchInfo,
-        cronSchedule: '*/5 * * * *'
+        cronSchedule: '*/2 * * * *'
       }
     }), { headers });
   } catch (error) {
@@ -930,14 +946,13 @@ async function handleDebugEmailStatus(_request, env, corsHeaders) {
     const configData = await env.BOOKMARKS_KV.get('email_config');
     const config = configData ? JSON.parse(configData) : null;
 
-    // 获取时间信息
+    // 获取时间信息（避免依赖 locale 解析）
     const now = new Date();
-    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
-    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
-      beijingTime.getMinutes().toString().padStart(2, '0');
+    const bj = getBeijingWallClock(now);
+    const currentTime = bj.timeString;
 
     // 获取今日发送记录
-    const today = beijingTime.toISOString().split('T')[0];
+    const today = bj.dateString;
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
@@ -946,7 +961,7 @@ async function handleDebugEmailStatus(_request, env, corsHeaders) {
     if (config && config.sendTime) {
       const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
       const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-      const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
+      const currentMinutes = bj.minutesOfDay;
       const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
 
       timeMatchInfo = {
@@ -1267,17 +1282,16 @@ async function handleScheduledEmail(env) {
       return;
     }
 
-    // 检查是否到了发送时间 - 使用标准时区API
+    // 检查是否到了发送时间 - 使用固定 UTC+8 计算
     const now = new Date();
-    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
-    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
-      beijingTime.getMinutes().toString().padStart(2, '0');
+    const bj = getBeijingWallClock(now);
+    const currentTime = bj.timeString;
 
     console.log(`Current Beijing time: ${currentTime}, Scheduled time: ${config.sendTime}`);
-    console.log(`UTC time: ${now.toISOString()}, Beijing time calculated: ${beijingTime.toISOString()}`);
+    console.log(`UTC time: ${now.toISOString()}, Beijing wall-clock: ${bj.dateString} ${currentTime}`);
 
     // 检查是否已经发送过今天的邮件 - 使用北京时间的日期
-    const today = beijingTime.toISOString().split('T')[0];
+    const today = bj.dateString;
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
@@ -1291,7 +1305,7 @@ async function handleScheduledEmail(env) {
     // 检查时间匹配（允许3分钟的误差，因为cron每2分钟执行一次）
     const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
     const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-    const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
+    const currentMinutes = bj.minutesOfDay;
     const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
 
     console.log(`Scheduled minutes: ${scheduledMinutes}, Current minutes: ${currentMinutes}, Difference: ${timeDifference}`);
