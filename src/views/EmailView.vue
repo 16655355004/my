@@ -661,6 +661,11 @@ const logout = () => {
 
 // 添加邮箱动画
 const addEmail = () => {
+  // 确保 emails 数组存在
+  if (!Array.isArray(config.value.emails)) {
+    config.value.emails = [];
+  }
+  
   config.value.emails.push("");
 
   nextTick(() => {
@@ -687,6 +692,11 @@ const addEmail = () => {
 
 // 删除邮箱动画
 const removeEmail = (index: number) => {
+  // 确保索引有效
+  if (index < 0 || index >= config.value.emails.length) {
+    return;
+  }
+
   const emailItems = document.querySelectorAll('.email-item');
   const itemToRemove = emailItems[index];
 
@@ -698,11 +708,17 @@ const removeEmail = (index: number) => {
       duration: 0.3,
       ease: "power2.in",
       onComplete: () => {
-        config.value.emails.splice(index, 1);
+        // 确保数组仍然存在且索引有效
+        if (Array.isArray(config.value.emails) && index < config.value.emails.length) {
+          config.value.emails.splice(index, 1);
+        }
       }
     });
   } else {
-    config.value.emails.splice(index, 1);
+    // 直接删除，不使用动画
+    if (Array.isArray(config.value.emails) && index < config.value.emails.length) {
+      config.value.emails.splice(index, 1);
+    }
   }
 };
 
@@ -1137,7 +1153,7 @@ const onTimeInputFocus = (event: Event) => {
 /* 现代化黑色主题邮件系统样式 */
 .email-view {
   min-height: 100vh;
-  background: linear-gradient(135deg, #525151 0%, #414040 50%, #cec7c7 100%);
+  background: linear-gradient(135deg, #1d1d1d 0%, #2b2a2a 50%, #3d3b3b 100%);
   /* background-color: black; */
   position: relative;
   overflow-x: hidden;
@@ -1719,13 +1735,13 @@ const onTimeInputFocus = (event: Event) => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #6c757d;
+  background: #6c757d !important;
   margin-top: 0.5rem;
   transition: all 0.3s ease;
 }
 
 .status-indicator.active {
-  background: #00ff88;
+  background: #00ff88 !important;
   box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
 }
 
