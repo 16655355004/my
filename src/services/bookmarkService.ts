@@ -31,8 +31,8 @@ class BookmarkService {
   private adminToken: string | null = null
 
   constructor() {
-    // 直接使用空字符串，这样API调用会使用相对路径
-    this.baseUrl = ''
+    // 在开发环境中使用完整URL，生产环境使用相对路径
+    this.baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
   }
 
   // 设置管理员令牌

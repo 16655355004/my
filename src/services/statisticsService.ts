@@ -24,8 +24,8 @@ class StatisticsService {
   private lastResponseTime: number = 0
 
   constructor() {
-    // 使用空字符串作为baseUrl，因为所有的API调用都已经包含了/api前缀
-    this.baseUrl = ''
+    // 在开发环境中使用完整URL，生产环境使用相对路径
+    this.baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
     this.initializeVisitorId()
   }
 

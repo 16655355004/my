@@ -53,6 +53,11 @@ export default {
         return await handleDebugResetEmailSent(request, env, corsHeaders);
       }
 
+      // 调试路由 - 查看邮件系统状态
+      if (path === '/api/debug/email-status') {
+        return await handleDebugEmailStatus(request, env, corsHeaders);
+      }
+
       return new Response('Not Found', { status: 404, headers: corsHeaders });
     } catch (error) {
       console.error('Worker error:', error);
@@ -822,11 +827,11 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
     const configData = await env.BOOKMARKS_KV.get('email_config');
     const config = configData ? JSON.parse(configData) : null;
 
-    // 时间计算
+    // 时间计算 - 使用与定时任务相同的方法
     const now = new Date();
-    const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-    const currentTime = beijingTime.getUTCHours().toString().padStart(2, '0') + ':' +
-      beijingTime.getUTCMinutes().toString().padStart(2, '0');
+    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
+    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
+      beijingTime.getMinutes().toString().padStart(2, '0');
 
     // 检查上次发送记录
     const today = beijingTime.toISOString().split('T')[0];
@@ -837,7 +842,7 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
     if (config && config.sendTime) {
       const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
       const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-      const currentMinutes = beijingTime.getUTCHours() * 60 + beijingTime.getUTCMinutes();
+      const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
       const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
 
       timeMatchInfo = {
@@ -906,6 +911,87 @@ async function handleDebugResetEmailSent(_request, env, corsHeaders) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to reset email sent record: ' + error.message
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 调试端点 - 查看邮件系统状态
+async function handleDebugEmailStatus(_request, env, corsHeaders) {
+  const headers = {
+    ...corsHeaders,
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    // 获取邮件配置
+    const configData = await env.BOOKMARKS_KV.get('email_config');
+    const config = configData ? JSON.parse(configData) : null;
+
+    // 获取时间信息
+    const now = new Date();
+    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
+    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
+      beijingTime.getMinutes().toString().padStart(2, '0');
+
+    // 获取今日发送记录
+    const today = beijingTime.toISOString().split('T')[0];
+    const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
+    const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
+
+    // 计算时间差
+    let timeMatchInfo = null;
+    if (config && config.sendTime) {
+      const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
+      const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
+      const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
+      const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
+
+      timeMatchInfo = {
+        scheduledTime: config.sendTime,
+        currentTime: currentTime,
+        timeDifference: timeDifference,
+        withinRange: timeDifference <= 3,
+        scheduledMinutes,
+        currentMinutes
+      };
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        currentTime: {
+          utc: now.toISOString(),
+          beijing: beijingTime.toISOString(),
+          timeString: currentTime,
+          date: today
+        },
+        emailConfig: config ? {
+          enabled: config.enabled,
+          sendTime: config.sendTime,
+          emailCount: config.emails ? config.emails.length : 0,
+          hasQuestion: !!config.question,
+          timezone: config.timezone
+        } : null,
+        lastSent,
+        alreadySentToday: lastSent && lastSent.date === today,
+        timeMatchInfo,
+        systemStatus: {
+          configExists: !!config,
+          systemEnabled: config ? config.enabled : false,
+          hasEmails: config ? (config.emails && config.emails.length > 0) : false,
+          hasQuestion: config ? !!config.question : false,
+          readyToSend: config ? (config.enabled && config.emails && config.emails.length > 0 && config.question) : false
+        }
+      }
+    }), { headers });
+  } catch (error) {
+    console.error('Debug email status error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to get email status: ' + error.message
     }), {
       status: 500,
       headers
@@ -1181,12 +1267,11 @@ async function handleScheduledEmail(env) {
       return;
     }
 
-    // 检查是否到了发送时间 - 使用更准确的时区转换
+    // 检查是否到了发送时间 - 使用标准时区API
     const now = new Date();
-    // 获取北京时间 (UTC+8)
-    const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-    const currentTime = beijingTime.getUTCHours().toString().padStart(2, '0') + ':' +
-      beijingTime.getUTCMinutes().toString().padStart(2, '0');
+    const beijingTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" }));
+    const currentTime = beijingTime.getHours().toString().padStart(2, '0') + ':' +
+      beijingTime.getMinutes().toString().padStart(2, '0');
 
     console.log(`Current Beijing time: ${currentTime}, Scheduled time: ${config.sendTime}`);
     console.log(`UTC time: ${now.toISOString()}, Beijing time calculated: ${beijingTime.toISOString()}`);
@@ -1203,14 +1288,15 @@ async function handleScheduledEmail(env) {
       return;
     }
 
-    // 检查时间匹配（允许5分钟的误差）
+    // 检查时间匹配（允许3分钟的误差，因为cron每2分钟执行一次）
     const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
     const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-    const currentMinutes = beijingTime.getUTCHours() * 60 + beijingTime.getUTCMinutes();
+    const currentMinutes = beijingTime.getHours() * 60 + beijingTime.getMinutes();
+    const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
 
-    console.log(`Scheduled minutes: ${scheduledMinutes}, Current minutes: ${currentMinutes}, Difference: ${Math.abs(currentMinutes - scheduledMinutes)}`);
+    console.log(`Scheduled minutes: ${scheduledMinutes}, Current minutes: ${currentMinutes}, Difference: ${timeDifference}`);
 
-    if (Math.abs(currentMinutes - scheduledMinutes) <= 5) {
+    if (timeDifference <= 3) {
       console.log('Time matches, sending scheduled email...');
       const result = await sendDailyEmail(env, config, false);
 
@@ -1362,8 +1448,8 @@ async function sendEmailViaResend(env, toEmail, emailContent, isTest = false) {
     console.log(`Sending email to: ${toEmail}`);
 
     const subject = isTest ?
-      `[测试] 每日智慧分享 - ${new Date().toLocaleDateString('zh-CN')}` :
-      `每日智慧分享 - ${new Date().toLocaleDateString('zh-CN')}`;
+      `[测试] 空空分享 - ${new Date().toLocaleDateString('zh-CN')}` :
+      `空空分享 - ${new Date().toLocaleDateString('zh-CN')}`;
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -1425,7 +1511,7 @@ function generateEmailTemplate(question, answer, isTest = false) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日智慧分享</title>
+    <title>空空分享</title>
     <style>
         * {
             margin: 0;
@@ -1604,14 +1690,14 @@ function generateEmailTemplate(question, answer, isTest = false) {
             <div class="divider"></div>
 
             <div class="answer-section">
-                <div class="answer-label">AI 智慧回答</div>
+                <div class="answer-label">空空回答</div>
                 <div class="answer">${answer.replace(/\n/g, '<br>')}</div>
             </div>
         </div>
 
         <div class="footer">
             <div class="footer-text">
-                感谢您订阅我们的每日智慧分享！<br>
+                感谢您订阅我们的空空分享！<br>
                 希望这些内容能为您的生活带来启发和正能量。
             </div>
             <a href="https://www.jisoolove.top" class="website-link">

@@ -148,10 +148,12 @@
           <!-- 操作按钮 -->
           <div class="actions">
             <button @click="testSend" :disabled="isTesting" class="test-btn">
-              {{ isTesting ? "发送中..." : "测试发送" }}
+              <div v-if="isTesting" class="loading-spinner"></div>
+              <span>{{ isTesting ? "发送中..." : "测试发送" }}</span>
             </button>
             <button @click="saveConfig" :disabled="isSaving" class="save-btn">
-              {{ isSaving ? "保存中..." : "保存配置" }}
+              <div v-if="isSaving" class="loading-spinner"></div>
+              <span>{{ isSaving ? "保存中..." : "保存配置" }}</span>
             </button>
           </div>
 
@@ -162,6 +164,27 @@
             </span>
             <span class="message-text">{{ message.text }}</span>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 测试发送日志弹窗 -->
+    <div v-if="showTestLogModal" class="modal-overlay" @click="closeTestLogModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>测试发送详细日志</h3>
+          <button @click="closeTestLogModal" class="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="log-container">
+            <div v-for="(log, index) in testLogs" :key="index" class="log-entry" :class="log.type">
+              <span class="log-time">{{ log.time }}</span>
+              <span class="log-message">{{ log.message }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeTestLogModal" class="modal-btn">关闭</button>
         </div>
       </div>
     </div>
@@ -182,6 +205,10 @@ const error = ref<string | null>(null);
 const isSaving = ref(false);
 const isTesting = ref(false);
 const message = ref<{ type: "success" | "error" | "info"; text: string } | null>(null);
+
+// 测试发送日志相关
+const showTestLogModal = ref(false);
+const testLogs = ref<Array<{ time: string; message: string; type: string }>>([]);
 
 const config = ref<EmailConfig>({
   emails: [],
@@ -325,30 +352,47 @@ const saveConfig = async () => {
 const testSend = async () => {
   try {
     isTesting.value = true;
+    testLogs.value = []; // 清空之前的日志
+
+    addTestLog("开始测试发送邮件...", "info");
     console.log("开始测试发送邮件...");
 
     // 验证配置
+    addTestLog("验证邮件配置...", "info");
     const validation = emailService.validateConfig(config.value);
     if (!validation.valid) {
+      addTestLog(`配置验证失败: ${validation.errors[0]}`, "error");
       console.error("测试发送验证失败:", validation.errors);
       showMessage("error", validation.errors[0]);
+      showTestLogModal.value = true;
       return;
     }
+    addTestLog("配置验证通过", "success");
 
+    addTestLog("发送测试邮件请求...", "info");
     const result = await emailService.testSend(emailService.getAdminPassword());
     console.log("测试发送结果:", result);
 
     if (result.success) {
+      addTestLog("测试邮件发送成功！", "success");
+      if (result.data && result.data.details) {
+        addTestLog(`发送详情: ${JSON.stringify(result.data.details, null, 2)}`, "info");
+      }
       showMessage("success", "测试邮件发送成功！请检查您的邮箱。");
+      showTestLogModal.value = true;
     } else {
       const errorMsg = result.error || "未知错误";
+      addTestLog(`发送失败: ${errorMsg}`, "error");
       console.error("测试发送失败:", errorMsg);
       showMessage("error", "测试发送失败: " + errorMsg);
+      showTestLogModal.value = true;
     }
   } catch (error) {
     console.error("测试发送异常:", error);
     const errorMsg = error instanceof Error ? error.message : "网络连接失败";
+    addTestLog(`发送异常: ${errorMsg}`, "error");
     showMessage("error", "测试发送失败: " + errorMsg);
+    showTestLogModal.value = true;
   } finally {
     isTesting.value = false;
   }
@@ -375,6 +419,20 @@ const showMessage = (type: "success" | "error" | "info", text: string) => {
   setTimeout(() => {
     message.value = null;
   }, 5000);
+};
+
+// 测试日志相关函数
+const addTestLog = (message: string, type: string) => {
+  const now = new Date();
+  testLogs.value.push({
+    time: now.toLocaleTimeString(),
+    message,
+    type,
+  });
+};
+
+const closeTestLogModal = () => {
+  showTestLogModal.value = false;
 };
 </script>
 
@@ -907,6 +965,162 @@ const showMessage = (type: "success" | "error" | "info", text: string) => {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.test-btn,
+.save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+  background: #f8f9fa;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.log-container {
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.log-entry {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 4px;
+  border-left: 3px solid #ddd;
+}
+
+.log-entry.success {
+  background: #d4edda;
+  border-left-color: #28a745;
+  color: #155724;
+}
+
+.log-entry.error {
+  background: #f8d7da;
+  border-left-color: #dc3545;
+  color: #721c24;
+}
+
+.log-entry.info {
+  background: #d1ecf1;
+  border-left-color: #17a2b8;
+  color: #0c5460;
+}
+
+.log-time {
+  color: #666;
+  margin-right: 12px;
+  font-weight: bold;
+}
+
+.log-message {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  background: #212529;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.modal-btn:hover {
+  background: #495057;
 }
 
 .message {
