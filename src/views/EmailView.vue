@@ -668,26 +668,26 @@ const addEmail = () => {
   
   config.value.emails.push("");
 
-  nextTick(() => {
-    const emailItems = document.querySelectorAll('.email-item');
-    const newItem = emailItems[emailItems.length - 1];
-    if (newItem) {
-      gsap.fromTo(newItem,
-        {
-          opacity: 0,
-          x: -30,
-          scale: 0.8
-        },
-        {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-          duration: 0.5,
-          ease: "back.out(1.7)"
-        }
-      );
-    }
-  });
+  // nextTick(() => {
+  //   const emailItems = document.querySelectorAll('.email-item');
+  //   const newItem = emailItems[emailItems.length - 1];
+  //   if (newItem) {
+  //     gsap.fromTo(newItem,
+  //       {
+  //         opacity: 0,
+  //         x: -30,
+  //         scale: 0.8
+  //       },
+  //       {
+  //         opacity: 1,
+  //         x: 0,
+  //         scale: 1,
+  //         duration: 0.5,
+  //         ease: "back.out(1.7)"
+  //       }
+  //     );
+  //   }
+  // });
 };
 
 // 删除邮箱动画
@@ -1928,7 +1928,7 @@ const onTimeInputFocus = (event: Event) => {
 .remove-btn {
   width: 44px;
   height: 44px;
-  background: rgba(255, 107, 107, 0.1);
+  background: rgba(255, 117, 107, 0.1);
   border: 1px solid rgba(255, 107, 107, 0.2);
   border-radius: 12px;
   color: #ff6b6b;
@@ -1986,7 +1986,7 @@ const onTimeInputFocus = (event: Event) => {
 
 .remove-btn {
   padding: 8px 12px;
-  background: #7d6f6c;
+  background: #f36303;
   color: white;
   border: none;
   border-radius: 4px;
