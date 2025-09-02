@@ -251,6 +251,164 @@
           </div>
 
           <div class="config-panels" ref="configPanels">
+            <!-- 系统操作面板移到最上方 -->
+            <div class="action-panel" ref="actionPanel">
+              <div class="panel-header">
+                <div class="panel-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon
+                      points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h2>系统操作</h2>
+              </div>
+
+              <div class="panel-content">
+                <div class="action-grid">
+                  <button
+                    @click="testSend"
+                    :disabled="isTesting"
+                    class="action-btn"
+                    :class="{
+                      primary:
+                        buttonStates.test.status === 'idle' ||
+                        buttonStates.test.status === 'loading',
+                      success: buttonStates.test.status === 'success',
+                      error: buttonStates.test.status === 'error',
+                    }"
+                    ref="testBtn"
+                  >
+                    <div class="btn-icon">
+                      <svg
+                        v-if="!isTesting"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M22 2L11 13"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <polygon
+                          points="22,2 15,22 11,13 2,9 22,2"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      <div v-else class="loading-spinner-btn"></div>
+                    </div>
+                    <div class="btn-content">
+                      <span class="btn-title">{{ buttonStates.test.text }}</span>
+                      <span class="btn-subtitle">立即发送测试邮件</span>
+                    </div>
+                  </button>
+
+                  <button
+                    @click="resetTodayEmail"
+                    :disabled="isResetting"
+                    class="action-btn"
+                    :class="{
+                      warning:
+                        buttonStates.reset.status === 'idle' ||
+                        buttonStates.reset.status === 'loading',
+                      success: buttonStates.reset.status === 'success',
+                      error: buttonStates.reset.status === 'error',
+                    }"
+                    ref="resetBtn"
+                  >
+                    <div class="btn-icon">
+                      <svg
+                        v-if="!isResetting"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <polyline
+                          points="1,4 1,10 7,10"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M3.51 15A9 9 0 0 0 21 12A9 9 0 0 0 5.64 5.64L1 10"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      <div v-else class="loading-spinner-btn"></div>
+                    </div>
+                    <div class="btn-content">
+                      <span class="btn-title">{{ buttonStates.reset.text }}</span>
+                      <span class="btn-subtitle">重置今日发送记录</span>
+                    </div>
+                  </button>
+
+                  <button
+                    @click="saveConfig"
+                    :disabled="isSaving"
+                    class="action-btn"
+                    :class="{
+                      success:
+                        buttonStates.save.status === 'idle' ||
+                        buttonStates.save.status === 'loading',
+                      primary: buttonStates.save.status === 'success',
+                      error: buttonStates.save.status === 'error',
+                    }"
+                    ref="saveBtn"
+                  >
+                    <div class="btn-icon">
+                      <svg
+                        v-if="!isSaving"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <polyline
+                          points="17,21 17,13 7,13 7,21"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <polyline
+                          points="7,3 7,8 15,8"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      <div v-else class="loading-spinner-btn"></div>
+                    </div>
+                    <div class="btn-content">
+                      <span class="btn-title">{{ buttonStates.save.text }}</span>
+                      <span class="btn-subtitle">保存所有设置</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="config-panel" ref="emailPanel">
               <div class="panel-header">
                 <div class="panel-icon">
@@ -384,180 +542,60 @@
                         {{ config.enabled ? "系统将每日自动发送邮件" : "系统已暂停，不会发送邮件" }}
                       </p>
                     </div>
-                    <label class="modern-switch" :class="{ active: config.enabled }">
-                      <input v-model="config.enabled" type="checkbox" class="switch-input" />
-                      <span class="switch-slider">
-                        <span class="switch-button"></span>
-                      </span>
-                    </label>
+                    <div class="premium-switch" @click="toggleSwitch" ref="premiumSwitch">
+                      <input
+                        v-model="config.enabled"
+                        type="checkbox"
+                        class="switch-input"
+                        style="display: none"
+                      />
+                      <div class="switch-track" ref="switchTrack">
+                        <div class="switch-glow" ref="switchGlow"></div>
+                        <div class="switch-thumb" ref="switchThumb">
+                          <div class="thumb-inner" ref="thumbInner">
+                            <div class="thumb-icon" ref="thumbIcon">
+                              <svg
+                                v-if="config.enabled"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M20 6L9 17L4 12"
+                                  stroke="currentColor"
+                                  stroke-width="3"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                />
+                              </svg>
+                              <svg
+                                v-else
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M18 6L6 18M6 6L18 18"
+                                  stroke="currentColor"
+                                  stroke-width="3"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="switch-labels">
+                          <span class="label-on" ref="labelOn">ON</span>
+                          <span class="label-off" ref="labelOff">OFF</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="action-panel" ref="actionPanel">
-            <div class="panel-header">
-              <div class="panel-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <polygon
-                    points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </div>
-              <h2>系统操作</h2>
-            </div>
-
-            <div class="panel-content">
-              <div class="action-grid">
-                <button
-                  @click="testSend"
-                  :disabled="isTesting"
-                  class="action-btn primary"
-                  ref="testBtn"
-                >
-                  <div class="btn-icon">
-                    <svg
-                      v-if="!isTesting"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M22 2L11 13"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <polygon
-                        points="22,2 15,22 11,13 2,9 22,2"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <div v-else class="loading-spinner-btn"></div>
-                  </div>
-                  <div class="btn-content">
-                    <span class="btn-title">{{ isTesting ? "发送中..." : "测试发送" }}</span>
-                    <span class="btn-subtitle">立即发送测试邮件</span>
-                  </div>
-                </button>
-
-                <button
-                  @click="resetTodayEmail"
-                  :disabled="isResetting"
-                  class="action-btn warning"
-                  ref="resetBtn"
-                >
-                  <div class="btn-icon">
-                    <svg
-                      v-if="!isResetting"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <polyline
-                        points="1,4 1,10 7,10"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M3.51 15A9 9 0 0 0 21 12A9 9 0 0 0 5.64 5.64L1 10"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <div v-else class="loading-spinner-btn"></div>
-                  </div>
-                  <div class="btn-content">
-                    <span class="btn-title">{{ isResetting ? "重置中..." : "重置发送" }}</span>
-                    <span class="btn-subtitle">重置今日发送记录</span>
-                  </div>
-                </button>
-
-                <button
-                  @click="saveConfig"
-                  :disabled="isSaving"
-                  class="action-btn success"
-                  ref="saveBtn"
-                >
-                  <div class="btn-icon">
-                    <svg
-                      v-if="!isSaving"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <polyline
-                        points="17,21 17,13 7,13 7,21"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <polyline
-                        points="7,3 7,8 15,8"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <div v-else class="loading-spinner-btn"></div>
-                  </div>
-                  <div class="btn-content">
-                    <span class="btn-title">{{ isSaving ? "保存中..." : "保存配置" }}</span>
-                    <span class="btn-subtitle">保存所有设置</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="message" class="message" :class="message.type">
-          <span class="message-icon">
-            {{ message.type === "success" ? "✓" : message.type === "error" ? "✗" : "i" }}
-          </span>
-          <span class="message-text">{{ message.text }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="showTestLogModal" class="modal-overlay" @click="closeTestLogModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>测试发送详细日志</h3>
-          <button @click="closeTestLogModal" class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="log-container">
-            <div v-for="(log, index) in testLogs" :key="index" class="log-entry" :class="log.type">
-              <span class="log-time">{{ log.time }}</span>
-              <span class="log-message">{{ log.message }}</span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="closeTestLogModal" class="modal-btn">关闭</button>
         </div>
       </div>
     </div>
@@ -580,11 +618,13 @@ const isSaving = ref(false);
 const isTesting = ref(false);
 const isResetting = ref(false);
 const refreshing = ref(false);
-const message = ref<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
-// 测试发送日志相关
-const showTestLogModal = ref(false);
-const testLogs = ref<Array<{ time: string; message: string; type: string }>>([]);
+// 按钮状态管理
+const buttonStates = ref({
+  test: { text: "测试发送", status: "idle" }, // idle, loading, success, error
+  save: { text: "保存配置", status: "idle" },
+  reset: { text: "重置发送", status: "idle" },
+});
 
 const config = ref<EmailConfig>({
   emails: [],
@@ -701,7 +741,7 @@ const animateButtonClick = (buttonRef: HTMLElement) => {
   });
 };
 
-// 保存配置动画
+// 保存配置优化版
 const saveConfig = async () => {
   const saveBtn = document.querySelector(".action-btn.success") as HTMLElement;
   if (saveBtn) {
@@ -710,13 +750,14 @@ const saveConfig = async () => {
 
   try {
     isSaving.value = true;
+    updateButtonState("save", "loading");
     console.log("开始保存配置...", config.value);
 
     // 验证配置
     const validation = emailService.validateConfig(config.value);
     if (!validation.valid) {
       console.error("配置验证失败:", validation.errors);
-      showMessage("error", validation.errors[0]);
+      updateButtonState("save", "error", "验证失败");
       return;
     }
 
@@ -724,7 +765,7 @@ const saveConfig = async () => {
     console.log("保存配置结果:", result);
 
     if (result.success) {
-      showMessage("success", "配置保存成功！");
+      updateButtonState("save", "success");
       if (result.data) {
         config.value = result.data;
       }
@@ -739,20 +780,56 @@ const saveConfig = async () => {
         });
       }
     } else {
-      const errorMsg = result.error || "未知错误";
-      console.error("保存配置失败:", errorMsg);
-      showMessage("error", "保存失败: " + errorMsg);
+      console.error("保存配置失败:", result.error);
+      updateButtonState("save", "error", "保存失败");
     }
   } catch (error) {
     console.error("保存配置异常:", error);
-    const errorMsg = error instanceof Error ? error.message : "网络连接失败";
-    showMessage("error", "保存失败: " + errorMsg);
+    updateButtonState("save", "error", "网络错误");
   } finally {
     isSaving.value = false;
   }
 };
 
-// 测试发送动画
+// 按钮状态动画函数
+const updateButtonState = (
+  buttonType: "test" | "save" | "reset",
+  status: "idle" | "loading" | "success" | "error",
+  customText?: string
+) => {
+  const states = {
+    test: {
+      idle: "测试发送",
+      loading: "正在发送...",
+      success: "发送完成",
+      error: "发送失败",
+    },
+    save: {
+      idle: "保存配置",
+      loading: "正在保存...",
+      success: "保存成功",
+      error: "保存失败",
+    },
+    reset: {
+      idle: "重置发送",
+      loading: "正在重置...",
+      success: "重置完成",
+      error: "重置失败",
+    },
+  };
+
+  buttonStates.value[buttonType].status = status;
+  buttonStates.value[buttonType].text = customText || states[buttonType][status];
+
+  // 如果是成功状态或错误状态，2秒后恢复
+  if (status === "success" || status === "error") {
+    setTimeout(() => {
+      updateButtonState(buttonType, "idle");
+    }, 2000);
+  }
+};
+
+// 测试发送优化版
 const testSend = async () => {
   const testBtn = document.querySelector(".action-btn.primary") as HTMLElement;
   if (testBtn) {
@@ -761,32 +838,22 @@ const testSend = async () => {
 
   try {
     isTesting.value = true;
-    testLogs.value = [];
+    updateButtonState("test", "loading");
 
-    addTestLog("开始测试发送邮件...", "info");
     console.log("开始测试发送邮件...");
 
     const validation = emailService.validateConfig(config.value);
     if (!validation.valid) {
-      addTestLog(`配置验证失败: ${validation.errors[0]}`, "error");
       console.error("测试发送验证失败:", validation.errors);
-      showMessage("error", validation.errors[0]);
-      showTestLogModal.value = true;
+      updateButtonState("test", "error", "验证失败");
       return;
     }
-    addTestLog("配置验证通过", "success");
 
-    addTestLog("发送测试邮件请求...", "info");
     const result = await emailService.testSend(emailService.getAdminPassword());
     console.log("测试发送结果:", result);
 
     if (result.success) {
-      addTestLog("测试邮件发送成功！", "success");
-      if (result.data && result.data.details) {
-        addTestLog(`发送详情: ${JSON.stringify(result.data.details, null, 2)}`, "info");
-      }
-      showMessage("success", "测试邮件发送成功！请检查您的邮箱。");
-      showTestLogModal.value = true;
+      updateButtonState("test", "success");
 
       // 成功动画
       if (testBtn) {
@@ -798,18 +865,12 @@ const testSend = async () => {
         });
       }
     } else {
-      const errorMsg = result.error || "未知错误";
-      addTestLog(`发送失败: ${errorMsg}`, "error");
-      console.error("测试发送失败:", errorMsg);
-      showMessage("error", "测试发送失败: " + errorMsg);
-      showTestLogModal.value = true;
+      console.error("测试发送失败:", result.error);
+      updateButtonState("test", "error", "发送失败");
     }
   } catch (error) {
     console.error("测试发送异常:", error);
-    const errorMsg = error instanceof Error ? error.message : "网络连接失败";
-    addTestLog(`发送异常: ${errorMsg}`, "error");
-    showMessage("error", "测试发送失败: " + errorMsg);
-    showTestLogModal.value = true;
+    updateButtonState("test", "error", "网络错误");
   } finally {
     isTesting.value = false;
   }
@@ -834,50 +895,42 @@ const loadConfig = async () => {
     } else {
       const errorMsg = result.error || "未知错误";
       console.error("配置加载失败:", errorMsg);
-      showMessage("error", "加载配置失败: " + errorMsg);
     }
   } catch (error) {
     console.error("配置加载异常:", error);
-    const errorMsg = error instanceof Error ? error.message : "网络连接失败";
-    showMessage("error", "加载配置失败: " + errorMsg);
   } finally {
     loading.value = false;
   }
 };
 
-// 重置今日邮件发送记录
+// 重置今日邮件发送记录优化版
 const resetTodayEmail = async () => {
-  if (!confirm("确定要重置今日邮件发送记录吗？重置后可以重新测试定时发送功能。")) {
-    return;
-  }
-
   try {
     isResetting.value = true;
-    testLogs.value = []; // 清空之前的日志
-    addTestLog("开始重置今日发送记录...", "info");
+    updateButtonState("reset", "loading");
+
     console.log("开始重置今日发送记录...");
 
+    // 首先保存当前配置，确保使用最新的问题设置
+    const saveResult = await emailService.saveConfig(config.value, emailService.getAdminPassword());
+    if (!saveResult.success) {
+      updateButtonState("reset", "error", "配置保存失败");
+      return;
+    }
+
+    // 重置发送记录
     const result = await emailService.resetTodayEmailSent();
     console.log("重置发送记录结果:", result);
 
     if (result.success) {
-      addTestLog("重置成功！现在可以重新测试发送", "success");
-      addTestLog("提示：请设置发送时间为当前时间+3分钟进行测试", "info");
-      showMessage("success", "今日发送记录已重置，现在可以重新测试定时发送功能");
-      showTestLogModal.value = true;
+      updateButtonState("reset", "success");
     } else {
-      const errorMsg = result.error || "未知错误";
-      addTestLog(`重置失败: ${errorMsg}`, "error");
-      console.error("重置发送记录失败:", errorMsg);
-      showMessage("error", "重置失败: " + errorMsg);
-      showTestLogModal.value = true;
+      console.error("重置发送记录失败:", result.error);
+      updateButtonState("reset", "error", "重置失败");
     }
   } catch (error) {
     console.error("重置发送记录异常:", error);
-    const errorMsg = error instanceof Error ? error.message : "网络连接失败";
-    addTestLog(`重置异常: ${errorMsg}`, "error");
-    showMessage("error", "重置失败: " + errorMsg);
-    showTestLogModal.value = true;
+    updateButtonState("reset", "error", "网络错误");
   } finally {
     isResetting.value = false;
   }
@@ -887,29 +940,8 @@ const validateEmail = (index: number) => {
   const email = config.value.emails[index];
 
   if (email && !emailService.validateEmail(email)) {
-    showMessage("error", `邮箱格式不正确: ${email}`);
+    console.warn(`邮箱格式不正确: ${email}`);
   }
-};
-
-const showMessage = (type: "success" | "error" | "info", text: string) => {
-  message.value = { type, text };
-  setTimeout(() => {
-    message.value = null;
-  }, 5000);
-};
-
-// 测试日志相关函数
-const addTestLog = (message: string, type: string) => {
-  const now = new Date();
-  testLogs.value.push({
-    time: now.toLocaleTimeString(),
-    message,
-    type,
-  });
-};
-
-const closeTestLogModal = () => {
-  showTestLogModal.value = false;
 };
 
 // 刷新状态
@@ -917,6 +949,101 @@ const refreshStatus = async () => {
   refreshing.value = true;
   await loadConfig();
   refreshing.value = false;
+};
+
+// 高端开关切换函数
+const toggleSwitch = () => {
+  const newState = !config.value.enabled;
+  config.value.enabled = newState;
+
+  // GSAP动画
+  const switchThumb = document.querySelector(".switch-thumb") as HTMLElement;
+  const switchTrack = document.querySelector(".switch-track") as HTMLElement;
+  const switchGlow = document.querySelector(".switch-glow") as HTMLElement;
+  const thumbInner = document.querySelector(".thumb-inner") as HTMLElement;
+  const thumbIcon = document.querySelector(".thumb-icon") as HTMLElement;
+  const labelOn = document.querySelector(".label-on") as HTMLElement;
+  const labelOff = document.querySelector(".label-off") as HTMLElement;
+
+  if (newState) {
+    // 开启状态动画
+    gsap.to(switchThumb, {
+      x: 50,
+      duration: 0.4,
+      ease: "back.out(1.7)",
+    });
+
+    gsap.to(switchTrack, {
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      boxShadow: "0 0 20px rgba(102, 126, 234, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.1)",
+      duration: 0.3,
+    });
+
+    gsap.to(switchGlow, {
+      opacity: 1,
+      scale: 1.2,
+      duration: 0.3,
+    });
+
+    gsap.to(thumbInner, {
+      background: "linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(102, 126, 234, 0.3)",
+      duration: 0.3,
+    });
+
+    gsap.to(thumbIcon, {
+      rotation: 360,
+      scale: 1.1,
+      duration: 0.4,
+      ease: "back.out(1.7)",
+    });
+
+    gsap.to(labelOn, { opacity: 1, x: 0, duration: 0.3, delay: 0.1 });
+    gsap.to(labelOff, { opacity: 0, x: 10, duration: 0.2 });
+  } else {
+    // 关闭状态动画
+    gsap.to(switchThumb, {
+      x: 0,
+      duration: 0.4,
+      ease: "back.out(1.7)",
+    });
+
+    gsap.to(switchTrack, {
+      background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)",
+      boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.1)",
+      duration: 0.3,
+    });
+
+    gsap.to(switchGlow, {
+      opacity: 0,
+      scale: 1,
+      duration: 0.3,
+    });
+
+    gsap.to(thumbInner, {
+      background: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
+      boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.8)",
+      duration: 0.3,
+    });
+
+    gsap.to(thumbIcon, {
+      rotation: -360,
+      scale: 1,
+      duration: 0.4,
+      ease: "back.out(1.7)",
+    });
+
+    gsap.to(labelOff, { opacity: 1, x: 0, duration: 0.3, delay: 0.1 });
+    gsap.to(labelOn, { opacity: 0, x: -10, duration: 0.2 });
+  }
+
+  // 触觉反馈效果
+  gsap.to(switchThumb, {
+    scale: 0.95,
+    duration: 0.1,
+    yoyo: true,
+    repeat: 1,
+  });
 };
 
 // GSAP动画初始化
@@ -1091,6 +1218,40 @@ const initMainInterfaceAnimations = () => {
       ease: "power2.out",
     }
   );
+
+  // 初始化高端开关状态
+  setTimeout(() => {
+    const switchThumb = document.querySelector(".switch-thumb") as HTMLElement;
+    const switchTrack = document.querySelector(".switch-track") as HTMLElement;
+    const switchGlow = document.querySelector(".switch-glow") as HTMLElement;
+    const thumbInner = document.querySelector(".thumb-inner") as HTMLElement;
+    const labelOn = document.querySelector(".label-on") as HTMLElement;
+    const labelOff = document.querySelector(".label-off") as HTMLElement;
+
+    if (switchThumb && switchTrack) {
+      if (config.value.enabled) {
+        // 设置开启状态
+        gsap.set(switchThumb, { x: 50 });
+        gsap.set(switchTrack, {
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          boxShadow: "0 0 20px rgba(102, 126, 234, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.1)",
+        });
+        if (switchGlow) gsap.set(switchGlow, { opacity: 1, scale: 1.2 });
+        if (thumbInner)
+          gsap.set(thumbInner, {
+            background: "linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(102, 126, 234, 0.3)",
+          });
+        if (labelOn) gsap.set(labelOn, { opacity: 1, x: 0 });
+        if (labelOff) gsap.set(labelOff, { opacity: 0, x: 10 });
+      } else {
+        // 设置关闭状态
+        gsap.set(switchThumb, { x: 0 });
+        if (labelOn) gsap.set(labelOn, { opacity: 0, x: -10 });
+        if (labelOff) gsap.set(labelOff, { opacity: 1, x: 0 });
+      }
+    }
+  }, 800);
 };
 
 // 输入框焦点处理
@@ -1644,6 +1805,15 @@ const onQuestionInputFocus = (event: Event) => {
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 
+.status-card.clickable {
+  cursor: pointer;
+}
+
+.status-card.clickable:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
 .status-card.primary.active::before {
   background: linear-gradient(90deg, #00ff88, #00d4ff);
   opacity: 1;
@@ -2135,53 +2305,114 @@ const onQuestionInputFocus = (event: Event) => {
   margin: 0;
 }
 
-.modern-switch {
+/* 高端开关样式 */
+.premium-switch {
   position: relative;
   display: inline-block;
-  width: 80px;
-  height: 44px;
   cursor: pointer;
+  user-select: none;
 }
 
-.switch-input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.switch-slider {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 22px;
+.switch-track {
+  position: relative;
+  width: 100px;
+  height: 50px;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  border-radius: 25px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
-.switch-button {
+.switch-glow {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 32px;
-  height: 32px;
-  background: #ffffff;
-  border-radius: 50%;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
+  border-radius: 30px;
+  opacity: 0;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
 }
 
-.modern-switch.active .switch-slider {
-  background: linear-gradient(135deg, #04b4fa 0%, #cbe979 100%);
-  border-color: #0d0e0d;
+.switch-thumb {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 40px;
+  height: 40px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 2;
 }
 
-.modern-switch.active .switch-button {
-  transform: translateX(36px);
-  background: #ffffff;
+.thumb-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.thumb-icon {
+  width: 20px;
+  height: 20px;
+  color: #666;
+  transition: all 0.4s ease;
+}
+
+.thumb-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.switch-labels {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+.label-on {
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+}
+
+.label-off {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s ease;
+}
+
+/* 悬停效果 */
+.premium-switch:hover .switch-track {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+.premium-switch:hover .thumb-inner {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+/* 激活状态 */
+.premium-switch:active .thumb-inner {
+  transform: scale(0.95);
 }
 
 /* 操作按钮样式 */
@@ -2189,6 +2420,25 @@ const onQuestionInputFocus = (event: Event) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+}
+
+/* 按钮加载动画 */
+.loading-spinner-btn {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .action-btn {
@@ -2227,6 +2477,18 @@ const onQuestionInputFocus = (event: Event) => {
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.03);
+  transform: none;
+}
+
+.action-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .action-btn.primary {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
   border-color: rgba(102, 126, 234, 0.3);
@@ -2255,6 +2517,16 @@ const onQuestionInputFocus = (event: Event) => {
 .action-btn.success:hover {
   background: linear-gradient(135deg, rgba(0, 255, 136, 0.3) 0%, rgba(0, 212, 255, 0.3) 100%);
   box-shadow: 0 15px 35px rgba(0, 255, 136, 0.2);
+}
+
+.action-btn.error {
+  background: linear-gradient(135deg, rgba(255, 59, 48, 0.2) 0%, rgba(255, 69, 58, 0.2) 100%);
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
+.action-btn.error:hover {
+  background: linear-gradient(135deg, rgba(255, 59, 48, 0.3) 0%, rgba(255, 69, 58, 0.3) 100%);
+  box-shadow: 0 15px 35px rgba(255, 59, 48, 0.2);
 }
 
 .action-btn:disabled {

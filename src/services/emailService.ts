@@ -4,6 +4,36 @@ export interface EmailConfig {
   question: string
   enabled: boolean
   updatedAt?: string
+  // 新增邮件功能配置
+  template?: EmailTemplate
+  sendingOptions?: SendingOptions
+}
+
+export interface EmailTemplate {
+  id?: string
+  name: string
+  subject: string
+  htmlContent: string
+  textContent?: string
+  variables?: Record<string, any>
+}
+
+export interface SendingOptions {
+  priority?: 'high' | 'normal' | 'low'
+  tags?: string[]
+  headers?: Record<string, string>
+  trackOpens?: boolean
+  trackClicks?: boolean
+  replyTo?: string
+}
+
+export interface EmailStats {
+  sent: number
+  delivered: number
+  opened: number
+  clicked: number
+  bounced: number
+  complained: number
 }
 
 export interface EmailTestResult {
@@ -211,22 +241,36 @@ class EmailService {
    */
   async resetTodayEmailSent(): Promise<ApiResponse<any>> {
     try {
-      const url = `${this.baseUrl.replace('/email', '')}/debug/reset-email-sent`
-      console.log('重置今日发送记录 - 请求URL:', url)
+      // 使用调试端点，这是实际工作的端点
+      const debugUrl = import.meta.env.DEV
+        ? 'https://www.jisoolove.top/api/debug/reset-email-sent'
+        : '/api/debug/reset-email-sent'
 
-      const response = await fetch(url, {
+      console.log('重置今日发送记录 - 请求URL:', debugUrl)
+
+      const response = await fetch(debugUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json'
+        }
       })
 
       console.log('重置今日发送记录 - 响应状态:', response.status)
 
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('重置今日发送记录 - HTTP错误:', response.status, errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+        const contentType = response.headers.get('content-type')
+        let errorMessage = `HTTP error! status: ${response.status}`
+
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({}))
+          errorMessage = errorData.error || errorMessage
+        } else {
+          const errorText = await response.text()
+          console.error('重置今日发送记录 - 非JSON错误响应:', errorText.substring(0, 200))
+          errorMessage = '服务器返回了非JSON格式的错误响应'
+        }
+
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
@@ -255,6 +299,91 @@ class EmailService {
    */
   setAdminPassword(password: string): void {
     localStorage.setItem('adminPassword', password)
+  }
+
+  /**
+   * 获取邮件发送统计
+   */
+  async getEmailStats(): Promise<ApiResponse<EmailStats>> {
+    try {
+      const url = `${this.baseUrl}/stats`
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('获取邮件统计失败:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '获取邮件统计失败'
+      }
+    }
+  }
+
+  /**
+   * 创建邮件模板
+   */
+  async createTemplate(template: EmailTemplate): Promise<ApiResponse<EmailTemplate>> {
+    try {
+      const url = `${this.baseUrl}/templates`
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(template)
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('创建邮件模板失败:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '创建邮件模板失败'
+      }
+    }
+  }
+
+  /**
+   * 获取邮件模板列表
+   */
+  async getTemplates(): Promise<ApiResponse<EmailTemplate[]>> {
+    try {
+      const url = `${this.baseUrl}/templates`
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('获取邮件模板失败:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '获取邮件模板失败'
+      }
+    }
   }
 }
 
