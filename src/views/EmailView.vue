@@ -213,9 +213,8 @@
               <div class="status-card">
                 <div class="card-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                    <polyline
-                      points="12,6 12,12 16,14"
+                    <path
+                      d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z"
                       stroke="currentColor"
                       stroke-width="2"
                       stroke-linecap="round"
@@ -224,9 +223,9 @@
                   </svg>
                 </div>
                 <div class="card-content">
-                  <h3>发送时间</h3>
-                  <p class="value-text">{{ formattedSendTime }}</p>
-                  <span class="label-text">北京时间</span>
+                  <h3>发送模式</h3>
+                  <p class="value-text">每日自动</p>
+                  <span class="label-text">基于日期发送</span>
                 </div>
               </div>
 
@@ -243,9 +242,9 @@
                   </svg>
                 </div>
                 <div class="card-content">
-                  <h3>下次发送</h3>
-                  <p class="value-text">{{ nextSendTime }}</p>
-                  <span class="label-text">预计时间</span>
+                  <h3>发送状态</h3>
+                  <p class="value-text">{{ config.enabled ? "已启用" : "已禁用" }}</p>
+                  <span class="label-text">系统状态</span>
                 </div>
               </div>
             </div>
@@ -374,110 +373,24 @@
                     ></textarea>
                     <div class="textarea-underline"></div>
                   </div>
-                  <!-- <div class="question-hint">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                      <path
-                        d="M12 16V12"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M12 8H12.01"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <span>问题应该积极正面，AI会基于这个问题生成每日的智慧分享内容</span>
-                  </div> -->
                 </div>
-              </div>
-            </div>
 
-            <div class="config-panel" ref="timePanel">
-              <div class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                    <polyline
-                      points="12,6 12,12 16,14"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </div>
-                <h2>时间设置</h2>
-                <div class="panel-badge active">{{ formattedSendTime }}</div>
-              </div>
-
-              <div class="panel-content">
-                <div class="time-section">
-                  <div class="time-input-group">
-                    <label for="sendTime" class="section-label">发送时间 (北京时间)</label>
-                    <div class="time-input-wrapper">
-                      <input
-                        id="sendTime"
-                        v-model="config.sendTime"
-                        type="time"
-                        class="time-input"
-                        @focus="onTimeInputFocus"
-                        ref="timeInput"
-                      />
-                      <div class="input-underline"></div>
+                <!-- 系统控制整合到问题设置面板 -->
+                <div class="control-section">
+                  <div class="switch-container">
+                    <div class="switch-info">
+                      <h3>定时发送功能</h3>
+                      <p>
+                        {{ config.enabled ? "系统将每日自动发送邮件" : "系统已暂停，不会发送邮件" }}
+                      </p>
                     </div>
+                    <label class="modern-switch" :class="{ active: config.enabled }">
+                      <input v-model="config.enabled" type="checkbox" class="switch-input" />
+                      <span class="switch-slider">
+                        <span class="switch-button"></span>
+                      </span>
+                    </label>
                   </div>
-                  <div class="timezone-info">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                      <path
-                        d="M12 6V12L16 14"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    <span>时区: {{ config.timezone || "Asia/Shanghai" }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="control-panel" ref="controlPanel">
-            <div class="panel-header">
-              <div class="panel-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <h2>系统控制</h2>
-              <div class="panel-badge" :class="{ active: config.enabled }">
-                {{ config.enabled ? "已启用" : "已禁用" }}
-              </div>
-            </div>
-
-            <div class="panel-content">
-              <div class="control-section">
-                <div class="switch-container">
-                  <div class="switch-info">
-                    <h3>定时发送功能</h3>
-                    <p>{{ config.enabled ? "系统将按设定时间自动发送邮件" : "系统已暂停，不会发送邮件" }}</p>
-                  </div>
-                  <label class="modern-switch" :class="{ active: config.enabled }">
-                    <input v-model="config.enabled" type="checkbox" class="switch-input" />
-                    <span class="switch-slider">
-                      <span class="switch-button"></span>
-                    </span>
-                  </label>
                 </div>
               </div>
             </div>
@@ -487,7 +400,13 @@
             <div class="panel-header">
               <div class="panel-icon">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polygon
+                    points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </div>
               <h2>系统操作</h2>
@@ -495,11 +414,33 @@
 
             <div class="panel-content">
               <div class="action-grid">
-                <button @click="testSend" :disabled="isTesting" class="action-btn primary" ref="testBtn">
+                <button
+                  @click="testSend"
+                  :disabled="isTesting"
+                  class="action-btn primary"
+                  ref="testBtn"
+                >
                   <div class="btn-icon">
-                    <svg v-if="!isTesting" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg
+                      v-if="!isTesting"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M22 2L11 13"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <polygon
+                        points="22,2 15,22 11,13 2,9 22,2"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                     <div v-else class="loading-spinner-btn"></div>
                   </div>
@@ -509,11 +450,33 @@
                   </div>
                 </button>
 
-                <button @click="resetTodayEmail" :disabled="isResetting" class="action-btn warning" ref="resetBtn">
+                <button
+                  @click="resetTodayEmail"
+                  :disabled="isResetting"
+                  class="action-btn warning"
+                  ref="resetBtn"
+                >
                   <div class="btn-icon">
-                    <svg v-if="!isResetting" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <polyline points="1,4 1,10 7,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M3.51 15A9 9 0 0 0 21 12A9 9 0 0 0 5.64 5.64L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg
+                      v-if="!isResetting"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <polyline
+                        points="1,4 1,10 7,10"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M3.51 15A9 9 0 0 0 21 12A9 9 0 0 0 5.64 5.64L1 10"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                     <div v-else class="loading-spinner-btn"></div>
                   </div>
@@ -523,12 +486,40 @@
                   </div>
                 </button>
 
-                <button @click="saveConfig" :disabled="isSaving" class="action-btn success" ref="saveBtn">
+                <button
+                  @click="saveConfig"
+                  :disabled="isSaving"
+                  class="action-btn success"
+                  ref="saveBtn"
+                >
                   <div class="btn-icon">
-                    <svg v-if="!isSaving" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <polyline points="7,3 7,8 15,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg
+                      v-if="!isSaving"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <polyline
+                        points="17,21 17,13 7,13 7,21"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <polyline
+                        points="7,3 7,8 15,8"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                     <div v-else class="loading-spinner-btn"></div>
                   </div>
@@ -574,7 +565,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import gsap from "gsap";
 import emailService, { type EmailConfig } from "@/services/emailService";
 import { bookmarkService } from "@/services/bookmarkService";
@@ -598,21 +589,7 @@ const testLogs = ref<Array<{ time: string; message: string; type: string }>>([])
 const config = ref<EmailConfig>({
   emails: [],
   question: "",
-  sendTime: "08:00",
-  timezone: "Asia/Shanghai",
   enabled: false,
-});
-
-// 计算属性
-const nextSendTime = computed(() => {
-  if (!config.value.enabled || !config.value.sendTime) {
-    return "系统已禁用";
-  }
-  return emailService.getTimeUntilNextSend(config.value.sendTime);
-});
-
-const formattedSendTime = computed(() => {
-  return emailService.formatTime(config.value.sendTime);
 });
 
 // 验证管理员密码
@@ -653,8 +630,6 @@ const logout = () => {
   config.value = {
     emails: [],
     question: "",
-    sendTime: "08:00",
-    timezone: "Asia/Shanghai",
     enabled: false,
   };
 };
@@ -665,7 +640,7 @@ const addEmail = () => {
   if (!Array.isArray(config.value.emails)) {
     config.value.emails = [];
   }
-  
+
   config.value.emails.push("");
 
   // nextTick(() => {
@@ -690,36 +665,29 @@ const addEmail = () => {
   // });
 };
 
-// 删除邮箱动画
+// 删除邮箱 - 修复显示bug
 const removeEmail = (index: number) => {
   // 确保索引有效
   if (index < 0 || index >= config.value.emails.length) {
     return;
   }
 
-  const emailItems = document.querySelectorAll('.email-item');
-  const itemToRemove = emailItems[index];
+  // 直接删除数组元素，确保响应式更新
+  config.value.emails.splice(index, 1);
 
-  if (itemToRemove) {
-    gsap.to(itemToRemove, {
-      opacity: 0,
-      x: 30,
-      scale: 0.8,
-      duration: 0.3,
-      ease: "power2.in",
-      onComplete: () => {
-        // 确保数组仍然存在且索引有效
-        if (Array.isArray(config.value.emails) && index < config.value.emails.length) {
-          config.value.emails.splice(index, 1);
-        }
+  // 添加简单的视觉反馈
+  nextTick(() => {
+    const emailItems = document.querySelectorAll(".email-item");
+    emailItems.forEach((item, i) => {
+      if (i >= index) {
+        gsap.fromTo(
+          item,
+          { x: -10, opacity: 0.8 },
+          { x: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
+        );
       }
     });
-  } else {
-    // 直接删除，不使用动画
-    if (Array.isArray(config.value.emails) && index < config.value.emails.length) {
-      config.value.emails.splice(index, 1);
-    }
-  }
+  });
 };
 
 // 按钮点击动画
@@ -729,13 +697,13 @@ const animateButtonClick = (buttonRef: HTMLElement) => {
     duration: 0.1,
     yoyo: true,
     repeat: 1,
-    ease: "power2.inOut"
+    ease: "power2.inOut",
   });
 };
 
 // 保存配置动画
 const saveConfig = async () => {
-  const saveBtn = document.querySelector('.action-btn.success') as HTMLElement;
+  const saveBtn = document.querySelector(".action-btn.success") as HTMLElement;
   if (saveBtn) {
     animateButtonClick(saveBtn);
   }
@@ -767,7 +735,7 @@ const saveConfig = async () => {
           backgroundColor: "rgba(0, 255, 136, 0.3)",
           duration: 0.3,
           yoyo: true,
-          repeat: 1
+          repeat: 1,
         });
       }
     } else {
@@ -786,7 +754,7 @@ const saveConfig = async () => {
 
 // 测试发送动画
 const testSend = async () => {
-  const testBtn = document.querySelector('.action-btn.primary') as HTMLElement;
+  const testBtn = document.querySelector(".action-btn.primary") as HTMLElement;
   if (testBtn) {
     animateButtonClick(testBtn);
   }
@@ -826,7 +794,7 @@ const testSend = async () => {
           backgroundColor: "rgba(0, 255, 136, 0.3)",
           duration: 0.3,
           yoyo: true,
-          repeat: 1
+          repeat: 1,
         });
       }
     } else {
@@ -877,10 +845,6 @@ const loadConfig = async () => {
   }
 };
 
-
-
-
-
 // 重置今日邮件发送记录
 const resetTodayEmail = async () => {
   if (!confirm("确定要重置今日邮件发送记录吗？重置后可以重新测试定时发送功能。")) {
@@ -918,8 +882,6 @@ const resetTodayEmail = async () => {
     isResetting.value = false;
   }
 };
-
-
 
 const validateEmail = (index: number) => {
   const email = config.value.emails[index];
@@ -979,33 +941,35 @@ onMounted(() => {
 
 // 登录界面动画
 const initLoginAnimations = () => {
-  const loginCard = document.querySelector('.login-card');
-  const loginIcon = document.querySelector('.login-icon');
-  const loginTitle = document.querySelector('.login-title');
-  const loginSubtitle = document.querySelector('.login-subtitle');
-  const loginForm = document.querySelector('.login-form');
+  const loginCard = document.querySelector(".login-card");
+  const loginIcon = document.querySelector(".login-icon");
+  const loginTitle = document.querySelector(".login-title");
+  const loginSubtitle = document.querySelector(".login-subtitle");
+  const loginForm = document.querySelector(".login-form");
 
   if (loginCard) {
-    gsap.fromTo(loginCard,
+    gsap.fromTo(
+      loginCard,
       {
         opacity: 0,
         y: 50,
-        scale: 0.9
+        scale: 0.9,
       },
       {
         opacity: 1,
         y: 0,
         scale: 1,
         duration: 0.8,
-        ease: "back.out(1.7)"
+        ease: "back.out(1.7)",
       }
     );
 
-    gsap.fromTo(loginIcon,
+    gsap.fromTo(
+      loginIcon,
       {
         opacity: 0,
         scale: 0,
-        rotation: -180
+        rotation: -180,
       },
       {
         opacity: 1,
@@ -1013,34 +977,36 @@ const initLoginAnimations = () => {
         rotation: 0,
         duration: 0.6,
         delay: 0.3,
-        ease: "back.out(1.7)"
+        ease: "back.out(1.7)",
       }
     );
 
-    gsap.fromTo([loginTitle, loginSubtitle],
+    gsap.fromTo(
+      [loginTitle, loginSubtitle],
       {
         opacity: 0,
-        y: 20
+        y: 20,
       },
       {
         opacity: 1,
         y: 0,
         duration: 0.6,
         delay: 0.5,
-        stagger: 0.1
+        stagger: 0.1,
       }
     );
 
-    gsap.fromTo(loginForm,
+    gsap.fromTo(
+      loginForm,
       {
         opacity: 0,
-        y: 30
+        y: 30,
       },
       {
         opacity: 1,
         y: 0,
         duration: 0.6,
-        delay: 0.7
+        delay: 0.7,
       }
     );
   }
@@ -1048,31 +1014,33 @@ const initLoginAnimations = () => {
 
 // 主界面动画
 const initMainInterfaceAnimations = () => {
-  const topNav = document.querySelector('.top-nav');
-  const statusDashboard = document.querySelector('.status-dashboard');
-  const configPanels = document.querySelectorAll('.config-panel, .control-panel, .action-panel');
+  const topNav = document.querySelector(".top-nav");
+  const statusDashboard = document.querySelector(".status-dashboard");
+  const configPanels = document.querySelectorAll(".config-panel, .control-panel, .action-panel");
 
   if (topNav) {
-    gsap.fromTo(topNav,
+    gsap.fromTo(
+      topNav,
       {
         opacity: 0,
-        y: -50
+        y: -50,
       },
       {
         opacity: 1,
         y: 0,
         duration: 0.6,
-        ease: "power2.out"
+        ease: "power2.out",
       }
     );
   }
 
   if (statusDashboard) {
-    gsap.fromTo(statusDashboard,
+    gsap.fromTo(
+      statusDashboard,
       {
         opacity: 0,
         y: 30,
-        scale: 0.95
+        scale: 0.95,
       },
       {
         opacity: 1,
@@ -1080,17 +1048,18 @@ const initMainInterfaceAnimations = () => {
         scale: 1,
         duration: 0.8,
         delay: 0.2,
-        ease: "power2.out"
+        ease: "power2.out",
       }
     );
 
     // 状态卡片动画
-    const statusCards = document.querySelectorAll('.status-card');
-    gsap.fromTo(statusCards,
+    const statusCards = document.querySelectorAll(".status-card");
+    gsap.fromTo(
+      statusCards,
       {
         opacity: 0,
         y: 20,
-        scale: 0.9
+        scale: 0.9,
       },
       {
         opacity: 1,
@@ -1099,17 +1068,18 @@ const initMainInterfaceAnimations = () => {
         duration: 0.6,
         delay: 0.4,
         stagger: 0.1,
-        ease: "back.out(1.7)"
+        ease: "back.out(1.7)",
       }
     );
   }
 
   // 配置面板动画
-  gsap.fromTo(configPanels,
+  gsap.fromTo(
+    configPanels,
     {
       opacity: 0,
       y: 40,
-      scale: 0.95
+      scale: 0.95,
     },
     {
       opacity: 1,
@@ -1118,7 +1088,7 @@ const initMainInterfaceAnimations = () => {
       duration: 0.8,
       delay: 0.6,
       stagger: 0.15,
-      ease: "power2.out"
+      ease: "power2.out",
     }
   );
 };
@@ -1126,7 +1096,7 @@ const initMainInterfaceAnimations = () => {
 // 输入框焦点处理
 const onEmailInputFocus = (event: Event) => {
   const input = event.target as HTMLInputElement;
-  const wrapper = input.closest('.email-input-wrapper');
+  const wrapper = input.closest(".email-input-wrapper");
   if (wrapper) {
     gsap.to(wrapper, { scale: 1.02, duration: 0.2, ease: "power2.out" });
   }
@@ -1134,17 +1104,9 @@ const onEmailInputFocus = (event: Event) => {
 
 const onQuestionInputFocus = (event: Event) => {
   const textarea = event.target as HTMLTextAreaElement;
-  const wrapper = textarea.closest('.textarea-wrapper');
+  const wrapper = textarea.closest(".textarea-wrapper");
   if (wrapper) {
     gsap.to(wrapper, { scale: 1.01, duration: 0.2, ease: "power2.out" });
-  }
-};
-
-const onTimeInputFocus = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const wrapper = input.closest('.time-input-wrapper');
-  if (wrapper) {
-    gsap.to(wrapper, { scale: 1.02, duration: 0.2, ease: "power2.out" });
   }
 };
 </script>
@@ -1165,13 +1127,11 @@ const onTimeInputFocus = (event: Event) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background:
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+  background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
   z-index: 0;
   pointer-events: none;
-  
 }
 
 .container {
@@ -1180,7 +1140,6 @@ const onTimeInputFocus = (event: Event) => {
   padding: 0 20px;
   position: relative;
   z-index: 1;
-  
 }
 
 .header {
@@ -1193,7 +1152,6 @@ const onTimeInputFocus = (event: Event) => {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
- 
 }
 
 .header h1 {
@@ -1257,16 +1215,14 @@ const onTimeInputFocus = (event: Event) => {
   max-width: 450px;
   width: 100%;
   text-align: center;
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
 }
 
 .login-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -1387,7 +1343,7 @@ const onTimeInputFocus = (event: Event) => {
 }
 
 .login-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
@@ -1489,7 +1445,6 @@ const onTimeInputFocus = (event: Event) => {
   color: #ffffff;
   font-weight: 600;
   font-size: 1.1rem;
-
 }
 
 .system-logo svg {
@@ -1668,7 +1623,7 @@ const onTimeInputFocus = (event: Event) => {
 }
 
 .status-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -2154,6 +2109,9 @@ const onTimeInputFocus = (event: Event) => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .switch-container {
@@ -2250,7 +2208,7 @@ const onTimeInputFocus = (event: Event) => {
 }
 
 .action-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
@@ -2385,7 +2343,8 @@ const onTimeInputFocus = (event: Event) => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

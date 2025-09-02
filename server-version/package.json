@@ -1,0 +1,16 @@
+{
+  "name": "email-scheduler-lite",
+  "version": "1.0.0",
+  "description": "轻量级邮件定时发送服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "send-email": "node send-email.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

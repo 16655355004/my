@@ -58,6 +58,11 @@ export default {
         return await handleDebugEmailStatus(request, env, corsHeaders);
       }
 
+      // 调试路由 - 检查 Cron 执行状态
+      if (path === '/api/debug/cron-status') {
+        return await handleDebugCronStatus(request, env, corsHeaders);
+      }
+
       return new Response('Not Found', { status: 404, headers: corsHeaders });
     } catch (error) {
       console.error('Worker error:', error);
@@ -72,11 +77,14 @@ export default {
   scheduled(event, env, _ctx) {
     try {
       const ts = new Date().toISOString();
-      const bj = getBeijingWallClock();
+      const bj = getBeijingTime();
       console.log('=== CRON TRIGGER START ===');
       console.log('UTC time:', ts);
       console.log('Beijing time:', bj.dateString, bj.timeString);
       console.log('Cron schedule: */2 * * * * (every 2 minutes)');
+
+      // 记录 cron 执行
+      event.waitUntil(recordCronExecution(env, ts));
 
       // Use waitUntil so the runtime keeps the task alive even if this handler returns
       event.waitUntil(handleScheduledEmail(env));
@@ -86,18 +94,34 @@ export default {
   }
 };
 
-// Helper: get Beijing wall-clock time information (UTC+8) without relying on locale parsing
-function getBeijingWallClock(date = new Date()) {
-  const pad = (n) => n.toString().padStart(2, '0');
-  const utcMs = date.getTime() + date.getTimezoneOffset() * 60000;
-  const bjMs = utcMs + 8 * 60 * 60000;
-  const bjDate = new Date(bjMs);
-  const hours = bjDate.getUTCHours();
-  const minutes = bjDate.getUTCMinutes();
+// Helper: get Beijing time information using toLocaleString (更简单可靠)
+function getBeijingTime(date = new Date()) {
+  // 使用 toLocaleString 获取北京时间
+  const beijingDateStr = date.toLocaleDateString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const beijingTimeStr = date.toLocaleTimeString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+
+  // 解析时间
+  const [hours, minutes] = beijingTimeStr.split(':').map(Number);
   const minutesOfDay = hours * 60 + minutes;
-  const timeString = `${pad(hours)}:${pad(minutes)}`;
-  const dateString = `${bjDate.getUTCFullYear()}-${pad(bjDate.getUTCMonth() + 1)}-${pad(bjDate.getUTCDate())}`;
-  return { hours, minutes, minutesOfDay, timeString, dateString };
+
+  return {
+    hours,
+    minutes,
+    minutesOfDay,
+    timeString: beijingTimeStr,
+    dateString: beijingDateStr.replace(/\//g, '-') // 转换为 YYYY-MM-DD 格式
+  };
 }
 
 
@@ -813,7 +837,7 @@ async function handleDebugEmailTrigger(_request, env, corsHeaders) {
   };
 
   try {
-    console.log('Manual email check triggered via debug endpoint');
+    console.log('🔧 手动触发邮件检查 - 通过调试端点');
 
     // 调用定时邮件检查函数
     await handleScheduledEmail(env);
@@ -821,15 +845,16 @@ async function handleDebugEmailTrigger(_request, env, corsHeaders) {
     return new Response(JSON.stringify({
       success: true,
       data: {
-        message: 'Email check triggered successfully',
-        timestamp: new Date().toISOString()
+        message: '邮件检查已手动触发',
+        timestamp: new Date().toISOString(),
+        note: '请查看控制台日志了解详细执行情况'
       }
     }), { headers });
   } catch (error) {
-    console.error('Debug email trigger error:', error);
+    console.error('❌ 手动邮件检查失败:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: 'Failed to trigger email check: ' + error.message
+      error: '手动触发邮件检查失败: ' + error.message
     }), {
       status: 500,
       headers
@@ -849,9 +874,9 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
     const configData = await env.BOOKMARKS_KV.get('email_config');
     const config = configData ? JSON.parse(configData) : null;
 
-    // 时间计算 - 使用与定时任务相同的方法（避免依赖 locale 解析）
+    // 时间计算 - 使用简化的时区处理
     const now = new Date();
-    const bj = getBeijingWallClock(now);
+    const bj = getBeijingTime(now);
     const currentTime = bj.timeString;
 
     // 检查上次发送记录
@@ -859,22 +884,7 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
-    let timeMatchInfo = null;
-    if (config && config.sendTime) {
-      const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
-      const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-      const currentMinutes = bj.minutesOfDay;
-      const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
-
-      timeMatchInfo = {
-        scheduledTime: config.sendTime,
-        scheduledMinutes,
-        currentMinutes,
-        timeDifference,
-        withinRange: timeDifference <= 3,
-        nextCheckIn: (2 - (currentMinutes % 2)) % 2 // cron 每2分钟
-      };
-    }
+    // 移除时间匹配逻辑，简化为基于日期的发送
 
     return new Response(JSON.stringify({
       success: true,
@@ -885,13 +895,11 @@ async function handleDebugTimeInfo(_request, env, corsHeaders) {
         today,
         emailConfig: config ? {
           enabled: config.enabled,
-          sendTime: config.sendTime,
           emailCount: config.emails ? config.emails.length : 0,
           hasQuestion: !!config.question
         } : null,
         lastSent,
         alreadySentToday: lastSent && lastSent.date === today,
-        timeMatchInfo,
         cronSchedule: '*/2 * * * *'
       }
     }), { headers });
@@ -951,9 +959,9 @@ async function handleDebugEmailStatus(_request, env, corsHeaders) {
     const configData = await env.BOOKMARKS_KV.get('email_config');
     const config = configData ? JSON.parse(configData) : null;
 
-    // 获取时间信息（避免依赖 locale 解析）
+    // 获取时间信息
     const now = new Date();
-    const bj = getBeijingWallClock(now);
+    const bj = getBeijingTime(now);
     const currentTime = bj.timeString;
 
     // 获取今日发送记录
@@ -961,43 +969,24 @@ async function handleDebugEmailStatus(_request, env, corsHeaders) {
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
-    // 计算时间差
-    let timeMatchInfo = null;
-    if (config && config.sendTime) {
-      const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
-      const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-      const currentMinutes = bj.minutesOfDay;
-      const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
-
-      timeMatchInfo = {
-        scheduledTime: config.sendTime,
-        currentTime: currentTime,
-        timeDifference: timeDifference,
-        withinRange: timeDifference <= 3,
-        scheduledMinutes,
-        currentMinutes
-      };
-    }
+    // 移除时间匹配检查，简化为只检查日期
 
     return new Response(JSON.stringify({
       success: true,
       data: {
         currentTime: {
           utc: now.toISOString(),
-          beijing: beijingTime.toISOString(),
+          beijing: bj.dateString + 'T' + currentTime + ':00.000+08:00',
           timeString: currentTime,
           date: today
         },
         emailConfig: config ? {
           enabled: config.enabled,
-          sendTime: config.sendTime,
           emailCount: config.emails ? config.emails.length : 0,
-          hasQuestion: !!config.question,
-          timezone: config.timezone
+          hasQuestion: !!config.question
         } : null,
         lastSent,
         alreadySentToday: lastSent && lastSent.date === today,
-        timeMatchInfo,
         systemStatus: {
           configExists: !!config,
           systemEnabled: config ? config.enabled : false,
@@ -1012,6 +1001,74 @@ async function handleDebugEmailStatus(_request, env, corsHeaders) {
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to get email status: ' + error.message
+    }), {
+      status: 500,
+      headers
+    });
+  }
+}
+
+// 记录 Cron 执行
+async function recordCronExecution(env, timestamp) {
+  try {
+    const cronData = await env.BOOKMARKS_KV.get('cron_executions');
+    const executions = cronData ? JSON.parse(cronData) : { count: 0, executions: [] };
+
+    executions.count += 1;
+    executions.executions.push({
+      timestamp,
+      executionNumber: executions.count
+    });
+
+    // 只保留最近 50 次执行记录
+    if (executions.executions.length > 50) {
+      executions.executions = executions.executions.slice(-50);
+    }
+
+    await env.BOOKMARKS_KV.put('cron_executions', JSON.stringify(executions));
+    console.log(`Cron execution #${executions.count} recorded at ${timestamp}`);
+  } catch (error) {
+    console.error('Failed to record cron execution:', error);
+  }
+}
+
+// 调试端点 - 检查 Cron 执行状态
+async function handleDebugCronStatus(_request, env, corsHeaders) {
+  const headers = {
+    ...corsHeaders,
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    const cronData = await env.BOOKMARKS_KV.get('cron_executions');
+    const executions = cronData ? JSON.parse(cronData) : { count: 0, executions: [] };
+
+    const lastExecution = executions.executions.length > 0
+      ? executions.executions[executions.executions.length - 1]
+      : null;
+
+    const now = new Date();
+    const timeSinceLastExecution = lastExecution
+      ? Math.floor((now.getTime() - new Date(lastExecution.timestamp).getTime()) / 1000 / 60)
+      : null;
+
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        totalExecutions: executions.count,
+        lastExecution: lastExecution ? lastExecution.timestamp : null,
+        timeSinceLastExecution: timeSinceLastExecution,
+        recentExecutions: executions.executions.slice(-10), // 最近 10 次
+        cronWorking: timeSinceLastExecution !== null && timeSinceLastExecution < 5, // 5分钟内有执行
+        expectedInterval: '2 minutes',
+        currentTime: now.toISOString()
+      }
+    }), { headers });
+  } catch (error) {
+    console.error('Debug cron status error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to get cron status: ' + error.message
     }), {
       status: 500,
       headers
@@ -1082,8 +1139,6 @@ async function getEmailConfig(env, headers) {
     const config = configData ? JSON.parse(configData) : {
       emails: [],
       question: '',
-      sendTime: '08:00',
-      timezone: 'Asia/Shanghai',
       enabled: false
     };
 
@@ -1138,16 +1193,6 @@ async function saveEmailConfig(request, env, headers) {
       });
     }
 
-    if (!configData.sendTime || !/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(configData.sendTime)) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Invalid send time format (HH:MM)'
-      }), {
-        status: 400,
-        headers
-      });
-    }
-
     // 验证邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     for (const email of configData.emails) {
@@ -1165,8 +1210,6 @@ async function saveEmailConfig(request, env, headers) {
     const config = {
       emails: configData.emails,
       question: configData.question.trim(),
-      sendTime: configData.sendTime,
-      timezone: configData.timezone || 'Asia/Shanghai',
       enabled: Boolean(configData.enabled),
       updatedAt: new Date().toISOString()
     };
@@ -1259,103 +1302,108 @@ async function testSendEmail(request, env, headers) {
   }
 }
 
-// 处理定时邮件发送
+// 处理定时邮件发送 - 每天检查一次，如果没发送就发送
 async function handleScheduledEmail(env) {
   try {
-    console.log('=== EMAIL SCHEDULE CHECK START ===');
+    const now = new Date();
+    const bj = getBeijingTime(now);
+
+    console.log('=== 每日邮件检查开始 ===');
+    console.log(`UTC时间: ${now.toISOString()}`);
+    console.log(`北京时间: ${bj.dateString} ${bj.timeString}`);
 
     // 获取邮件配置
     const configData = await env.BOOKMARKS_KV.get('email_config');
     if (!configData) {
-      console.log('❌ No email configuration found');
+      console.log('❌ 未找到邮件配置，请先在管理界面配置邮件系统');
       return;
     }
 
     const config = JSON.parse(configData);
-    console.log('📧 Email config loaded:', {
-      enabled: config.enabled,
-      emailCount: config.emails ? config.emails.length : 0,
-      hasQuestion: !!config.question,
-      sendTime: config.sendTime
-    });
+    console.log('📧 邮件配置状态:');
+    console.log(`   系统启用: ${config.enabled ? '✅ 是' : '❌ 否'}`);
+    console.log(`   邮箱数量: ${config.emails ? config.emails.length : 0} 个`);
+    console.log(`   问题配置: ${config.question ? '✅ 已配置' : '❌ 未配置'}`);
+    console.log(`   邮箱列表: ${config.emails ? config.emails.join(', ') : '无'}`);
 
+    // 检查系统是否启用
     if (!config.enabled) {
-      console.log('❌ Email system is disabled');
+      console.log('⏸️ 邮件系统已禁用，跳过发送');
+      console.log('💡 提示: 请在管理界面启用"定时发送功能"');
       return;
     }
 
+    // 检查邮箱配置
     if (!config.emails || config.emails.length === 0) {
-      console.log('❌ No email addresses configured');
+      console.log('❌ 未配置邮箱地址，跳过发送');
+      console.log('💡 提示: 请在管理界面添加至少一个邮箱地址');
       return;
     }
 
-    if (!config.question) {
-      console.log('❌ No question configured');
+    // 检查问题配置
+    if (!config.question || !config.question.trim()) {
+      console.log('❌ 未配置每日问题，跳过发送');
+      console.log('💡 提示: 请在管理界面配置每日问题');
       return;
     }
 
-    // 检查是否到了发送时间 - 使用固定 UTC+8 计算
-    const now = new Date();
-    const bj = getBeijingWallClock(now);
-    const currentTime = bj.timeString;
-
-    console.log('⏰ Time check:');
-    console.log(`   Current Beijing time: ${currentTime}`);
-    console.log(`   Scheduled time: ${config.sendTime}`);
-    console.log(`   UTC time: ${now.toISOString()}`);
-    console.log(`   Beijing date: ${bj.dateString}`);
-
-    // 检查是否已经发送过今天的邮件 - 使用北京时间的日期
+    // 检查今日是否已发送
     const today = bj.dateString;
     const lastSentData = await env.BOOKMARKS_KV.get('last_email_sent');
     const lastSent = lastSentData ? JSON.parse(lastSentData) : null;
 
-    console.log('📅 Send history check:');
-    console.log(`   Today (Beijing): ${today}`);
-    console.log(`   Last sent: ${lastSent ? `${lastSent.date} at ${lastSent.time}` : 'never'}`);
+    console.log('📅 发送历史检查:');
+    console.log(`   今日日期: ${today}`);
+    if (lastSent) {
+      console.log(`   上次发送: ${lastSent.date} ${lastSent.time}`);
+      console.log(`   发送详情: ${lastSent.sentAt}`);
+    } else {
+      console.log(`   上次发送: 从未发送`);
+    }
 
     if (lastSent && lastSent.date === today) {
-      console.log('✅ Email already sent today - skipping');
+      console.log('✅ 今日已发送邮件，无需重复发送');
+      console.log('💡 如需重新发送，请使用"重置发送记录"功能');
       return;
     }
 
-    // 检查时间匹配（允许3分钟的误差，因为cron每2分钟执行一次）
-    const [scheduleHour, scheduleMinute] = config.sendTime.split(':').map(Number);
-    const scheduledMinutes = scheduleHour * 60 + scheduleMinute;
-    const currentMinutes = bj.minutesOfDay;
-    const timeDifference = Math.abs(currentMinutes - scheduledMinutes);
+    // 开始发送邮件
+    console.log('🚀 开始发送今日邮件...');
+    console.log(`   问题内容: ${config.question}`);
+    console.log(`   目标邮箱: ${config.emails.join(', ')}`);
 
-    console.log('🎯 Time matching check:');
-    console.log(`   Scheduled: ${config.sendTime} (${scheduledMinutes} minutes from midnight)`);
-    console.log(`   Current: ${currentTime} (${currentMinutes} minutes from midnight)`);
-    console.log(`   Difference: ${timeDifference} minutes`);
-    console.log(`   Tolerance: ±3 minutes`);
-    console.log(`   Within range: ${timeDifference <= 3 ? 'YES' : 'NO'}`);
+    const result = await sendDailyEmail(env, config, false);
 
-    if (timeDifference <= 3) {
-      console.log('✅ Time matches! Sending scheduled email...');
-      const result = await sendDailyEmail(env, config, false);
+    if (result.success) {
+      // 记录发送时间
+      const sendRecord = {
+        date: today,
+        time: bj.timeString,
+        sentAt: now.toISOString(),
+        emailCount: config.emails.length,
+        question: config.question
+      };
 
-      if (result.success) {
-        // 记录发送时间
-        await env.BOOKMARKS_KV.put('last_email_sent', JSON.stringify({
-          date: today,
-          time: currentTime,
-          sentAt: new Date().toISOString()
-        }));
-        console.log('🎉 Scheduled email sent successfully!');
-        console.log(`   Sent to ${result.details.successfulSends}/${result.details.totalEmails} recipients`);
-      } else {
-        console.error('❌ Failed to send scheduled email:', result.error);
+      await env.BOOKMARKS_KV.put('last_email_sent', JSON.stringify(sendRecord));
+
+      console.log('🎉 邮件发送成功!');
+      console.log(`   成功发送: ${result.details.successfulSends}/${result.details.totalEmails} 个邮箱`);
+      console.log(`   发送时间: ${bj.dateString} ${bj.timeString}`);
+
+      if (result.details.failedSends > 0) {
+        console.log(`⚠️  发送失败: ${result.details.failedSends} 个邮箱`);
       }
     } else {
-      console.log('⏳ Not time to send email yet');
+      console.error('❌ 邮件发送失败:', result.error);
+      console.log('💡 请检查邮件配置和网络连接');
     }
 
-    console.log('=== EMAIL SCHEDULE CHECK END ===');
+    console.log('=== 每日邮件检查结束 ===');
+
   } catch (error) {
-    console.error('❌ Scheduled email error:', error);
-    console.error('Error stack:', error.stack);
+    console.error('❌ 邮件发送异常:', error);
+    console.error('错误详情:', error.stack);
+    console.log('💡 请检查系统配置和网络连接');
   }
 }
 

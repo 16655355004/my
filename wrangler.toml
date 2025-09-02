@@ -14,9 +14,9 @@ ADMIN_PASSWORD = "jisoo521"  # 设置你的管理员密码
 RESEND_API_KEY = "re_Zx6mKyWX_MbX5pwweuaE92w4H7Ferxhox"  # Resend API密钥
 DEEPSEEK_API_KEY = "sk-d1809f2d4f724f25be37274c77e0e424"  # DeepSeek API密钥
 
-# Cron 触发器 - 每2分钟检查一次是否需要发送邮件
+# Cron 触发器 - 每天上午8点检查一次是否需要发送邮件
 [triggers]
-crons = ["*/2 * * * *"]
+crons = ["0 8 * * *"]
 
 # 路由配置
 [[routes]]
