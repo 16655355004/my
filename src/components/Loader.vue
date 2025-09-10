@@ -143,7 +143,7 @@ const closeSplash = () => {
   <div v-if="isLoading" class="video-splash-screen">
     <div class="video-container">
       <video class="splash-video" autoplay muted playsinline preload="auto" loop>
-        <source src="@/assets/1.mp4" type="video/mp4" />
+        <source src="@/assets/2.mp4" type="video/mp4" />
         <!-- <source
           src="https://img.jisoolove.top/file/BAACAgUAAyEGAASnZpmtAAMdaMEnwVch04FwrehokP-tyCT2E4EAAhEZAALe2whWZ7HAcXFT6ek2BA.mp4"
           type="video/mp4"
