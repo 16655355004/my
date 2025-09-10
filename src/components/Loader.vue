@@ -143,18 +143,22 @@ const closeSplash = () => {
   <div v-if="isLoading" class="video-splash-screen">
     <div class="video-container">
       <video class="splash-video" autoplay muted playsinline preload="auto" loop>
-        <!-- <source src="@/assets/1.mp4" type="video/mp4" /> -->
-        <source src="https://img.jisoolove.top/file/BAACAgUAAyEGAASnZpmtAAMcaMEkhpiWCPoWboLptX4YnAaFq_wAAg8ZAALe2whWb2_5hn6tt_s2BA.mp4" type="video/mp4" />
+        <source src="@/assets/1.mp4" type="video/mp4" />
+        <!-- <source
+          src="https://img.jisoolove.top/file/BAACAgUAAyEGAASnZpmtAAMdaMEnwVch04FwrehokP-tyCT2E4EAAhEZAALe2whWZ7HAcXFT6ek2BA.mp4"
+          type="video/mp4"
+        /> -->
+        <!-- <source src="https://img.jisoolove.top/file/BAACAgUAAyEGAASnZpmtAAMcaMEkhpiWCPoWboLptX4YnAaFq_wAAg8ZAALe2whWb2_5hn6tt_s2BA.mp4" type="video/mp4" /> -->
       </video>
       <div class="splash-overlay">
         <div class="splash-content">
           <h1 class="splash-title">JisooLove</h1>
           <p class="splash-subtitle">个人网站</p>
-          <div class="loading-dots">
+          <!-- <div class="loading-dots">
             <span></span>
             <span></span>
             <span></span>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -231,8 +235,8 @@ const closeSplash = () => {
   font-size: 4rem;
   font-weight: 900;
   margin: 0 0 1rem 0;
-  font-family: "Orbitron", "Arial Black", Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  font-family: "Parisienne", "Orbitron", "Arial Black", Arial, sans-serif;
+  background: linear-gradient(135deg, #fc7979, #d5b1f8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
