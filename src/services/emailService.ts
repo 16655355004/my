@@ -3,6 +3,7 @@ export interface EmailConfig {
   emails: string[]
   question: string
   enabled: boolean
+  sendTime?: string // 发送时间，格式：HH:mm (如 "08:00", "15:30")
   updatedAt?: string
   // 新增邮件功能配置
   template?: EmailTemplate

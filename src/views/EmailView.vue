@@ -224,8 +224,8 @@
                 </div>
                 <div class="card-content">
                   <h3>发送模式</h3>
-                  <p class="value-text">每日自动</p>
-                  <span class="label-text">基于日期发送</span>
+                  <p class="value-text">{{ formatDisplayTime(config.sendTime) }}</p>
+                  <span class="label-text">每日定时发送</span>
                 </div>
               </div>
 
@@ -533,13 +533,143 @@
                   </div>
                 </div>
 
+                <!-- 发送时间设置 -->
+                <div class="time-section">
+                  <label class="section-label">发送时间</label>
+                  <div class="time-input-group">
+                    <!-- 自定义时间选择器 -->
+                    <div class="custom-time-picker" ref="timePickerWrapper">
+                      <div class="time-display" @click="toggleTimePicker" ref="timeDisplay">
+                        <div class="time-value">
+                          <span class="time-text">{{ formatDisplayTime(config.sendTime) }}</span>
+                          <span class="time-digital">{{ config.sendTime }}</span>
+                        </div>
+                        <div class="time-icon">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                            <polyline
+                              points="12,6 12,12 16,14"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </div>
+                        <div class="picker-glow" ref="pickerGlow"></div>
+                      </div>
+
+                      <!-- 时间选择面板 -->
+                      <div class="time-picker-panel" ref="timePickerPanel" v-show="showTimePicker">
+                        <div class="picker-header">
+                          <h4>选择发送时间</h4>
+                          <button @click="closeTimePicker" class="close-btn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <line
+                                x1="18"
+                                y1="6"
+                                x2="6"
+                                y2="18"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                              />
+                              <line
+                                x1="6"
+                                y1="6"
+                                x2="18"
+                                y2="18"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div class="time-wheels">
+                          <!-- 小时选择器 -->
+                          <div class="time-wheel">
+                            <div class="wheel-label">小时</div>
+                            <div class="wheel-container" ref="hourWheel">
+                              <div
+                                v-for="hour in 24"
+                                :key="hour - 1"
+                                class="wheel-item"
+                                :class="{ active: selectedHour === hour - 1 }"
+                                @click="selectHour(hour - 1)"
+                                :ref="(el) => (hourItems[hour - 1] = el)"
+                              >
+                                {{ (hour - 1).toString().padStart(2, "0") }}
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- 分钟选择器 -->
+                          <div class="time-wheel">
+                            <div class="wheel-label">分钟</div>
+                            <div class="wheel-container" ref="minuteWheel">
+                              <div
+                                v-for="minute in minuteOptions"
+                                :key="minute"
+                                class="wheel-item"
+                                :class="{ active: selectedMinute === minute }"
+                                @click="selectMinute(minute)"
+                                :ref="(el) => (minuteItems[minute] = el)"
+                              >
+                                {{ minute.toString().padStart(2, "0") }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="picker-actions">
+                          <button @click="confirmTime" class="confirm-btn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <polyline
+                                points="20,6 9,17 4,12"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </svg>
+                            确认
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="timezone-info">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                        <polyline
+                          points="12,6 12,12 16,14"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      <span
+                        >北京时间 (UTC+8) - 系统将在每天
+                        {{ formatDisplayTime(config.sendTime) }} 自动发送邮件</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
                 <!-- 系统控制整合到问题设置面板 -->
                 <div class="control-section">
                   <div class="switch-container">
                     <div class="switch-info">
                       <h3>定时发送功能</h3>
                       <p>
-                        {{ config.enabled ? "系统将每日自动发送邮件" : "系统已暂停，不会发送邮件" }}
+                        {{
+                          config.enabled
+                            ? `系统将在每天 ${formatDisplayTime(config.sendTime)} 自动发送邮件`
+                            : "系统已暂停，不会发送邮件"
+                        }}
                       </p>
                     </div>
                     <div class="premium-switch" @click="toggleSwitch" ref="premiumSwitch">
@@ -619,6 +749,16 @@ const isTesting = ref(false);
 const isResetting = ref(false);
 const refreshing = ref(false);
 
+// 时间选择器相关状态
+const showTimePicker = ref(false);
+const selectedHour = ref(8);
+const selectedMinute = ref(0);
+const hourItems = ref<Record<number, HTMLElement>>({});
+const minuteItems = ref<Record<number, HTMLElement>>({});
+
+// 分钟选项（每15分钟一个选项）
+const minuteOptions = [0, 15, 30, 45];
+
 // 按钮状态管理
 const buttonStates = ref({
   test: { text: "测试发送", status: "idle" }, // idle, loading, success, error
@@ -630,6 +770,7 @@ const config = ref<EmailConfig>({
   emails: [],
   question: "",
   enabled: false,
+  sendTime: "08:00", // 默认早上8点
 });
 
 // 验证管理员密码
@@ -671,6 +812,7 @@ const logout = () => {
     emails: [],
     question: "",
     enabled: false,
+    sendTime: "08:00",
   };
 };
 
@@ -1268,6 +1410,290 @@ const onQuestionInputFocus = (event: Event) => {
   const wrapper = textarea.closest(".textarea-wrapper");
   if (wrapper) {
     gsap.to(wrapper, { scale: 1.01, duration: 0.2, ease: "power2.out" });
+  }
+};
+
+// 时间输入框相关动画和处理
+const onTimeInputFocus = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const wrapper = input.closest(".time-input-wrapper") as HTMLElement;
+  const glow = wrapper?.querySelector(".time-glow") as HTMLElement;
+  const underline = wrapper?.querySelector(".input-underline") as HTMLElement;
+
+  if (wrapper && glow && underline) {
+    // 包装器缩放动画
+    gsap.to(wrapper, {
+      scale: 1.02,
+      duration: 0.3,
+      ease: "power2.out",
+    });
+
+    // 发光效果
+    gsap.to(glow, {
+      opacity: 0.6,
+      scale: 1.1,
+      duration: 0.3,
+      ease: "power2.out",
+    });
+
+    // 下划线展开
+    gsap.to(underline, {
+      width: "100%",
+      duration: 0.4,
+      ease: "power2.out",
+    });
+  }
+};
+
+const onTimeInputBlur = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const wrapper = input.closest(".time-input-wrapper") as HTMLElement;
+  const glow = wrapper?.querySelector(".time-glow") as HTMLElement;
+  const underline = wrapper?.querySelector(".input-underline") as HTMLElement;
+
+  if (wrapper && glow && underline) {
+    // 恢复包装器
+    gsap.to(wrapper, {
+      scale: 1,
+      duration: 0.3,
+      ease: "power2.out",
+    });
+
+    // 隐藏发光效果
+    gsap.to(glow, {
+      opacity: 0,
+      scale: 1,
+      duration: 0.3,
+      ease: "power2.out",
+    });
+
+    // 收缩下划线
+    gsap.to(underline, {
+      width: "0%",
+      duration: 0.4,
+      ease: "power2.out",
+    });
+  }
+};
+
+const onTimeChange = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const wrapper = input.closest(".time-input-wrapper") as HTMLElement;
+
+  if (wrapper) {
+    // 时间改变时的反馈动画
+    gsap.fromTo(
+      wrapper,
+      {
+        boxShadow: "0 0 0 rgba(102, 126, 234, 0)",
+      },
+      {
+        boxShadow: "0 0 20px rgba(102, 126, 234, 0.3)",
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut",
+      }
+    );
+  }
+
+  console.log("发送时间已更改为:", config.value.sendTime);
+};
+
+// 格式化显示时间
+const formatDisplayTime = (time?: string) => {
+  if (!time) return "08:00";
+
+  try {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours);
+    const min = minutes || "00";
+
+    if (hour === 0) {
+      return `凌晨 12:${min}`;
+    } else if (hour < 6) {
+      return `凌晨 ${hour}:${min}`;
+    } else if (hour < 12) {
+      return `上午 ${hour}:${min}`;
+    } else if (hour === 12) {
+      return `中午 12:${min}`;
+    } else if (hour < 18) {
+      return `下午 ${hour - 12}:${min}`;
+    } else {
+      return `晚上 ${hour - 12}:${min}`;
+    }
+  } catch (error) {
+    return time;
+  }
+};
+
+// 时间选择器相关方法
+const toggleTimePicker = () => {
+  showTimePicker.value = !showTimePicker.value;
+
+  if (showTimePicker.value) {
+    // 解析当前时间
+    const [hours, minutes] = (config.value.sendTime || "08:00").split(":").map(Number);
+    selectedHour.value = hours;
+    selectedMinute.value = Math.floor(minutes / 15) * 15; // 取最近的15分钟倍数
+
+    nextTick(() => {
+      animatePickerOpen();
+    });
+  } else {
+    animatePickerClose();
+  }
+};
+
+const closeTimePicker = () => {
+  animatePickerClose();
+  setTimeout(() => {
+    showTimePicker.value = false;
+  }, 300);
+};
+
+const selectHour = (hour: number) => {
+  const prevHour = selectedHour.value;
+  selectedHour.value = hour;
+
+  // 动画效果
+  const hourElement = hourItems.value[hour] as HTMLElement;
+  const prevElement = hourItems.value[prevHour] as HTMLElement;
+
+  if (hourElement) {
+    gsap.fromTo(
+      hourElement,
+      { scale: 1, backgroundColor: "transparent" },
+      {
+        scale: 1.1,
+        backgroundColor: "rgba(102, 126, 234, 0.2)",
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut",
+      }
+    );
+  }
+
+  if (prevElement) {
+    gsap.to(prevElement, {
+      scale: 1,
+      backgroundColor: "transparent",
+      duration: 0.2,
+    });
+  }
+};
+
+const selectMinute = (minute: number) => {
+  const prevMinute = selectedMinute.value;
+  selectedMinute.value = minute;
+
+  // 动画效果
+  const minuteElement = minuteItems.value[minute] as HTMLElement;
+  const prevElement = minuteItems.value[prevMinute] as HTMLElement;
+
+  if (minuteElement) {
+    gsap.fromTo(
+      minuteElement,
+      { scale: 1, backgroundColor: "transparent" },
+      {
+        scale: 1.1,
+        backgroundColor: "rgba(102, 126, 234, 0.2)",
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut",
+      }
+    );
+  }
+
+  if (prevElement) {
+    gsap.to(prevElement, {
+      scale: 1,
+      backgroundColor: "transparent",
+      duration: 0.2,
+    });
+  }
+};
+
+const confirmTime = () => {
+  const newTime = `${selectedHour.value.toString().padStart(2, "0")}:${selectedMinute.value
+    .toString()
+    .padStart(2, "0")}`;
+  config.value.sendTime = newTime;
+
+  // 确认动画
+  const confirmBtn = document.querySelector(".confirm-btn") as HTMLElement;
+  if (confirmBtn) {
+    gsap.fromTo(
+      confirmBtn,
+      { scale: 1 },
+      {
+        scale: 0.95,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut",
+      }
+    );
+  }
+
+  console.log("时间已确认:", newTime);
+  closeTimePicker();
+};
+
+// 时间选择器动画
+const animatePickerOpen = () => {
+  const panel = document.querySelector(".time-picker-panel") as HTMLElement;
+  const glow = document.querySelector(".picker-glow") as HTMLElement;
+
+  if (panel) {
+    gsap.fromTo(
+      panel,
+      {
+        opacity: 0,
+        scale: 0.8,
+        y: -20,
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.4,
+        ease: "back.out(1.7)",
+      }
+    );
+  }
+
+  if (glow) {
+    gsap.to(glow, {
+      opacity: 0.6,
+      scale: 1.05,
+      duration: 0.3,
+    });
+  }
+};
+
+const animatePickerClose = () => {
+  const panel = document.querySelector(".time-picker-panel") as HTMLElement;
+  const glow = document.querySelector(".picker-glow") as HTMLElement;
+
+  if (panel) {
+    gsap.to(panel, {
+      opacity: 0,
+      scale: 0.8,
+      y: -20,
+      duration: 0.3,
+      ease: "power2.in",
+    });
+  }
+
+  if (glow) {
+    gsap.to(glow, {
+      opacity: 0,
+      scale: 1,
+      duration: 0.3,
+    });
   }
 };
 </script>
@@ -2229,32 +2655,227 @@ const onQuestionInputFocus = (event: Event) => {
   gap: 0.75rem;
 }
 
-.time-input-wrapper {
+/* 自定义时间选择器 */
+.custom-time-picker {
   position: relative;
-  max-width: 250px;
+  max-width: 350px;
 }
 
-.time-input {
-  width: 100%;
+.time-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 1rem 1.2rem;
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
   backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.time-input:focus {
-  outline: none;
-  border-color: rgba(102, 126, 234, 0.6);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+.time-display:hover {
+  border-color: rgba(102, 126, 234, 0.4);
   background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
 }
 
-.time-input:focus + .input-underline {
-  width: 100%;
+.time-value {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.time-text {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.time-digital {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  font-family: "Courier New", monospace;
+}
+
+.time-icon {
+  width: 24px;
+  height: 24px;
+  color: #667eea;
+  transition: transform 0.3s ease;
+}
+
+.time-display:hover .time-icon {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* 发光效果 */
+.picker-glow {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+  border-radius: 16px;
+  opacity: 0;
+  z-index: -1;
+  filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+/* 时间选择面板 */
+.time-picker-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background: rgba(30, 30, 40, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.picker-header h4 {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.close-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 时间滚轮 */
+.time-wheels {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.time-wheel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wheel-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.wheel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wheel-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.wheel-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.wheel-container::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.6);
+  border-radius: 2px;
+}
+
+.wheel-item {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Courier New", monospace;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.wheel-item:hover {
+  color: #ffffff;
+  background: rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
+}
+
+.wheel-item.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: scale(1.05);
+}
+
+/* 确认按钮 */
+.picker-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.confirm-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .timezone-info {
