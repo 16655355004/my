@@ -360,7 +360,7 @@ onMounted(() => {
       <div class="container">
         <!-- 主要内容居中 -->
         <div class="hero-content">
-          <h1 class="hero-title">空空</h1>
+          <h1 class="hero-title">JisooLove</h1>
           <div class="hero-subtitle-container">
             <TypewriterEffect
               :texts="typewriterTexts"
@@ -698,10 +698,13 @@ onMounted(() => {
   font-size: 4.5rem;
   font-weight: 800;
   margin-bottom: 1rem;
+  width: 100%;
+  height: 100px;
   background: linear-gradient(120deg, var(--primary-color), #00ff88);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: titleLightning 3s infinite;
+  font-family: "Parisienne", "Orbitron", "Arial Black", Arial, sans-serif;
 }
 
 @keyframes titleLightning {

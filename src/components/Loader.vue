@@ -153,7 +153,7 @@ const closeSplash = () => {
       <div class="splash-overlay">
         <div class="splash-content">
           <h1 class="splash-title">JisooLove</h1>
-          <p class="splash-subtitle">个人网站</p>
+          <p class="splash-subtitle">Personal Website</p>
           <!-- <div class="loading-dots">
             <span></span>
             <span></span>

@@ -379,6 +379,7 @@ watch(route, () => {
   animation: lightning 4s infinite;
   /* 确保文字始终可见的备用颜色 */
   color: var(--primary-color);
+  font-family: "Parisienne", "Orbitron", "Arial Black", Arial, sans-serif;
 }
 
 /* 闪烁雷电动画 */
