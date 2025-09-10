@@ -598,7 +598,7 @@
                                 class="wheel-item"
                                 :class="{ active: selectedHour === hour - 1 }"
                                 @click="selectHour(hour - 1)"
-                                :ref="(el) => (hourItems[hour - 1] = el)"
+                                :ref="(el) => { if (el) hourItems[hour - 1] = el as HTMLElement }"
                               >
                                 {{ (hour - 1).toString().padStart(2, "0") }}
                               </div>
@@ -615,7 +615,7 @@
                                 class="wheel-item"
                                 :class="{ active: selectedMinute === minute }"
                                 @click="selectMinute(minute)"
-                                :ref="(el) => (minuteItems[minute] = el)"
+                                :ref="(el) => { if (el) minuteItems[minute] = el as HTMLElement }"
                               >
                                 {{ minute.toString().padStart(2, "0") }}
                               </div>
