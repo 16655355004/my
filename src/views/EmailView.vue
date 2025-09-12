@@ -8,27 +8,12 @@
           <div class="login-header">
             <div class="login-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M12 2L2 7L12 12L22 7L12 2Z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M2 17L12 22L22 17"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M2 12L12 17L22 12"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
               </svg>
             </div>
             <h1 class="login-title">邮件系统管理</h1>
@@ -38,24 +23,13 @@
           <form @submit.prevent="authenticate" class="login-form">
             <div class="form-group">
               <div class="input-wrapper">
-                <input
-                  v-model="password"
-                  type="password"
-                  placeholder="管理员密码"
-                  class="form-input"
-                  :disabled="loading"
-                  ref="passwordInput"
-                />
+                <input v-model="password" type="password" placeholder="管理员密码" class="form-input" :disabled="loading"
+                  ref="passwordInput" />
                 <div class="input-focus-line"></div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              class="login-btn"
-              :disabled="loading || !password.trim()"
-              ref="loginBtn"
-            >
+            <button type="submit" class="login-btn" :disabled="loading || !password.trim()" ref="loginBtn">
               <span class="btn-content">
                 <div v-if="loading" class="loading-spinner"></div>
                 <span>{{ loading ? "验证中..." : "登录系统" }}</span>
@@ -80,11 +54,8 @@
             <div class="nav-left">
               <div class="system-logo">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  />
+                  <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
+                    stroke="currentColor" stroke-width="2" />
                   <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" />
                 </svg>
                 <span>邮件系统</span>
@@ -98,28 +69,11 @@
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <polyline
-                  points="16,17 21,12 16,7"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <line
-                  x1="21"
-                  y1="12"
-                  x2="9"
-                  y2="12"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <polyline points="16,17 21,12 16,7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
               </svg>
               退出
             </button>
@@ -139,33 +93,14 @@
               <h2>系统概览</h2>
               <div class="header-actions">
                 <button @click="refreshStatus" class="refresh-btn" :disabled="refreshing">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    :class="{ spinning: refreshing }"
-                  >
-                    <path
-                      d="M1 4V10H7"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M23 20V14H17"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    :class="{ spinning: refreshing }">
+                    <path d="M1 4V10H7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                    <path d="M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </button>
               </div>
@@ -176,13 +111,8 @@
                 <div class="card-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                    <polyline
-                      points="12,6 12,12 16,14"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                    <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                 </div>
                 <div class="card-content">
@@ -197,9 +127,7 @@
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    />
+                      stroke="currentColor" stroke-width="2" />
                     <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" />
                   </svg>
                 </div>
@@ -215,11 +143,7 @@
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
                 <div class="card-content">
@@ -234,11 +158,7 @@
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
                 <div class="card-content">
@@ -256,13 +176,8 @@
               <div class="panel-header">
                 <div class="panel-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polygon
-                      points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
                 <h2>系统操作</h2>
@@ -270,40 +185,19 @@
 
               <div class="panel-content">
                 <div class="action-grid">
-                  <button
-                    @click="testSend"
-                    :disabled="isTesting"
-                    class="action-btn"
-                    :class="{
-                      primary:
-                        buttonStates.test.status === 'idle' ||
-                        buttonStates.test.status === 'loading',
-                      success: buttonStates.test.status === 'success',
-                      error: buttonStates.test.status === 'error',
-                    }"
-                    ref="testBtn"
-                  >
+                  <button @click="testSend" :disabled="isTesting" class="action-btn" :class="{
+                    primary:
+                      buttonStates.test.status === 'idle' ||
+                      buttonStates.test.status === 'loading',
+                    success: buttonStates.test.status === 'success',
+                    error: buttonStates.test.status === 'error',
+                  }" ref="testBtn">
                     <div class="btn-icon">
-                      <svg
-                        v-if="!isTesting"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M22 2L11 13"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <polygon
-                          points="22,2 15,22 11,13 2,9 22,2"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
+                      <svg v-if="!isTesting" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                        <polygon points="22,2 15,22 11,13 2,9 22,2" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
                       <div v-else class="loading-spinner-btn"></div>
                     </div>
@@ -313,40 +207,19 @@
                     </div>
                   </button>
 
-                  <button
-                    @click="resetTodayEmail"
-                    :disabled="isResetting"
-                    class="action-btn"
-                    :class="{
-                      warning:
-                        buttonStates.reset.status === 'idle' ||
-                        buttonStates.reset.status === 'loading',
-                      success: buttonStates.reset.status === 'success',
-                      error: buttonStates.reset.status === 'error',
-                    }"
-                    ref="resetBtn"
-                  >
+                  <button @click="resetTodayEmail" :disabled="isResetting" class="action-btn" :class="{
+                    warning:
+                      buttonStates.reset.status === 'idle' ||
+                      buttonStates.reset.status === 'loading',
+                    success: buttonStates.reset.status === 'success',
+                    error: buttonStates.reset.status === 'error',
+                  }" ref="resetBtn">
                     <div class="btn-icon">
-                      <svg
-                        v-if="!isResetting"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <polyline
-                          points="1,4 1,10 7,10"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <path
-                          d="M3.51 15A9 9 0 0 0 21 12A9 9 0 0 0 5.64 5.64L1 10"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
+                      <svg v-if="!isResetting" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="1,4 1,10 7,10" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
+                        <path d="M3.51 15A9 9 0 0 0 21 12A9 9 0 0 0 5.64 5.64L1 10" stroke="currentColor"
+                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
                       <div v-else class="loading-spinner-btn"></div>
                     </div>
@@ -356,47 +229,22 @@
                     </div>
                   </button>
 
-                  <button
-                    @click="saveConfig"
-                    :disabled="isSaving"
-                    class="action-btn"
-                    :class="{
-                      success:
-                        buttonStates.save.status === 'idle' ||
-                        buttonStates.save.status === 'loading',
-                      primary: buttonStates.save.status === 'success',
-                      error: buttonStates.save.status === 'error',
-                    }"
-                    ref="saveBtn"
-                  >
+                  <button @click="saveConfig" :disabled="isSaving" class="action-btn" :class="{
+                    success:
+                      buttonStates.save.status === 'idle' ||
+                      buttonStates.save.status === 'loading',
+                    primary: buttonStates.save.status === 'success',
+                    error: buttonStates.save.status === 'error',
+                  }" ref="saveBtn">
                     <div class="btn-icon">
-                      <svg
-                        v-if="!isSaving"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
+                      <svg v-if="!isSaving" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
                           d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <polyline
-                          points="17,21 17,13 7,13 7,21"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
-                        <polyline
-                          points="7,3 7,8 15,8"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round" />
+                        <polyline points="7,3 7,8 15,8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                          stroke-linejoin="round" />
                       </svg>
                       <div v-else class="loading-spinner-btn"></div>
                     </div>
@@ -415,9 +263,7 @@
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    />
+                      stroke="currentColor" stroke-width="2" />
                     <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" />
                   </svg>
                 </div>
@@ -427,46 +273,17 @@
 
               <div class="panel-content">
                 <div class="email-list">
-                  <div
-                    v-for="(_, index) in config.emails"
-                    :key="index"
-                    class="email-item"
-                    ref="emailItems"
-                  >
+                  <div v-for="(_, index) in config.emails" :key="index" class="email-item" ref="emailItems">
                     <div class="email-input-wrapper">
-                      <input
-                        v-model="config.emails[index]"
-                        type="email"
-                        placeholder="请输入邮箱地址"
-                        class="email-input"
-                        @blur="validateEmail(index)"
-                        @focus="onEmailInputFocus"
-                      />
+                      <input v-model="config.emails[index]" type="email" placeholder="请输入邮箱地址" class="email-input"
+                        @blur="validateEmail(index)" @focus="onEmailInputFocus" />
                       <div class="input-underline"></div>
                     </div>
-                    <button
-                      @click="removeEmail(index)"
-                      class="remove-btn"
-                      :class="{ 'animate-out': false }"
-                    >
+                    <button @click="removeEmail(index)" class="remove-btn" :class="{ 'animate-out': false }">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                        <line
-                          x1="15"
-                          y1="9"
-                          x2="9"
-                          y2="15"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        />
-                        <line
-                          x1="9"
-                          y1="9"
-                          x2="15"
-                          y2="15"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        />
+                        <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" />
+                        <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" />
                       </svg>
                     </button>
                   </div>
@@ -488,30 +305,14 @@
                 <div class="panel-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                    <path
-                      d="M9.09 9A3 3 0 0 1 12 6C13.66 6 15 7.34 15 9C15 10.66 13.66 12 12 12"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <line
-                      x1="12"
-                      y1="17"
-                      x2="12.01"
-                      y2="17"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                    <path d="M9.09 9A3 3 0 0 1 12 6C13.66 6 15 7.34 15 9C15 10.66 13.66 12 12 12" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </div>
                 <h2>问题设置</h2>
-                <div
-                  class="panel-badge"
-                  :class="{ active: config.question && config.question.trim() }"
-                >
+                <div class="panel-badge" :class="{ active: config.question && config.question.trim() }">
                   {{ config.question && config.question.trim() ? "已配置" : "未配置" }}
                 </div>
               </div>
@@ -520,15 +321,8 @@
                 <div class="question-section">
                   <label for="question" class="section-label">每日问题</label>
                   <div class="textarea-wrapper">
-                    <textarea
-                      id="question"
-                      v-model="config.question"
-                      placeholder="请输入您想要AI回答的问题，例如：让人愉快的方法"
-                      class="question-input"
-                      rows="4"
-                      @focus="onQuestionInputFocus"
-                      ref="questionInput"
-                    ></textarea>
+                    <textarea id="question" v-model="config.question" placeholder="请输入您想要AI回答的问题，例如：让人愉快的方法"
+                      class="question-input" rows="4" @focus="onQuestionInputFocus" ref="questionInput"></textarea>
                     <div class="textarea-underline"></div>
                   </div>
                 </div>
@@ -547,114 +341,24 @@
                         <div class="time-icon">
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                            <polyline
-                              points="12,6 12,12 16,14"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
+                            <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round" />
                           </svg>
                         </div>
                         <div class="picker-glow" ref="pickerGlow"></div>
                       </div>
 
-                      <!-- 时间选择面板 -->
-                      <div class="time-picker-panel" ref="timePickerPanel" v-show="showTimePicker">
-                        <div class="picker-header">
-                          <h4>选择发送时间</h4>
-                          <button @click="closeTimePicker" class="close-btn">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <line
-                                x1="18"
-                                y1="6"
-                                x2="6"
-                                y2="18"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                              />
-                              <line
-                                x1="6"
-                                y1="6"
-                                x2="18"
-                                y2="18"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                              />
-                            </svg>
-                          </button>
-                        </div>
 
-                        <div class="time-wheels">
-                          <!-- 小时选择器 -->
-                          <div class="time-wheel">
-                            <div class="wheel-label">小时</div>
-                            <div class="wheel-container" ref="hourWheel">
-                              <div
-                                v-for="hour in 24"
-                                :key="hour - 1"
-                                class="wheel-item"
-                                :class="{ active: selectedHour === hour - 1 }"
-                                @click="selectHour(hour - 1)"
-                                :ref="(el) => { if (el) hourItems[hour - 1] = el as HTMLElement }"
-                              >
-                                {{ (hour - 1).toString().padStart(2, "0") }}
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- 分钟选择器 -->
-                          <div class="time-wheel">
-                            <div class="wheel-label">分钟</div>
-                            <div class="wheel-container" ref="minuteWheel">
-                              <div
-                                v-for="minute in minuteOptions"
-                                :key="minute"
-                                class="wheel-item"
-                                :class="{ active: selectedMinute === minute }"
-                                @click="selectMinute(minute)"
-                                :ref="(el) => { if (el) minuteItems[minute] = el as HTMLElement }"
-                              >
-                                {{ minute.toString().padStart(2, "0") }}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="picker-actions">
-                          <button @click="confirmTime" class="confirm-btn">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <polyline
-                                points="20,6 9,17 4,12"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              />
-                            </svg>
-                            确认
-                          </button>
-                        </div>
-                      </div>
                     </div>
 
                     <div class="timezone-info">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-                        <polyline
-                          points="12,6 12,12 16,14"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        />
+                        <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
-                      <span
-                        >北京时间 (UTC+8) - 系统将在每天
-                        {{ formatDisplayTime(config.sendTime) }} 自动发送邮件</span
-                      >
+                      <span>北京时间 (UTC+8) - 系统将在每天
+                        {{ formatDisplayTime(config.sendTime) }} 自动发送邮件</span>
                     </div>
                   </div>
                 </div>
@@ -673,44 +377,20 @@
                       </p>
                     </div>
                     <div class="premium-switch" @click="toggleSwitch" ref="premiumSwitch">
-                      <input
-                        v-model="config.enabled"
-                        type="checkbox"
-                        class="switch-input"
-                        style="display: none"
-                      />
+                      <input v-model="config.enabled" type="checkbox" class="switch-input" style="display: none" />
                       <div class="switch-track" ref="switchTrack">
                         <div class="switch-glow" ref="switchGlow"></div>
                         <div class="switch-thumb" ref="switchThumb">
                           <div class="thumb-inner" ref="thumbInner">
                             <div class="thumb-icon" ref="thumbIcon">
-                              <svg
-                                v-if="config.enabled"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M20 6L9 17L4 12"
-                                  stroke="currentColor"
-                                  stroke-width="3"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                />
+                              <svg v-if="config.enabled" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                                  stroke-linejoin="round" />
                               </svg>
-                              <svg
-                                v-else
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M18 6L6 18M6 6L18 18"
-                                  stroke="currentColor"
-                                  stroke-width="3"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                />
+                              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="3"
+                                  stroke-linecap="round" stroke-linejoin="round" />
                               </svg>
                             </div>
                           </div>
@@ -726,6 +406,68 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 时间选择器全屏模态弹窗 -->
+    <div v-if="showTimePicker" class="time-picker-modal" ref="timePickerModal" @click="closeTimePicker">
+      <div class="time-picker-panel" ref="timePickerPanel" @click.stop>
+        <div class="picker-header">
+          <h4>选择发送时间</h4>
+          <button @click="closeTimePicker" class="close-btn">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 快速选择常用时间 -->
+        <div class="quick-time-select">
+          <div class="quick-label">常用时间</div>
+          <div class="quick-options">
+            <button v-for="quickTime in quickTimeOptions" :key="quickTime.value"
+              @click="selectQuickTime(quickTime.value)" class="quick-time-btn"
+              :class="{ active: config.sendTime === quickTime.value }">
+              {{ quickTime.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="time-wheels">
+          <!-- 小时选择器 -->
+          <div class="time-wheel">
+            <div class="wheel-label">小时</div>
+            <div class="wheel-container" ref="hourWheel">
+              <div v-for="hour in 24" :key="hour - 1" class="wheel-item" :class="{ active: selectedHour === hour - 1 }"
+                @click="selectHour(hour - 1)" :ref="(el) => { if (el) hourItems[hour - 1] = el as HTMLElement }">
+                {{ (hour - 1).toString().padStart(2, "0") }}
+              </div>
+            </div>
+          </div>
+
+          <!-- 分钟选择器 -->
+          <div class="time-wheel">
+            <div class="wheel-label">分钟</div>
+            <div class="wheel-container minute-wheel" ref="minuteWheel">
+              <div v-for="minute in minuteOptions" :key="minute" class="wheel-item"
+                :class="{ active: selectedMinute === minute }" @click="selectMinute(minute)"
+                :ref="(el) => { if (el) minuteItems[minute] = el as HTMLElement }">
+                {{ minute.toString().padStart(2, "0") }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="picker-actions">
+          <button @click="confirmTime" class="confirm-btn">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            确认
+          </button>
         </div>
       </div>
     </div>
@@ -756,8 +498,24 @@ const selectedMinute = ref(0);
 const hourItems = ref<Record<number, HTMLElement>>({});
 const minuteItems = ref<Record<number, HTMLElement>>({});
 
-// 分钟选项（每15分钟一个选项）
-const minuteOptions = [0, 15, 30, 45];
+// 时间选择器模态弹窗的ref
+const timePickerModal = ref<HTMLElement>();
+const timePickerPanel = ref<HTMLElement>();
+
+// 分钟选项（每分钟一个选项，更灵活）
+const minuteOptions = Array.from({ length: 60 }, (_, i) => i);
+
+// 快速时间选择选项
+const quickTimeOptions = [
+  { label: '早上 6:00', value: '06:00' },
+  { label: '早上 7:00', value: '07:00' },
+  { label: '早上 8:00', value: '08:00' },
+  { label: '早上 9:00', value: '09:00' },
+  { label: '中午 12:00', value: '12:00' },
+  { label: '下午 6:00', value: '18:00' },
+  { label: '晚上 8:00', value: '20:00' },
+  { label: '晚上 9:00', value: '21:00' }
+];
 
 // 按钮状态管理
 const buttonStates = ref({
@@ -909,7 +667,13 @@ const saveConfig = async () => {
     if (result.success) {
       updateButtonState("save", "success");
       if (result.data) {
-        config.value = result.data;
+        // 保留当前的sendTime，避免被服务器返回的默认值覆盖
+        const currentSendTime = config.value.sendTime;
+        config.value = { ...result.data };
+        // 如果服务器返回的数据中没有sendTime或者是默认值，使用当前设置的值
+        if (!result.data.sendTime || result.data.sendTime === "08:00") {
+          config.value.sendTime = currentSendTime;
+        }
       }
 
       // 成功动画
@@ -1535,7 +1299,7 @@ const toggleTimePicker = () => {
     // 解析当前时间
     const [hours, minutes] = (config.value.sendTime || "08:00").split(":").map(Number);
     selectedHour.value = hours;
-    selectedMinute.value = Math.floor(minutes / 15) * 15; // 取最近的15分钟倍数
+    selectedMinute.value = minutes; // 直接使用精确的分钟数
 
     nextTick(() => {
       animatePickerOpen();
@@ -1593,6 +1357,15 @@ const selectMinute = (minute: number) => {
   const prevElement = minuteItems.value[prevMinute] as HTMLElement;
 
   if (minuteElement) {
+    // 滚动到选中的分钟项
+    const minuteWheel = document.querySelector('.wheel-container') as HTMLElement;
+    if (minuteWheel) {
+      minuteElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+
     gsap.fromTo(
       minuteElement,
       { scale: 1, backgroundColor: "transparent" },
@@ -1614,6 +1387,23 @@ const selectMinute = (minute: number) => {
       duration: 0.2,
     });
   }
+};
+
+// 快速时间选择
+const selectQuickTime = (timeValue: string) => {
+  const [hours, minutes] = timeValue.split(':').map(Number);
+  selectedHour.value = hours;
+  selectedMinute.value = minutes;
+  config.value.sendTime = timeValue;
+
+  console.log("快速选择时间:", timeValue);
+
+  // 立即保存配置，避免时间被重置
+  nextTick(async () => {
+    await saveConfigSilently();
+  });
+
+  closeTimePicker();
 };
 
 const confirmTime = () => {
@@ -1639,60 +1429,129 @@ const confirmTime = () => {
   }
 
   console.log("时间已确认:", newTime);
+
+  // 立即保存配置，避免时间被重置
+  nextTick(async () => {
+    await saveConfigSilently();
+  });
+
   closeTimePicker();
+};
+
+// 静默保存配置（不显示UI反馈）
+const saveConfigSilently = async () => {
+  try {
+    console.log("静默保存配置...", config.value);
+
+    // 验证配置
+    const validation = emailService.validateConfig(config.value);
+    if (!validation.valid) {
+      console.error("配置验证失败:", validation.errors);
+      return;
+    }
+
+    const result = await emailService.saveConfig(config.value, emailService.getAdminPassword());
+    console.log("静默保存配置结果:", result);
+
+    if (result.success && result.data) {
+      // 保留当前的sendTime，避免被服务器返回的默认值覆盖
+      const currentSendTime = config.value.sendTime;
+      config.value = { ...result.data };
+      // 如果服务器返回的数据中没有sendTime或者是默认值，使用当前设置的值
+      if (!result.data.sendTime || result.data.sendTime === "08:00") {
+        config.value.sendTime = currentSendTime;
+      }
+      console.log("静默保存成功，时间已保留:", config.value.sendTime);
+    }
+  } catch (error) {
+    console.error("静默保存配置失败:", error);
+  }
 };
 
 // 时间选择器动画
 const animatePickerOpen = () => {
-  const panel = document.querySelector(".time-picker-panel") as HTMLElement;
-  const glow = document.querySelector(".picker-glow") as HTMLElement;
+  const modal = timePickerModal.value as HTMLElement;
+  const panel = timePickerPanel.value as HTMLElement;
 
-  if (panel) {
-    gsap.fromTo(
-      panel,
-      {
-        opacity: 0,
-        scale: 0.8,
-        y: -20,
-      },
-      {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.4,
-        ease: "back.out(1.7)",
-      }
-    );
-  }
+  if (modal && panel) {
+    // 设置初始状态
+    gsap.set(modal, { opacity: 0 });
+    gsap.set(panel, { scale: 0.7, opacity: 0, rotationY: -15 });
 
-  if (glow) {
-    gsap.to(glow, {
-      opacity: 0.6,
-      scale: 1.05,
+    // 创建时间线动画
+    const tl = gsap.timeline();
+
+    // 背景淡入
+    tl.to(modal, {
+      opacity: 1,
       duration: 0.3,
+      ease: "power2.out"
+    })
+      // 面板弹出动画
+      .to(panel, {
+        scale: 1,
+        opacity: 1,
+        rotationY: 0,
+        duration: 0.5,
+        ease: "back.out(1.7)"
+      }, "-=0.1")
+      // 添加轻微的弹跳效果
+      .to(panel, {
+        scale: 1.02,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+
+    // 滚动到当前选中的时间项
+    nextTick(() => {
+      scrollToSelectedTime();
     });
   }
 };
 
 const animatePickerClose = () => {
-  const panel = document.querySelector(".time-picker-panel") as HTMLElement;
-  const glow = document.querySelector(".picker-glow") as HTMLElement;
+  const modal = timePickerModal.value as HTMLElement;
+  const panel = timePickerPanel.value as HTMLElement;
 
-  if (panel) {
-    gsap.to(panel, {
+  if (modal && panel) {
+    const tl = gsap.timeline();
+
+    // 面板缩小并旋转消失
+    tl.to(panel, {
+      scale: 0.7,
       opacity: 0,
-      scale: 0.8,
-      y: -20,
+      rotationY: 15,
       duration: 0.3,
-      ease: "power2.in",
+      ease: "power2.in"
+    })
+      // 背景淡出
+      .to(modal, {
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.in"
+      }, "-=0.1");
+  }
+};
+
+// 滚动到当前选中的时间项
+const scrollToSelectedTime = () => {
+  // 滚动到选中的小时
+  const selectedHourElement = hourItems.value[selectedHour.value];
+  if (selectedHourElement) {
+    selectedHourElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
     });
   }
 
-  if (glow) {
-    gsap.to(glow, {
-      opacity: 0,
-      scale: 1,
-      duration: 0.3,
+  // 滚动到选中的分钟
+  const selectedMinuteElement = minuteItems.value[selectedMinute.value];
+  if (selectedMinuteElement) {
+    selectedMinuteElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
     });
   }
 };
@@ -1707,6 +1566,7 @@ const animatePickerClose = () => {
   position: relative;
   overflow-x: hidden;
 }
+
 /* 粒子背景 */
 .particle-background {
   position: fixed;
@@ -1779,6 +1639,7 @@ const animatePickerClose = () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -1911,7 +1772,7 @@ const animatePickerClose = () => {
   transition: width 0.3s ease;
 }
 
-.form-input:focus + .input-focus-line {
+.form-input:focus+.input-focus-line {
   width: 100%;
 }
 
@@ -2472,7 +2333,7 @@ const animatePickerClose = () => {
   transition: width 0.3s ease;
 }
 
-.email-input:focus + .input-underline {
+.email-input:focus+.input-underline {
   width: 100%;
 }
 
@@ -2617,7 +2478,7 @@ const animatePickerClose = () => {
   transition: width 0.3s ease;
 }
 
-.question-input:focus + .textarea-underline {
+.question-input:focus+.textarea-underline {
   width: 100%;
 }
 
@@ -2726,20 +2587,35 @@ const animatePickerClose = () => {
   transition: all 0.3s ease;
 }
 
-/* 时间选择面板 */
-.time-picker-panel {
-  position: absolute;
-  bottom: 100%;
+/* 时间选择器全屏模态弹窗 */
+.time-picker-modal {
+  position: fixed;
+  top: 0;
   left: 0;
   right: 0;
-  margin-bottom: 0.5rem;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+}
+
+.time-picker-panel {
   background: rgba(30, 30, 40, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 1.5rem;
-  z-index: 1000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  transform: scale(0.9);
+  opacity: 0;
 }
 
 .picker-header {
@@ -2774,6 +2650,51 @@ const animatePickerClose = () => {
 .close-btn svg {
   width: 16px;
   height: 16px;
+}
+
+/* 快速时间选择 */
+.quick-time-select {
+  margin-bottom: 1.5rem;
+}
+
+.quick-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.quick-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.quick-time-btn {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.quick-time-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.3);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.quick-time-btn.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* 时间滚轮 */
@@ -3057,6 +2978,7 @@ const animatePickerClose = () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -3210,6 +3132,7 @@ const animatePickerClose = () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -3220,6 +3143,7 @@ const animatePickerClose = () => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -3230,16 +3154,19 @@ const animatePickerClose = () => {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -3455,6 +3382,7 @@ const animatePickerClose = () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -3629,6 +3557,7 @@ const animatePickerClose = () => {
 
 /* 高对比度模式 */
 @media (prefers-contrast: high) {
+
   .login-card,
   .status-dashboard,
   .config-panel,
@@ -3648,6 +3577,7 @@ const animatePickerClose = () => {
 
 /* 减少动画模式 */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

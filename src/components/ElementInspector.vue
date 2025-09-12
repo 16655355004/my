@@ -546,30 +546,11 @@ onUnmounted(() => {
 <template>
   <!-- 检查器按钮 -->
   <div class="element-inspector">
-    <button
-      @click="toggleInspector"
-      :class="['inspector-btn', { active: isActive }]"
-      title="元素检查器"
-    >
+    <button @click="toggleInspector" :class="['inspector-btn', { active: isActive }]" title="元素检查器">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M12 2L2 7L12 12L22 7L12 2Z"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linejoin="round"
-        />
-        <path
-          d="M2 17L12 22L22 17"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linejoin="round"
-        />
-        <path
-          d="M2 12L12 17L22 12"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linejoin="round"
-        />
+        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
       </svg>
       <span>{{ isActive ? "退出检查" : "元素检查" }}</span>
     </button>
@@ -581,30 +562,14 @@ onUnmounted(() => {
   </div>
 
   <!-- 工具提示 -->
-  <div
-    v-if="isActive"
-    ref="tooltip"
-    class="element-tooltip"
-    :style="tooltipStyle"
-    :class="{ locked: isTooltipLocked }"
-  >
+  <div v-if="isActive" ref="tooltip" class="element-tooltip" :style="tooltipStyle" :class="{ locked: isTooltipLocked }">
     <div class="tooltip-content">
       <!-- 工具提示头部 -->
       <div class="tooltip-header">
         <div class="element-selector">{{ getElementSelector() }}</div>
-        <button
-          v-if="isTooltipLocked"
-          @click="unlockTooltip"
-          class="close-btn"
-          title="关闭详细视图 (ESC)"
-        >
+        <button v-if="isTooltipLocked" @click="unlockTooltip" class="close-btn" title="关闭详细视图 (ESC)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M18 6L6 18M6 6L18 18"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
           </svg>
         </button>
       </div>
@@ -715,10 +680,7 @@ onUnmounted(() => {
           </div>
           <div v-if="tooltipContent.backgroundColor !== 'rgba(0, 0, 0, 0)'" class="info-item">
             <span class="info-label">background:</span>
-            <span
-              class="info-value color-preview"
-              :style="{ backgroundColor: tooltipContent.backgroundColor }"
-            >
+            <span class="info-value color-preview" :style="{ backgroundColor: tooltipContent.backgroundColor }">
               {{ tooltipContent.backgroundColor }}
             </span>
           </div>
@@ -738,13 +700,10 @@ onUnmounted(() => {
           </div>
           <div class="info-item">
             <span class="info-label">可见:</span>
-            <span
-              class="info-value"
-              :class="{
-                'status-visible': tooltipContent.isVisible,
-                'status-hidden': !tooltipContent.isVisible,
-              }"
-            >
+            <span class="info-value" :class="{
+              'status-visible': tooltipContent.isVisible,
+              'status-hidden': !tooltipContent.isVisible,
+            }">
               {{ tooltipContent.isVisible ? "是" : "否" }}
             </span>
           </div>
@@ -762,7 +721,7 @@ onUnmounted(() => {
             <span class="info-label">{{ key }}:</span>
             <span class="info-value">{{
               value.length > 30 ? value.slice(0, 30) + "..." : value
-            }}</span>
+              }}</span>
           </div>
         </div>
       </div>
@@ -852,11 +811,13 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.3), inset 0 0 0 1px rgba(0, 255, 136, 0.2),
       0 4px 12px rgba(0, 255, 136, 0.2);
   }
+
   50% {
     box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.5), inset 0 0 0 1px rgba(0, 255, 136, 0.3),
       0 6px 16px rgba(0, 255, 136, 0.3);
@@ -920,6 +881,7 @@ onUnmounted(() => {
   from {
     box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 136, 0.3);
   }
+
   to {
     box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 136, 0.5);
   }
@@ -986,11 +948,13 @@ onUnmounted(() => {
 }
 
 @keyframes pulse-lock {
+
   0%,
   100% {
     border-color: rgba(0, 255, 136, 0.4);
     box-shadow: 0 2px 8px rgba(0, 255, 136, 0.1);
   }
+
   50% {
     border-color: rgba(0, 255, 136, 0.6);
     box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
@@ -1011,10 +975,12 @@ onUnmounted(() => {
 }
 
 @keyframes pulse-hint {
+
   0%,
   100% {
     opacity: 0.8;
   }
+
   50% {
     opacity: 1;
   }
