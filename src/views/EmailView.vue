@@ -2729,10 +2729,10 @@ const animatePickerClose = () => {
 /* 时间选择面板 */
 .time-picker-panel {
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 0;
   right: 0;
-  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   background: rgba(30, 30, 40, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);

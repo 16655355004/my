@@ -118,9 +118,18 @@ class CFConfigFetcher {
                     config.question = '请设置每日问题';
                 }
 
-                // 验证发送时间字段
-                if (!config.sendTime || typeof config.sendTime !== 'string') {
-                    console.warn('⚠️ sendTime字段无效，使用默认值 08:00');
+                // 验证发送时间字段 - 修复时间处理逻辑
+                if (config.sendTime) {
+                    // 验证时间格式是否正确
+                    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+                    if (timeRegex.test(config.sendTime)) {
+                        console.log('✅ sendTime字段有效:', config.sendTime);
+                    } else {
+                        console.warn('⚠️ sendTime格式无效，使用默认值 08:00');
+                        config.sendTime = '08:00';
+                    }
+                } else {
+                    console.warn('⚠️ sendTime字段不存在，使用默认值 08:00');
                     config.sendTime = '08:00';
                 }
 
@@ -159,8 +168,33 @@ class CFConfigFetcher {
 
             if (response.statusCode === 200) {
                 console.log('✅ 成功从CF API获取配置');
-                const config = JSON.parse(response.data);
+                const configData = response.data;
+                console.log('CF API原始数据:', configData);
+                
+                // 解析JSON数据
+                let config;
+                try {
+                    config = JSON.parse(configData);
+                } catch (parseError) {
+                    console.error('❌ JSON解析失败:', parseError.message);
+                    return null;
+                }
+                
                 console.log('CF API配置:', config);
+                
+                // 验证发送时间字段 - 修复时间处理逻辑
+                if (config && config.sendTime) {
+                    // 验证时间格式是否正确
+                    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+                    if (!timeRegex.test(config.sendTime)) {
+                        console.warn('⚠️ sendTime格式无效，使用默认值 08:00');
+                        config.sendTime = '08:00';
+                    }
+                } else if (config) {
+                    console.warn('⚠️ sendTime字段不存在，使用默认值 08:00');
+                    config.sendTime = '08:00';
+                }
+                
                 return config;
             } else {
                 throw new Error(`CF API获取失败: ${response.statusCode}`);
@@ -185,7 +219,8 @@ class CFConfigFetcher {
             return {
                 enabled: false,
                 emails: [],
-                question: '请设置每日问题'
+                question: '请设置每日问题',
+                sendTime: '08:00'
             };
         }
 
@@ -395,12 +430,12 @@ function isTimeToSend(sendTime) {
     console.log(`⏰ 当前北京时间: ${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
     console.log(`🎯 目标发送时间: ${targetHour.toString().padStart(2, '0')}:${targetMinute.toString().padStart(2, '0')}`);
 
-    // 检查是否到达发送时间（允许5分钟的误差范围）
+    // 检查是否到达发送时间（允许2分钟的误差范围，减少重复发送可能性）
     const currentTotalMinutes = currentHour * 60 + currentMinute;
     const targetTotalMinutes = targetHour * 60 + targetMinute;
     const timeDiff = Math.abs(currentTotalMinutes - targetTotalMinutes);
 
-    return timeDiff <= 5; // 5分钟内都算到达发送时间
+    return timeDiff <= 2; // 缩小时间窗口到2分钟内
 }
 
 async function checkAndSendEmail() {
@@ -408,7 +443,7 @@ async function checkAndSendEmail() {
         const now = new Date();
         const today = now.toDateString();
 
-        // 检查是否已经发送过今天的邮件
+        // 检查是否已经发送过今天的邮件（增加时间检查，避免重复发送）
         if (lastSentDate === today) {
             console.log('📅 今日邮件已发送，跳过');
             return;
@@ -429,6 +464,12 @@ async function checkAndSendEmail() {
         }
 
         console.log('🎯 到达发送时间，开始处理...');
+
+        // 发送邮件前再次检查是否已发送（双重检查避免并发问题）
+        if (lastSentDate === today) {
+            console.log('📅 今日邮件已发送（并发检查），跳过');
+            return;
+        }
 
         // 发送邮件
         const result = await sendDailyEmail(config, false);
