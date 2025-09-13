@@ -27,7 +27,7 @@
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.23.0",
     "unplugin-vue-components": "^2.2.0",
-    "vite": "^7.0.0",
+    "vite": "^6.0.0",
     "vite-plugin-compression": "^0.5.1"
   }
 }
