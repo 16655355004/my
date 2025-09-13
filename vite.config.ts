@@ -1,8 +1,17 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type ProxyOptions } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import type { ServerOptions, PreviewOptions } from 'vite'
+
+// Optional devtools import
+let vueDevTools: any;
+try {
+  // This will be tree-shaken in production
+  vueDevTools = require('vite-plugin-vue-devtools').default;
+} catch (e) {
+  console.warn('vite-plugin-vue-devtools not found, devtools will be disabled');
+  vueDevTools = null;
+}
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
@@ -40,12 +49,14 @@ export default defineConfig(({ mode }) => {
     open: true
   };
   
+  const plugins = [
+    vue(),
+    ...(vueDevTools ? [vueDevTools()] : []) as any[],
+  ];
+
   return {
     base: isProduction ? './' : '/',
-    plugins: [
-      vue(),
-      vueDevTools(),
-    ],
+    plugins,
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url))
