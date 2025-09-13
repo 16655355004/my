@@ -5,11 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm install && vite build --base=./ && node cf-pages.js",
+    "build": "npm install && vite build --base=./ && node cf-pages.cjs",
     "preview": "vite preview",
     "lint": "oxlint . && eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
-    "email:action": "node email-sender-github-action.js",
-    "email:reset": "node reset-email-sent-github-action.js",
     "cf-preview": "wrangler pages dev dist"
   },
   "dependencies": {
