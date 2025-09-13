@@ -13,7 +13,6 @@ const filesToCopy = [
   '_headers',
   '_redirects',
   '_routes.json',
-  'index.html',
   'favicon.ico',
   'placeholder-profile.jpg'
 ];
