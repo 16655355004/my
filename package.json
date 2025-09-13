@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --base=./ && node cf-pages.js",
     "preview": "vite preview",
     "lint": "oxlint . && eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "email:action": "node email-sender-github-action.js",
-    "email:reset": "node reset-email-sent-github-action.js"
+    "email:reset": "node reset-email-sent-github-action.js",
+    "cf-preview": "wrangler pages dev dist"
   },
   "dependencies": {
     "gsap": "^3.12.8",

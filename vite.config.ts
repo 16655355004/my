@@ -1,64 +1,77 @@
 import { fileURLToPath, URL } from 'node:url'
-
-import { defineConfig } from 'vite'
+import { defineConfig, type ProxyOptions } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import type { ServerOptions, PreviewOptions } from 'vite'
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
-    },
-  },
-  build: {
-    // 确保输出目录正确
-    outDir: 'dist',
-    // 确保资源路径正确
-    assetsDir: 'assets',
-    // 生成source map用于调试
-    sourcemap: false,
-    // 确保模块格式正确
-    rollupOptions: {
-      output: {
-        // 确保文件名不包含特殊字符
-        entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+export default defineConfig(({ mode }) => {
+  const isProduction = mode === 'production'
+  
+  // Configure proxy
+  const proxy: Record<string, string | ProxyOptions> = {
+    '/api': {
+      target: 'https://www.jisoolove.top',
+      changeOrigin: true,
+      secure: true,
+      configure: (proxy) => {
+        proxy.on('error', (err: Error) => {
+          console.log('Proxy error:', err);
+        });
+        proxy.on('proxyReq', (proxyReq: any, req: any) => {
+          console.log('Sending request to target:', req.method, req.url);
+        });
+        proxy.on('proxyRes', (proxyRes: any, req: any) => {
+          console.log('Received response from target:', proxyRes.statusCode, req.url);
+        });
       }
     }
-  },
-  // 确保开发服务器配置正确
-  server: {
+  };
+
+  // Server configuration
+  const server: ServerOptions = {
     port: 3000,
-    host: true,
-    proxy: {
-      // 代理API请求到Cloudflare Worker
-      '/api': {
-        target: 'https://www.jisoolove.top',
-        changeOrigin: true,
-        secure: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        },
-      }
-    }
-  },
-  // 预览服务器配置
-  preview: {
+    open: true,
+    proxy
+  };
+
+  // Preview configuration
+  const preview: PreviewOptions = {
     port: 4173,
-    host: true
-  }
-})
+    open: true
+  };
+  
+  return {
+    base: isProduction ? './' : '/',
+    plugins: [
+      vue(),
+      vueDevTools(),
+    ],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url))
+      }
+    },
+    envPrefix: 'VITE_',
+    css: {
+      devSourcemap: false
+    },
+    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.fbx'],
+    worker: {
+      format: 'es'
+    },
+    build: {
+      outDir: 'dist',
+      assetsDir: 'assets',
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash][extname]'
+        }
+      }
+    },
+    server,
+    preview
+  };
+});
