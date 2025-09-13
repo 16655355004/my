@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm ci && vite build --base=./ && node cf-pages.js",
+    "build": "npm install && vite build --base=./ && node cf-pages.js",
     "preview": "vite preview",
     "lint": "oxlint . && eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "email:action": "node email-sender-github-action.js",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@eslint/js": "^9.29.1",
     "@tsconfig/node20": "^20.1.4",
+    "@vue/tsconfig": "^0.5.1",
     "@vitejs/plugin-vue": "^5.2.1",
     "eslint": "^9.29.0",
     "eslint-plugin-vue": "^9.32.0",
