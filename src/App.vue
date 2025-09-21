@@ -6,7 +6,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
 import SplitText from "gsap/SplitText";
 import Navbar from "./components/Navbar.vue";
-import Loader from "./components/Loader.vue";
+import Loader from "./components/LoaderOptimized.vue";
 import { useVisitorTracking } from "./composables/useVisitorTracking";
 
 const showBackToTop = ref(false);
