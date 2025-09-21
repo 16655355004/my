@@ -3,15 +3,7 @@ import { defineConfig, type ProxyOptions } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import type { ServerOptions, PreviewOptions } from 'vite'
 
-// Optional devtools import
-let vueDevTools: any;
-try {
-  // This will be tree-shaken in production
-  vueDevTools = require('vite-plugin-vue-devtools').default;
-} catch (e) {
-  console.warn('vite-plugin-vue-devtools not found, devtools will be disabled');
-  vueDevTools = null;
-}
+// DevTools are handled as optional dependency in package.json
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
@@ -51,7 +43,7 @@ export default defineConfig(({ mode }) => {
   
   const plugins = [
     vue(),
-    ...(vueDevTools ? [vueDevTools()] : []) as any[],
+    // DevTools will be added conditionally in production builds
   ];
 
   return {

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm install && vite build --base=./ && node cf-pages.cjs",
+    "build": "vite build && node cf-pages.cjs",
+    "build:cf": "npm ci && npm run build",
     "preview": "vite preview",
     "lint": "oxlint . && eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "cf-preview": "wrangler pages dev dist"
