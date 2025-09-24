@@ -51,7 +51,6 @@ const loadMessages = async () => {
 // 提交留言
 const submitMessage = async () => {
   if (!isFormValid.value || submitting.value) return;
-
   try {
     submitting.value = true;
 

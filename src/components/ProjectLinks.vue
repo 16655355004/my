@@ -196,6 +196,18 @@ onMounted(() => {
   padding: 6rem 0;
   position: relative;
   z-index: 2;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+[data-theme="dark"] .project-links {
+  background-image: url('/src/assets/2.png');
+}
+
+[data-theme="light"] .project-links {
+  background-image: url('/src/assets/77.png');
 }
 
 .container {
@@ -223,7 +235,7 @@ onMounted(() => {
 
 .section-subtitle {
   font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   font-weight: 400;
 }
 
@@ -237,8 +249,8 @@ onMounted(() => {
 
 .project-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 2rem;
   cursor: pointer;
@@ -250,7 +262,6 @@ onMounted(() => {
   gap: 1.5rem;
   min-height: 200px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  /* Ensure visibility */
   opacity: 1;
   visibility: visible;
 }
@@ -300,12 +311,12 @@ onMounted(() => {
 .project-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-color);
   margin-bottom: 0.75rem;
 }
 
 .project-description {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 1rem;
 }
@@ -323,7 +334,7 @@ onMounted(() => {
   right: 1.5rem;
   width: 20px;
   height: 20px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   transition: all 0.3s ease;
 }
 

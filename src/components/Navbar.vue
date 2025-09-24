@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import gsap from "gsap";
 import SplitText from "gsap/SplitText";
+import { useTheme } from "../composables/useTheme";
 
 // 注册GSAP插件
 gsap.registerPlugin(SplitText);
@@ -12,6 +13,9 @@ const isMenuOpen = ref(false);
 const logoRef = ref(null);
 const route = useRoute();
 const router = useRouter();
+
+// 主题系统
+const { toggleTheme, isDark, themeIcon, themeLabel } = useTheme();
 
 // 导航到锚点的函数
 const navigateToSection = (sectionId: string) => {
@@ -93,6 +97,112 @@ const handleScroll = () => {
         ease: "power2.out",
       });
     }
+  }
+};
+
+// 主题切换动画 - 令人眼前一亮的效果
+const handleThemeToggle = () => {
+  // 创建多彩粒子爆炸效果
+  const createParticleExplosion = () => {
+    const particles = [];
+    const colors = ['#00d4ff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+    
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.style.cssText = `
+        position: fixed;
+        width: 6px;
+        height: 6px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 10000;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 10px currentColor;
+      `;
+      document.body.appendChild(particle);
+      particles.push(particle);
+      
+      // 随机方向和距离的爆炸动画
+      const angle = (Math.PI * 2 * i) / 30;
+      const distance = 100 + Math.random() * 200;
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+      
+      gsap.to(particle, {
+        x: x,
+        y: y,
+        opacity: 0,
+        scale: 0,
+        duration: 1.2,
+        ease: "power2.out",
+        onComplete: () => particle.remove()
+      });
+    }
+  };
+  
+  // 创建波纹扩散效果
+  const createRippleEffect = () => {
+    const ripple = document.createElement('div');
+    ripple.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      border: 2px solid ${isDark.value ? '#ffffff' : '#00d4ff'};
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 9998;
+    `;
+    document.body.appendChild(ripple);
+    
+    gsap.to(ripple, {
+      width: '200vw',
+      height: '200vw',
+      opacity: 0,
+      duration: 0.8,
+      ease: "power2.out",
+      onComplete: () => ripple.remove()
+    });
+  };
+  
+  // 页面翻转效果
+  const flipAnimation = () => {
+    gsap.to('body', {
+      rotationY: 180,
+      duration: 0.4,
+      ease: "power2.inOut",
+      onComplete: () => {
+        toggleTheme();
+        gsap.set('body', { rotationY: -180 });
+        gsap.to('body', {
+          rotationY: 0,
+          duration: 0.4,
+          ease: "power2.inOut"
+        });
+      }
+    });
+  };
+  
+  // 执行动画序列
+  createParticleExplosion();
+  createRippleEffect();
+  flipAnimation();
+  
+  // 链接点击反馈
+  const themeLink = document.querySelector('.theme-toggle-link');
+  if (themeLink) {
+    gsap.to(themeLink, {
+      scale: 0.95,
+      duration: 0.1,
+      yoyo: true,
+      repeat: 1,
+      ease: "power2.inOut"
+    });
   }
 };
 
@@ -333,8 +443,10 @@ watch(route, () => {
             <RouterLink to="/tutorial" class="nav-link">教程</RouterLink>
           </li>
 
-          <li class="nav-item" @click="closeMenu">
-            <RouterLink to="/email" class="nav-link">邮件系统</RouterLink>
+          <li class="nav-item">
+            <a @click="handleThemeToggle" class="nav-link theme-toggle-link">
+              {{ themeLabel }}
+            </a>
           </li>
         </ul>
       </nav>
@@ -373,6 +485,7 @@ watch(route, () => {
   background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   display: inline-block;
   will-change: transform, opacity;
   position: relative;
@@ -649,5 +762,10 @@ watch(route, () => {
   .nav-link {
     font-size: 1.5rem;
   }
+}
+
+/* 主题切换链接样式 */
+.theme-toggle-link {
+  cursor: pointer;
 }
 </style>

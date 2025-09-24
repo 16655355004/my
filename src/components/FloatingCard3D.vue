@@ -192,10 +192,10 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 280px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--card-background);
   border-radius: 20px;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   transform-style: preserve-3d;
   perspective: 1000px;
@@ -236,14 +236,14 @@ onMounted(() => {
 .card-title {
   font-size: 1.4rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 0.8rem;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .card-description {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 1.5rem;
 }

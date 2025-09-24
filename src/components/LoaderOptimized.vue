@@ -212,7 +212,7 @@ const closeSplash = () => {
   <div v-if="isLoading" class="video-splash-screen">
     <div class="video-container">
       <!-- 优化后的视频元素 -->
-      <video 
+      <!-- <video 
         v-if="!showFallback"
         class="splash-video" 
         autoplay 
@@ -222,7 +222,7 @@ const closeSplash = () => {
         :poster="null"
       >
         <source src="@/assets/2.mp4" type="video/mp4" />
-      </video>
+      </video> -->
       
       <!-- 备用渐变动画 -->
       <div v-if="showFallback" class="fallback-animation">
@@ -265,6 +265,11 @@ const closeSplash = () => {
   will-change: opacity, transform;
   backface-visibility: hidden;
   transform: translateZ(0);
+  background-image: url('/src/assets/001.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .video-container {

@@ -4,10 +4,10 @@ import { statisticsService, type Statistics } from "../services/statisticsServic
 
 // 响应式数据
 const statistics = ref<Statistics | null>(null);
-const loading = ref(false); // 改为false，不自动加载
+const loading = ref(true); // 改为true，自动加载
 const error = ref<string | null>(null);
 const updateInterval = ref<number | null>(null);
-const isVisible = ref(false); // 控制统计数据是否显示
+const isVisible = ref(true); // 直接显示统计数据
 const hasLoaded = ref(false); // 标记是否已经加载过数据
 
 // 获取统计数据
@@ -59,8 +59,8 @@ const recordVisit = async () => {
 
 // 启动实时更新
 const startRealTimeUpdates = () => {
-  // 每30秒更新一次统计数据
-  updateInterval.value = window.setInterval(fetchStatistics, 30000);
+  // 每5分钟更新一次统计数据，减少API调用频率
+  updateInterval.value = window.setInterval(fetchStatistics, 300000); // 5分钟 = 300000ms
 };
 
 // 停止实时更新
@@ -91,8 +91,13 @@ const loadStatistics = async () => {
 
 // 组件挂载时的操作
 onMounted(async () => {
-  // 只记录访问，不自动加载统计数据
+  // 记录访问并自动加载统计数据
   await recordVisit();
+  await fetchStatistics();
+  // 不再自动启动实时更新，改为手动控制
+  // if (statistics.value && !error.value) {
+  //   startRealTimeUpdates();
+  // }
 });
 
 // 组件卸载时清理
@@ -138,47 +143,15 @@ const resetResponseTime = async () => {
 <template>
   <div class="website-statistics">
     <div class="container">
-      <!-- 统计数据触发按钮 -->
-      <div class="stats-trigger">
-        <button @click="loadStatistics" class="stats-toggle-btn" :class="{ active: isVisible }">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M9 19C9 20.1046 9.89543 21 11 21H13C14.1046 21 15 20.1046 15 19V5C15 3.89543 14.1046 3 13 3H11C9.89543 3 9 3.89543 9 5V19Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M3 13C3 14.1046 3.89543 15 5 15H7C8.10457 15 9 14.1046 9 13V11C9 9.89543 8.10457 9 7 9H5C3.89543 9 3 9.89543 3 11V13Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M15 17C15 18.1046 15.8954 19 17 19H19C20.1046 19 21 18.1046 21 17V7C21 5.89543 20.1046 5 19 5H17C15.8954 5 15 5.89543 15 7V17Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-          </svg>
-          <span>{{ isVisible ? "隐藏统计" : "查看网站统计" }}</span>
-          <svg
-            class="chevron-icon"
-            :class="{ rotated: isVisible }"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6 9L12 15L18 9"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </button>
-      </div>
+      <!-- 统计数据标题
+      <div class="stats-header">
+        <h2 class="stats-title">网站统计</h2>
+        <p class="stats-subtitle">实时数据监控</p>
+      </div> -->
+
 
       <!-- 统计数据内容区域 -->
-      <div v-if="isVisible" class="stats-content">
+      <div class="stats-content">
         <div v-if="loading" class="loading-state">
           <div class="loading-spinner"></div>
           <p>加载统计数据中...</p>
@@ -312,9 +285,7 @@ const resetResponseTime = async () => {
             </div>
           </div>
         </div>
-        <!-- Close stats-grid -->
       </div>
-      <!-- Close stats-content -->
     </div>
   </div>
 </template>
@@ -323,7 +294,7 @@ const resetResponseTime = async () => {
 .website-statistics {
   width: 100%;
   margin: 0 auto;
-  padding: 0;
+  padding: 2rem 0;
 }
 
 /* 统计数据触发按钮 */
@@ -337,30 +308,29 @@ const resetResponseTime = async () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(156, 39, 176, 0.1));
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  /* background: var(--card-background); */
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1rem 1.5rem;
-  color: #00d4ff;
+  color: var(--text-color);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.1);
 }
 
 .stats-toggle-btn:hover {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(156, 39, 176, 0.2));
-  border-color: rgba(0, 212, 255, 0.5);
+  background: var(--card-background);
+  border-color: var(--primary-color);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
 }
 
 .stats-toggle-btn.active {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(156, 39, 176, 0.2));
-  border-color: rgba(0, 212, 255, 0.6);
-  color: #ffffff;
+  background: var(--card-background);
+  border-color: var(--primary-color);
+  color: var(--text-color);
 }
 
 .btn-icon {
@@ -410,6 +380,7 @@ const resetResponseTime = async () => {
   background: linear-gradient(120deg, var(--primary-color), #00ff88);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 0.5rem;
 }
 
@@ -430,6 +401,9 @@ const resetResponseTime = async () => {
 }
 
 .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
   position: relative;
   z-index: 2;
 }
@@ -438,7 +412,7 @@ const resetResponseTime = async () => {
 .error-state {
   text-align: center;
   padding: 2rem 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-color);
 }
 
 .loading-spinner {
@@ -498,8 +472,8 @@ const resetResponseTime = async () => {
 }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 1.25rem;
   position: relative;
@@ -642,14 +616,10 @@ const resetResponseTime = async () => {
 .stat-number {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #00d4ff;
+  color: var(--primary-color);
   line-height: 1;
   margin-bottom: 0.25rem;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #00d4ff, #ffffff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .stat-card:hover .stat-number {
@@ -659,19 +629,19 @@ const resetResponseTime = async () => {
 .stat-number .unit {
   font-size: 0.9rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   margin-left: 0.25rem;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-color);
   font-weight: 500;
 }
 
 .stat-detail {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   margin-top: 0.25rem;
 }
 
@@ -715,11 +685,13 @@ const resetResponseTime = async () => {
   }
 }
 
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .website-statistics {
     padding: 1rem;
   }
+
 
   .stats-trigger {
     margin-bottom: 1.5rem;

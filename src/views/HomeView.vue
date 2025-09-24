@@ -7,7 +7,6 @@ import TextPlugin from "gsap/TextPlugin";
 import ElementInspector from "../components/ElementInspector.vue";
 import WebsiteStatistics from "../components/WebsiteStatistics.vue";
 import ProjectLinks from "../components/ProjectLinks.vue";
-import ParticleBackground from "../components/ParticleBackground.vue";
 import FloatingCard3D from "../components/FloatingCard3D.vue";
 import TypewriterEffect from "../components/TypewriterEffect.vue";
 
@@ -326,41 +325,13 @@ onMounted(() => {
 
 <template>
   <div class="home-page">
-    <!-- 新的背景效果组件 -->
-    <ParticleBackground />
-
-    <!-- 背景装饰 -->
-    <div class="background-decorations">
-      <!-- 网格背景 -->
-      <div class="grid-background"></div>
-
-      <!-- 代码雨效果 -->
-      <div class="code-rain">
-        <div class="code-line" v-for="i in 20" :key="i">
-          <span>{{ getRandomCode() }}</span>
-        </div>
-      </div>
-
-      <!-- 浮动几何图形 -->
-      <div class="floating-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-        <div class="shape shape-4"></div>
-      </div>
-
-      <!-- 原有的光晕效果 -->
-      <div class="parallax-bg bg-circle bg-circle-1" data-speed="0.15"></div>
-      <div class="parallax-bg bg-circle bg-circle-2" data-speed="0.1"></div>
-      <div class="parallax-bg bg-circle bg-circle-3" data-speed="0.2"></div>
-    </div>
-
     <!-- Hero Section -->
     <section class="hero-section" id="home">
       <div class="container">
         <!-- 主要内容居中 -->
         <div class="hero-content">
           <h1 class="hero-title">JisooLove</h1>
+          
           <div class="hero-subtitle-container">
             <TypewriterEffect
               :texts="typewriterTexts"
@@ -372,16 +343,10 @@ onMounted(() => {
           </div>
           <div class="hero-buttons">
             <button class="btn btn-primary" @click="router.push('/playground')">动画实验室</button>
+            
             <button class="btn btn-outline" @click="navigateToSection('about')">了解更多</button>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- 网站统计区域 - 独立的section，横向排列 -->
-    <section class="statistics-section">
-      <div class="container">
-        <WebsiteStatistics />
       </div>
     </section>
 
@@ -393,15 +358,15 @@ onMounted(() => {
       <div class="container">
         <h2 class="section-title">我的专业技能</h2>
         <div class="features-grid">
-          <FloatingCard3D
-            v-for="(feature, index) in features"
+          <div
+            v-for="feature in features"
             :key="feature.title"
-            :title="feature.title"
-            :description="feature.description"
-            :icon="feature.icon"
-            :color="feature.color"
-            :delay="index * 0.2"
-          />
+            class="feature-card"
+          >
+            <div class="feature-icon">{{ feature.icon }}</div>
+            <h3 class="feature-title">{{ feature.title }}</h3>
+            <p class="feature-description">{{ feature.description }}</p>
+          </div>
         </div>
       </div>
     </section>
@@ -422,7 +387,6 @@ onMounted(() => {
     <section class="skills-progress section">
       <div class="container">
         <h2 class="section-title">技能熟练度</h2>
-
         <!-- 技能条展示 -->
         <div class="skills-grid">
           <div v-for="skill in skills" :key="skill.name" class="skill-item">
@@ -442,6 +406,13 @@ onMounted(() => {
       </div>
     </section>
 
+    <!-- 网站统计区域 - 放在页面最下面 -->
+    <section class="statistics-section">
+      <div class="container">
+        <WebsiteStatistics />
+      </div>
+    </section>
+
     <!-- 元素检查器 -->
     <ElementInspector />
   </div>
@@ -452,200 +423,10 @@ onMounted(() => {
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(
-    135deg,
-    #0a0a0f 0%,
-    #1a1a2e 25%,
-    #16213e 50%,
-    #0f3460 75%,
-    #1a1a2e 100%
-  );
-}
-
-/* 背景装饰 */
-.background-decorations {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.bg-circle {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.2;
-}
-
-.bg-circle-1 {
-  width: 50vw;
-  height: 50vw;
-  background: radial-gradient(circle, var(--primary-color) 0%, rgba(0, 0, 0, 0) 70%);
-  top: -15vw;
-  right: -15vw;
-}
-
-.bg-circle-2 {
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, var(--accent-color) 0%, rgba(0, 0, 0, 0) 70%);
-  bottom: -10vw;
-  left: -10vw;
-}
-
-.bg-circle-3 {
-  width: 30vw;
-  height: 30vw;
-  background: radial-gradient(circle, var(--purple-accent) 0%, rgba(0, 0, 0, 0) 70%);
-  top: 30vh;
-  left: 10vw;
-}
-
-/* 网格背景 */
-.grid-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: gridMove 20s linear infinite;
-}
-
-@keyframes gridMove {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(50px, 50px);
-  }
-}
-
-/* 代码雨效果 */
-.code-rain {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.code-line {
-  position: absolute;
-  color: rgba(0, 212, 255, 0.5);
-  font-family: "Courier New", monospace;
-  font-size: 15px;
-  white-space: nowrap;
-  animation: codeRain 15s linear infinite;
-  top: -100vh; /* 确保初始位置在屏幕上方 */
-  will-change: transform; /* 优化动画性能 */
-}
-
-.code-line:nth-child(odd) {
-  animation-delay: -5s;
-  color: rgba(139, 92, 246, 0.5);
-}
-
-.code-line:nth-child(3n) {
-  animation-delay: -10s;
-  color: rgba(0, 255, 136, 0.5);
-}
-
-@keyframes codeRain {
-  0% {
-    transform: translateY(-100vh);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh);
-    opacity: 0;
-  }
-}
-
-/* 浮动几何图形 */
-.floating-shapes {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.shape {
-  position: absolute;
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  animation: float 20s ease-in-out infinite;
-}
-
-.shape-1 {
-  width: 100px;
-  height: 100px;
-  top: 20%;
-  left: 10%;
-  border-radius: 50%;
-  animation-delay: 0s;
-}
-
-.shape-2 {
-  width: 60px;
-  height: 60px;
-  top: 60%;
-  right: 15%;
-  transform: rotate(45deg);
-  animation-delay: -5s;
-  border-color: rgba(139, 92, 246, 0.2);
-}
-
-.shape-3 {
-  width: 80px;
-  height: 80px;
-  top: 40%;
-  left: 70%;
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  background: rgba(0, 255, 136, 0.1);
-  border: none;
-  animation-delay: -10s;
-}
-
-.shape-4 {
-  width: 120px;
-  height: 120px;
-  top: 80%;
-  left: 30%;
-  border-radius: 20px;
-  animation-delay: -15s;
-  border-color: rgba(255, 51, 102, 0.2);
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-20px) rotate(90deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(180deg);
-  }
-  75% {
-    transform: translateY(-30px) rotate(270deg);
-  }
+  background: var(--background-color);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-color, background-image;
+  transform: translateZ(0);
 }
 
 /* Hero Section */
@@ -659,13 +440,33 @@ onMounted(() => {
   padding: 0;
 }
 
+[data-theme="light"] .hero-section {
+  background-image: url("/src/assets/66.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-image;
+  transform: translateZ(0);
+}
+
+[data-theme="dark"] .hero-section {
+  background-image: url("/src/assets/1.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-image;
+  transform: translateZ(0);
+}
+
 .hero-section .container {
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   width: 100%;
-  height: 100%;
+  /* height: 100%; */
 }
 
 .hero-content {
@@ -680,8 +481,8 @@ onMounted(() => {
   justify-content: center;
   position: relative;
   z-index: 2;
-  padding: 4rem 0;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+  /* padding: 4rem 0; */
+  background: transparent;
 }
 
 .statistics-section .container {
@@ -845,6 +646,28 @@ onMounted(() => {
   padding: 8rem 0;
   position: relative;
   z-index: 2;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+[data-theme="dark"] .features-section {
+  background-image: url('/src/assets/3.png');
+  transition: background-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-image;
+  transform: translateZ(0);
+}
+
+[data-theme="light"] .features-section {
+  background-image: url('/src/assets/88.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  transition: background-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-image;
+  transform: translateZ(0);
 }
 
 .section-title {
@@ -865,15 +688,33 @@ onMounted(() => {
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--card-background);
   border-radius: 20px;
   padding: 2.5rem;
   text-align: center;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
-  opacity: 1; /* 确保初始可见 */
-  transform: translateY(0); /* 确保初始位置正确 */
+  opacity: 1;
+  transform: translateY(0);
+  box-shadow: 0 4px 20px var(--shadow-color), 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+  transition: left 0.6s ease;
+}
+
+.feature-card:hover::before {
+  left: 100%;
 }
 
 .feature-card:hover {
@@ -895,18 +736,36 @@ onMounted(() => {
 }
 
 .feature-description {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 /* Stats Section */
 .stats-section {
   padding: 6rem 0;
-  background: rgba(0, 0, 0, 0.2);
+  background: transparent;
   position: relative;
   z-index: 2;
 }
 
+[data-theme="dark"] .skills-progress {
+  background-image: url('/src/assets/4.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-image;
+  transform: translateZ(0);
+}
+[data-theme="light"] .skills-progress {
+  background-image: url('/src/assets/99.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: background-image;
+  transform: translateZ(0);
+}
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -927,7 +786,7 @@ onMounted(() => {
 
 .stat-label {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -947,14 +806,31 @@ onMounted(() => {
 }
 
 .skill-item {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--card-background);
   border-radius: 15px;
   padding: 1.5rem;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
-  opacity: 1; /* 确保初始可见 */
-  transform: translateX(0); /* 确保初始位置正确 */
+  box-shadow: 0 2px 12px var(--shadow-color), 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-item::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.skill-item:hover::after {
+  opacity: 1;
 }
 
 .skill-item:hover {
@@ -985,7 +861,7 @@ onMounted(() => {
 .skill-bar {
   width: 100%;
   height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--divider-color);
   border-radius: 4px;
   overflow: hidden;
   position: relative;
@@ -1006,7 +882,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
   animation: shimmer 2s infinite;
 }
 
@@ -1024,7 +900,7 @@ onMounted(() => {
   padding: 8rem 0;
   position: relative;
   z-index: 2;
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
 .playground-preview {
@@ -1034,11 +910,42 @@ onMounted(() => {
 }
 
 .playground-demo {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--card-background);
   border-radius: 20px;
   padding: 3rem;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 32px var(--shadow-color), 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.playground-demo::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(59, 130, 246, 0.03),
+    transparent,
+    rgba(139, 92, 246, 0.03),
+    transparent
+  );
+  animation: rotate 20s linear infinite;
+  z-index: -1;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .demo-box-mini {

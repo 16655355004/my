@@ -10,20 +10,47 @@
 }
 
 :root {
-  --primary-color: #00adb5;
-  --secondary-color: #393e46;
-  --background-color: #1a1d23;
-  --text-color: #eeeeee;
-  --accent-color: #ff5722;
-  --purple-accent: #9c27b0;
-  --green-accent: #4caf50;
+  /* 主色调 - 将由主题系统动态设置 */
+  --primary-color: #00d4ff;
+  --secondary-color: #1a1a2e;
+  --accent-color: #ff3366;
+  --success-color: #00ff88;
+  --warning-color: #ffaa00;
+  --error-color: #ff4757;
 
-  --transition-slow: 0.6s cubic-bezier(0.76, 0, 0.24, 1);
-  --transition-medium: 0.4s cubic-bezier(0.76, 0, 0.24, 1);
-  --transition-fast: 0.2s cubic-bezier(0.76, 0, 0.24, 1);
+  /* 背景色 - 将由主题系统动态设置 */
+  --background-color: #0a0a0f;
+  --surface-color: #1a1a2e;
+  --card-background: rgba(26, 26, 46, 0.8);
 
-  /* 性能优化 */
-  --gpu-acceleration: translateZ(0);
+  /* 文字颜色 - 将由主题系统动态设置 */
+  --text-color: #e8e8f0;
+  --text-secondary: #b8b8c8;
+  --text-muted: #888899;
+
+  /* 边框和分割线 */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --divider-color: rgba(255, 255, 255, 0.05);
+
+  /* 阴影 */
+  --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.15);
+  --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.2);
+
+  /* 渐变 */
+  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  --gradient-surface: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(16, 16, 32, 0.9));
+
+  /* 动画时长 */
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
+
+  /* 特殊颜色 - 将由主题系统动态设置 */
+  --purple-accent: #8b5cf6;
+  --blue-accent: #3b82f6;
+  --green-accent: #10b981;
+  --orange-accent: #f59e0b;
 }
 
 *,
@@ -43,7 +70,7 @@ html {
 body {
   min-height: 100vh;
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, var(--background-color) 0%, #2c3e50 100%);
+  background: var(--background-color);
   color: var(--text-color);
   line-height: 1.6;
   text-rendering: optimizeLegibility;

@@ -7,12 +7,17 @@ import ScrollToPlugin from "gsap/ScrollToPlugin";
 import SplitText from "gsap/SplitText";
 import Navbar from "./components/Navbar.vue";
 import Loader from "./components/LoaderOptimized.vue";
+import ThemeToggle from "./components/ThemeToggle.vue";
 import { useVisitorTracking } from "./composables/useVisitorTracking";
+import { useTheme } from "./composables/useTheme";
 
 const showBackToTop = ref(false);
 
 // 初始化访问者跟踪
 const { isTracking, visitorId, getSessionStats } = useVisitorTracking();
+
+// 初始化主题系统
+const { isDark } = useTheme();
 
 // 注册GSAP插件
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, SplitText);
@@ -146,28 +151,39 @@ const initPageTransitions = () => {
       </RouterView>
     </main>
 
+    <!-- 浮动装饰元素 -->
+    <div class="floating-decoration floating-decoration-1"></div>
+    <div class="floating-decoration floating-decoration-2"></div>
+    <div class="floating-decoration floating-decoration-3"></div>
+    <div class="grid-background"></div>
+
     <!-- 页面转场遮罩 -->
     <div class="page-transition-overlay"></div>
-  </div>
 
-  <!-- 返回顶部按钮 -->
-  <button v-if="showBackToTop" class="back-to-top" @click="scrollToTop" aria-label="返回顶部">
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
+    <!-- 返回顶部按钮
+    <button
+      @click="scrollToTop"
+      :class="['scroll-to-top', { visible: showBackToTop }]"
+      aria-label="回到顶部"
     >
-      <path d="m18 15-6-6-6 6" />
-    </svg>
-  </button>
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="m18 15-6-6-6 6" />
+      </svg>
+    </button> -->
+  </div>
 </template>
 
 <style>
 @import "./assets/main.css";
 @import "./assets/animations.css";
+@import "./assets/light-theme-decorations.css";
 
 :root {
   --background-color: #0a0a0f;
@@ -202,6 +218,7 @@ body {
     "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 隐藏滚动条但保留滚动功能 */
