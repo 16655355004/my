@@ -1,0 +1,38 @@
+{
+  "name": "my-jisoolove",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node cf-pages.cjs",
+    "build:cf": "npm install --legacy-peer-deps && npm run build",
+    "preview": "vite preview",
+    "lint": "oxlint . && eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+    "cf-preview": "wrangler pages dev dist"
+  },
+  "dependencies": {
+    "gsap": "^3.12.8",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.1",
+    "@tsconfig/node20": "^20.1.4",
+    "@vue/tsconfig": "^0.5.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "eslint": "^9.29.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "oxlint": "^0.15.0",
+    "sass": "^1.89.2",
+    "terser": "^5.44.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.23.0",
+    "unplugin-vue-components": "^0.22.0",
+    "vite": "^6.0.0",
+    "vite-plugin-compression": "^0.5.1"
+  },
+  "optionalDependencies": {
+    "vite-plugin-vue-devtools": "^1.0.0"
+  }
+}
