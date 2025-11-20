@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 测试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #e8e8f0;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            color: #00d4ff;
+        }
+        button {
+            background: #00d4ff;
+            color: #0a0a0f;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00c2cc;
+        }
+        .result {
+            background: #0a0a0f;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #00d4ff;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: #e8e8f0;
+            font-family: monospace;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 API 密钥管理测试工具</h1>
+        
+        <label>API 基础 URL:</label>
+        <input type="text" id="baseUrl" value="https://9abdb4e8.my-jisoolove.pages.dev/api/apikeys">
+        
+        <label>管理员密码 (Authorization):</label>
+        <input type="text" id="password" value="admin">
+        
+        <h2>测试操作</h2>
+        <button onclick="testGetAll()">📋 获取所有密钥 (GET)</button>
+        <button onclick="testAdd()">➕ 添加测试密钥 (POST)</button>
+        <button onclick="testUpdate()">✏️ 更新密钥 ID=1 (PUT)</button>
+        <button onclick="testDelete()">🗑️ 删除密钥 ID=1 (DELETE)</button>
+        
+        <h2>添加密钥数据 (JSON):</h2>
+        <textarea id="addData" rows="8">{
+  "website": "OpenAI",
+  "mainSite": "https://openai.com",
+  "apiKey": "sk-test1234567890abcdef",
+  "balance": 100,
+  "expiryDate": "2025-12-31"
+}</textarea>
+        
+        <div id="result" class="result">等待测试...</div>
+    </div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+        
+        function getHeaders() {
+            const password = document.getElementById('password').value;
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${password}`
+            };
+        }
+        
+        async function testGetAll() {
+            try {
+                resultDiv.textContent = '正在获取所有密钥...';
+                const baseUrl = document.getElementById('baseUrl').value;
+                const response = await fetch(baseUrl, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                const data = await response.json();
+                resultDiv.textContent = `状态: ${response.status}\n响应:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function testAdd() {
+            try {
+                resultDiv.textContent = '正在添加密钥...';
+                const baseUrl = document.getElementById('baseUrl').value;
+                const addData = JSON.parse(document.getElementById('addData').value);
+                const response = await fetch(baseUrl, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(addData)
+                });
+                const data = await response.json();
+                resultDiv.textContent = `状态: ${response.status}\n响应:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function testUpdate() {
+            try {
+                resultDiv.textContent = '正在更新密钥 ID=1...';
+                const baseUrl = document.getElementById('baseUrl').value;
+                const response = await fetch(`${baseUrl}/1`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        balance: 200,
+                        expiryDate: "2026-12-31"
+                    })
+                });
+                const data = await response.json();
+                resultDiv.textContent = `状态: ${response.status}\n响应:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function testDelete() {
+            try {
+                resultDiv.textContent = '正在删除密钥 ID=1...';
+                const baseUrl = document.getElementById('baseUrl').value;
+                const response = await fetch(`${baseUrl}/1`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                const data = await response.json();
+                resultDiv.textContent = `状态: ${response.status}\n响应:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

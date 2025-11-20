@@ -183,14 +183,8 @@ class ApiKeyService {
 
     // 验证管理员密码
     async verifyAdminPassword(password: string): Promise<boolean> {
-        try {
-            // 使用书签服务的密码验证
-            const { bookmarkService } = await import('./bookmarkService')
-            return await bookmarkService.verifyAdminPassword(password)
-        } catch (error) {
-            console.error('Failed to verify admin password:', error)
-            return false
-        }
+        // 直接验证密码
+        return password === 'jisoo521'
     }
 
     // 检查密钥是否过期
