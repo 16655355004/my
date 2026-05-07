@@ -42,7 +42,7 @@ onMounted(() => {
     ease: "power2.out",
     scrollTrigger: {
       trigger: ".projects-list",
-      start: "top 82%",
+      start: "top 95%",
     },
   });
 });
@@ -86,11 +86,12 @@ onMounted(() => {
 
 <style scoped>
 .project-links {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  background: #080808;
 }
 
-/* ── 通用 section 头部（与 HomeView 保持一致） */
+/* ── 通用 section 头部 ── */
 .section-head {
   margin-bottom: 2.5rem;
 }
@@ -100,20 +101,21 @@ onMounted(() => {
   font-size: 0.7rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: #666;
   margin-bottom: 0.75rem;
 }
 
 .section-title {
   font-size: clamp(1.8rem, 4vw, 2.5rem);
   font-weight: 400;
-  color: var(--text);
+  color: #fff;
 }
 
 /* ── 项目列表 ── */
 .projects-list {
   display: flex;
   flex-direction: column;
+  border: 1px solid #333;
 }
 
 .project-item {
@@ -121,18 +123,20 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
-  padding: 1.75rem 0;
-  border-bottom: 1px solid var(--border);
+  padding: 1.75rem;
+  border-bottom: 1px solid #333;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background 0.25s ease;
+  color: #fff;
+  background: #080808;
 }
 
-.project-item:first-child {
-  border-top: 1px solid var(--border);
+.project-item:last-child {
+  border-bottom: none;
 }
 
 .project-item:hover {
-  padding-left: 0.75rem;
+  background: #111;
 }
 
 .project-item:hover .arrow-icon {
@@ -149,20 +153,20 @@ onMounted(() => {
   display: inline-block;
   font-size: 0.65rem;
   letter-spacing: 0.25em;
-  color: var(--text-dim);
+  color: #888;
   margin-bottom: 0.5rem;
 }
 
 .project-title {
   font-size: 1.25rem;
   font-weight: 500;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 0.4rem;
 }
 
 .project-desc {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #aaa;
   line-height: 1.6;
 }
 
@@ -177,16 +181,16 @@ onMounted(() => {
 
 .project-url {
   font-size: 0.75rem;
-  color: var(--text-dim);
+  color: #666;
   font-family: "Courier New", monospace;
 }
 
 .arrow-icon {
   width: 18px;
   height: 18px;
-  color: var(--text-muted);
+  color: #999;
   opacity: 0.5;
-  transition: transform var(--transition), opacity var(--transition);
+  transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
 @media (max-width: 640px) {
