@@ -1,200 +1,160 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import gsap from "gsap";
-import ScrollTrigger from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
-
-const projects = ref([
+const projects = [
   {
     id: "video-player",
-    title: "视频播放器",
-    desc: "在线视频播放平台，支持多种格式，流畅播放体验",
+    title: "视频空间",
+    desc: "集中观看和管理在线媒体内容，让视频入口更清楚、更好找。",
     url: "https://video.jisoolove.top",
     tag: "MEDIA",
+    tone: "amber",
   },
   {
     id: "image-hosting",
-    title: "图床服务",
-    desc: "集成 Telegram 频道的图片托管服务，快速分享图片",
+    title: "图片空间",
+    desc: "用于保存、展示和分享图片，让视觉素材拥有独立入口。",
     url: "https://img.jisoolove.top",
-    tag: "TOOLS",
+    tag: "IMAGE",
+    tone: "mint",
   },
   {
     id: "subscription-manager",
-    title: "订阅管理",
-    desc: "智能订阅提醒系统，Telegram 通知，不错过重要内容",
+    title: "提醒中心",
+    desc: "管理订阅提醒与重要通知，把容易错过的事项放进时间线。",
     url: "https://remind.jisoolove.top",
-    tag: "PRODUCTIVITY",
+    tag: "SYSTEM",
+    tone: "coral",
   },
-]);
+];
 
 const openProject = (url: string) => {
   window.open(url, "_blank", "noopener,noreferrer");
 };
-
-onMounted(() => {
-  gsap.from(".project-item", {
-    opacity: 0,
-    y: 20,
-    stagger: 0.12,
-    duration: 0.6,
-    ease: "power2.out",
-    scrollTrigger: {
-      trigger: ".projects-list",
-      start: "top 95%",
-    },
-  });
-});
 </script>
 
 <template>
-  <section class="project-links section">
+  <section class="projects-section section" id="projects">
     <div class="container">
       <div class="section-head">
-        <span class="section-tag">PROJECTS</span>
-        <h2 class="section-title">我的项目</h2>
+        <div>
+          <span class="section-kicker">Projects</span>
+          <h2 class="section-title">常用项目入口</h2>
+        </div>
+        <p class="section-copy">
+          把视频、图片和提醒三个核心入口放在首页，打开站点就能直达常用服务。
+        </p>
       </div>
 
-      <div class="projects-list">
-        <div
-          v-for="p in projects"
-          :key="p.id"
-          class="project-item"
-          @click="openProject(p.url)"
+      <div class="project-grid">
+        <article
+          v-for="project in projects"
+          :key="project.id"
+          :class="['project-card', project.tone]"
           role="link"
           tabindex="0"
-          @keydown.enter="openProject(p.url)"
+          @click="openProject(project.url)"
+          @keydown.enter="openProject(project.url)"
         >
-          <div class="project-left">
-            <span class="project-tag">{{ p.tag }}</span>
-            <h3 class="project-title">{{ p.title }}</h3>
-            <p class="project-desc">{{ p.desc }}</p>
-          </div>
-          <div class="project-right">
-            <span class="project-url">{{ p.url.replace("https://", "") }}</span>
-            <!-- 外链箭头 -->
-            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <path d="M7 17L17 7M17 7H7M17 7v10" stroke-linecap="round" stroke-linejoin="round"/>
+          <div class="project-top">
+            <span>{{ project.tag }}</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 17 17 7M17 7H8M17 7v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </div>
-        </div>
+          <h3>{{ project.title }}</h3>
+          <p>{{ project.desc }}</p>
+          <small>{{ project.url.replace("https://", "") }}</small>
+        </article>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.project-links {
-  border-top: 1px solid #333;
-  border-bottom: 1px solid #333;
-  background: #080808;
-}
-
-/* ── 通用 section 头部 ── */
 .section-head {
-  margin-bottom: 2.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  gap: 28px;
+  align-items: end;
+  margin-bottom: 28px;
 }
 
-.section-tag {
-  display: block;
-  font-size: 0.7rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: #666;
-  margin-bottom: 0.75rem;
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.section-title {
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 400;
-  color: #fff;
-}
-
-/* ── 项目列表 ── */
-.projects-list {
+.project-card {
+  min-height: 300px;
   display: flex;
   flex-direction: column;
-  border: 1px solid #333;
+  justify-content: space-between;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
+    radial-gradient(circle at 20% 10%, var(--card-glow), transparent 56%);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 
-.project-item {
+.project-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--line-strong);
+}
+
+.project-card.amber {
+  --card-glow: rgba(240, 179, 91, 0.32);
+}
+
+.project-card.mint {
+  --card-glow: rgba(83, 198, 176, 0.28);
+}
+
+.project-card.coral {
+  --card-glow: rgba(239, 111, 108, 0.26);
+}
+
+.project-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
-  padding: 1.75rem;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
-  transition: background 0.25s ease;
-  color: #fff;
-  background: #080808;
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
 }
 
-.project-item:last-child {
-  border-bottom: none;
+.project-top svg {
+  width: 22px;
+  height: 22px;
 }
 
-.project-item:hover {
-  background: #111;
+h3 {
+  margin-top: auto;
+  color: var(--text);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 800;
 }
 
-.project-item:hover .arrow-icon {
-  transform: translate(3px, -3px);
-  opacity: 1;
+p {
+  margin-top: 14px;
+  color: var(--text-muted);
 }
 
-/* ── 左侧内容 ── */
-.project-left {
-  flex: 1;
+small {
+  margin-top: 24px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
-.project-tag {
-  display: inline-block;
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  color: #888;
-  margin-bottom: 0.5rem;
-}
-
-.project-title {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: #fff;
-  margin-bottom: 0.4rem;
-}
-
-.project-desc {
-  font-size: 0.85rem;
-  color: #aaa;
-  line-height: 1.6;
-}
-
-/* ── 右侧 ── */
-.project-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.project-url {
-  font-size: 0.75rem;
-  color: #666;
-  font-family: "Courier New", monospace;
-}
-
-.arrow-icon {
-  width: 18px;
-  height: 18px;
-  color: #999;
-  opacity: 0.5;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-@media (max-width: 640px) {
-  .project-item { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .project-right { align-items: flex-start; flex-direction: row; }
+@media (max-width: 900px) {
+  .section-head,
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { messageService, type Message, type MessageInput } from "../services/bookmarkService";
 
 const messages = ref<Message[]>([]);
@@ -7,30 +7,26 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const submitting = ref(false);
 const toastVisible = ref(false);
-
 const form = ref<MessageInput>({ name: "", content: "" });
 
-const isFormValid = computed(
-  () => form.value.name.trim().length > 0 && form.value.content.trim().length > 0
-);
+const isFormValid = computed(() => form.value.name.trim().length > 0 && form.value.content.trim().length > 0);
 
 const loadMessages = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const res = await messageService.getAllMessages();
-    if (res.success && res.data) {
-      messages.value = (res.data.messages ?? []).sort(
-        (a: Message, b: Message) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const result = await messageService.getAllMessages();
+    if (result.success && result.data) {
+      messages.value = (result.data.messages ?? []).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } else {
-      error.value = res.error ?? "加载留言失败";
       messages.value = [];
+      error.value = "留言暂时没有同步成功。";
     }
   } catch {
-    error.value = "网络连接失败";
     messages.value = [];
+    error.value = "留言暂时没有同步成功。";
   } finally {
     loading.value = false;
   }
@@ -39,347 +35,250 @@ const loadMessages = async () => {
 const submitMessage = async () => {
   if (!isFormValid.value || submitting.value) return;
   submitting.value = true;
+  error.value = null;
   try {
-    const res = await messageService.addMessage({
+    const result = await messageService.addMessage({
       name: form.value.name.trim(),
       content: form.value.content.trim(),
     });
-    if (res.success) {
-      await loadMessages();
+    if (result.success) {
       form.value = { name: "", content: "" };
-      showToast();
+      await loadMessages();
+      toastVisible.value = true;
+      window.setTimeout(() => (toastVisible.value = false), 2600);
     } else {
-      error.value = res.error ?? "提交失败";
+      error.value = "留言发送失败，请稍后再试。";
     }
   } catch {
-    error.value = "网络连接失败";
+    error.value = "留言发送失败，请稍后再试。";
   } finally {
     submitting.value = false;
   }
 };
 
-const showToast = () => {
-  toastVisible.value = true;
-  setTimeout(() => { toastVisible.value = false; }, 3000);
-};
-
-const formatDate = (d: string) => {
-  const date = new Date(d);
-  const diff = Date.now() - date.getTime();
-  const min = Math.floor(diff / 60000);
-  const hr  = Math.floor(diff / 3600000);
-  const day = Math.floor(diff / 86400000);
-  if (min < 1)  return "刚刚";
-  if (hr  < 1)  return `${min}分钟前`;
-  if (day < 1)  return `${hr}小时前`;
-  if (day < 30) return `${day}天前`;
-  return date.toLocaleDateString("zh-CN");
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "未知时间";
+  return date.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 };
 
 onMounted(loadMessages);
 </script>
 
 <template>
-  <div class="messages-view">
+  <div class="messages-view page-shell">
     <div class="container">
-      <!-- 页头 -->
-      <div class="page-head">
-        <span class="page-tag">MESSAGES</span>
-        <h1 class="page-title">留言板</h1>
-        <p class="page-sub">分享你的想法，留下美好的回忆</p>
-      </div>
+      <header class="page-hero">
+        <div>
+          <span class="page-tag">Messages</span>
+          <h1 class="page-title">留言墙</h1>
+          <p class="page-sub">把想说的话留在这里。每条留言都会成为这个站点的一部分。</p>
+        </div>
+        <div class="panel count-card">
+          <strong>{{ messages.length }}</strong>
+          <span>条留言</span>
+        </div>
+      </header>
 
-      <!-- 表单 -->
-      <div class="form-section">
-        <h2 class="form-title">写下留言</h2>
-        <form @submit.prevent="submitMessage" class="msg-form">
-          <div class="form-row">
-            <label class="form-label">姓名</label>
-            <input
-              v-model="form.name"
-              type="text"
-              class="form-input"
-              placeholder="请输入姓名"
-              maxlength="20"
-              required
-            />
+      <div class="message-layout">
+        <form class="message-form panel" @submit.prevent="submitMessage">
+          <span class="section-kicker">Write</span>
+          <h2>写下留言</h2>
+          <label>
+            姓名
+            <input v-model="form.name" maxlength="20" placeholder="你的名字" required />
+          </label>
+          <label>
+            内容
+            <textarea v-model="form.content" maxlength="500" rows="6" placeholder="写下想留下的话" required></textarea>
+          </label>
+          <div class="form-foot">
+            <span>{{ form.content.length }} / 500</span>
+            <button class="btn" type="submit" :disabled="!isFormValid || submitting">
+              {{ submitting ? "发送中" : "发送留言" }}
+            </button>
           </div>
-
-          <div class="form-row">
-            <label class="form-label">
-              内容
-              <span class="char-hint">{{ form.content.length }} / 500</span>
-            </label>
-            <textarea
-              v-model="form.content"
-              class="form-input"
-              placeholder="分享你的想法…"
-              rows="4"
-              maxlength="500"
-              required
-            ></textarea>
-          </div>
-
-          <button type="submit" class="btn" :disabled="!isFormValid || submitting">
-            {{ submitting ? "提交中…" : "发送留言" }}
-          </button>
         </form>
-      </div>
 
-      <!-- 留言列表 -->
-      <div class="list-section">
-        <div class="list-head">
-          <h2 class="list-title">所有留言</h2>
-          <button class="btn btn-ghost" @click="loadMessages" :disabled="loading">
-            <svg class="icon-refresh" :class="{ spin: loading }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <polyline points="23 4 23 10 17 10"/>
-              <polyline points="1 20 1 14 7 14"/>
-              <path d="m20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
-            </svg>
-            刷新
-          </button>
-        </div>
-
-        <!-- 加载 -->
-        <div v-if="loading" class="state-box">
-          <div class="spinner"></div>
-          <p>正在加载…</p>
-        </div>
-
-        <!-- 错误 -->
-        <div v-else-if="error && messages.length === 0" class="state-box">
-          <p class="state-title">{{ error }}</p>
-          <button class="btn" @click="loadMessages">重试</button>
-        </div>
-
-        <!-- 列表 -->
-        <div v-else-if="messages.length > 0" class="msg-list">
-          <div v-for="msg in messages" :key="msg.id" class="msg-card">
-            <div class="msg-head">
-              <div class="avatar">{{ msg.name.charAt(0).toUpperCase() }}</div>
-              <div class="msg-meta">
-                <span class="msg-name">{{ msg.name }}</span>
-                <span class="msg-time">{{ formatDate(msg.createdAt) }}</span>
-              </div>
-            </div>
-            <p class="msg-content">{{ msg.content }}</p>
+        <section class="message-list">
+          <div class="list-head">
+            <span class="section-kicker">Wall</span>
+            <button class="btn btn-ghost" @click="loadMessages" :disabled="loading">
+              {{ loading ? "刷新中" : "刷新" }}
+            </button>
           </div>
-        </div>
 
-        <!-- 空状态 -->
-        <div v-else class="state-box">
-          <p class="state-title">还没有留言</p>
-          <p class="state-sub">成为第一个留言的人吧！</p>
-        </div>
+          <p v-if="error" class="soft-alert">{{ error }}</p>
+
+          <div v-if="loading" class="state-box panel">
+            <div class="spinner"></div>
+            <p>正在加载留言</p>
+          </div>
+
+          <div v-else-if="messages.length" class="cards">
+            <article v-for="message in messages" :key="message.id" class="message-card panel">
+              <div class="avatar">{{ message.name.charAt(0).toUpperCase() }}</div>
+              <div>
+                <header>
+                  <strong>{{ message.name }}</strong>
+                  <span>{{ formatDate(message.createdAt) }}</span>
+                </header>
+                <p>{{ message.content }}</p>
+              </div>
+            </article>
+          </div>
+
+          <div v-else class="state-box panel">
+            <p>还没有留言，第一条可以从这里开始。</p>
+          </div>
+        </section>
       </div>
     </div>
 
-    <!-- Toast 通知 -->
-    <div :class="['toast', { visible: toastVisible }]">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-      留言提交成功！
-    </div>
+    <div :class="['toast', { visible: toastVisible }]">留言已发送</div>
   </div>
 </template>
 
 <style scoped>
-.messages-view {
-  min-height: 100vh;
-  padding-top: 5rem;
-  padding-bottom: 4rem;
+.count-card {
+  min-height: 150px;
+  display: grid;
+  align-content: end;
+  padding: 22px;
 }
 
-/* ── 页头 ── */
-.page-head {
-  padding: 3rem 0 2.5rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 3rem;
+.count-card strong {
+  color: var(--accent-2);
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 800;
 }
 
-.page-tag {
-  display: block;
-  font-size: 0.7rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 0.75rem;
-}
-
-.page-title {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-
-.page-sub { font-size: 0.95rem; color: var(--text-muted); }
-
-/* ── 表单 ── */
-.form-section {
-  max-width: 560px;
-  margin-bottom: 4rem;
-  padding-bottom: 4rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.form-title {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 1.75rem;
-  letter-spacing: 0.02em;
-}
-
-.msg-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-row { display: flex; flex-direction: column; gap: 0.4rem; }
-
-.form-label {
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.count-card span {
   color: var(--text-muted);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-weight: 800;
 }
 
-.char-hint { color: var(--text-dim); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.message-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: 18px;
+  align-items: start;
+}
 
-.form-input {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 2px;
+.message-form {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+h2 {
   color: var(--text);
-  font-size: 0.9rem;
-  padding: 0.75rem 1rem;
-  outline: none;
-  transition: border-color var(--transition);
-  resize: vertical;
-  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
 }
 
-.form-input:focus { border-color: var(--border-active); }
-.form-input::placeholder { color: var(--text-dim); }
+label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
 
-/* ── 留言列表 ── */
-.list-section {}
-
+.form-foot,
 .list-head {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  gap: 12px;
 }
 
-.list-title { font-size: 1rem; font-weight: 500; color: var(--text); }
-
-.icon-refresh {
-  width: 14px;
-  height: 14px;
-  transition: transform var(--transition);
+.form-foot span,
+.soft-alert {
+  color: var(--text-soft);
+  font-size: 0.86rem;
 }
 
-.icon-refresh.spin { animation: spin 0.8s linear infinite; }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.msg-list {
-  display: flex;
-  flex-direction: column;
+.list-head {
+  margin-bottom: 14px;
 }
 
-.msg-card {
-  padding: 1.5rem 0;
-  border-bottom: 1px solid var(--border);
+.cards {
+  display: grid;
+  gap: 12px;
 }
 
-.msg-card:first-child { border-top: 1px solid var(--border); }
-
-.msg-head {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin-bottom: 0.75rem;
+.message-card {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 14px;
+  padding: 18px;
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border);
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+header {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+header strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+header span {
+  color: var(--text-soft);
   font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  flex-shrink: 0;
 }
 
-.msg-meta { display: flex; flex-direction: column; }
-.msg-name { font-size: 0.9rem; font-weight: 500; color: var(--text); }
-.msg-time { font-size: 0.75rem; color: var(--text-dim); }
-
-.msg-content {
-  font-size: 0.9rem;
+.message-card p {
+  margin-top: 8px;
   color: var(--text-muted);
-  line-height: 1.7;
   word-break: break-word;
-  padding-left: calc(32px + 0.85rem);
 }
 
-/* ── 状态 ── */
-.state-box {
-  padding: 4rem 0;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.state-title { font-size: 1rem; color: var(--text); }
-.state-sub   { font-size: 0.85rem; color: var(--text-dim); }
-
-.spinner {
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--border-hover);
-  border-top-color: var(--text);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 0.5rem;
-}
-
-/* ── Toast ── */
 .toast {
   position: fixed;
-  bottom: 2rem;
-  right: 1.5rem;
-  background: var(--text);
-  color: var(--bg);
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 0.75rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transform: translateY(16px);
+  right: 22px;
+  bottom: 22px;
+  z-index: 1200;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 800;
   opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  z-index: 500;
-  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity var(--transition), transform var(--transition);
 }
 
 .toast.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (max-width: 860px) {
+  .message-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .message-form {
+    position: static;
+  }
 }
 </style>

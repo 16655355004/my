@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { bookmarkService, type Website } from "../services/bookmarkService";
 
 const websites = ref<Website[]>([]);
@@ -8,22 +8,30 @@ const error = ref<string | null>(null);
 const searchQuery = ref("");
 const selectedCategory = ref("全部");
 
+const fallbackBookmarks = (): Website[] => [
+  { id: 1, name: "Reqable", description: "接口调试、抓包分析和 API 测试工具。", url: "https://reqable.com/", icon: "RQ", category: "开发工具", color: "#f0b35b" },
+  { id: 2, name: "PowerToys", description: "Windows 系统增强工具集合。", url: "https://learn.microsoft.com/zh-cn/windows/powertoys/install", icon: "PT", category: "系统工具", color: "#53c6b0" },
+  { id: 3, name: "Flow Launcher", description: "快速启动应用、搜索文件和执行命令。", url: "https://www.flowlauncher.com/", icon: "FL", category: "效率工具", color: "#ef6f6c" },
+  { id: 4, name: "GitHub", description: "代码托管、协作开发和自动化工作流平台。", url: "https://github.com/", icon: "GH", category: "开发工具", color: "#f0b35b" },
+  { id: 5, name: "VS Code", description: "轻量、灵活、插件丰富的代码编辑器。", url: "https://code.visualstudio.com/", icon: "VS", category: "开发工具", color: "#53c6b0" },
+  { id: 6, name: "Figma", description: "用于界面设计、原型和团队协作的设计工具。", url: "https://www.figma.com/", icon: "FG", category: "设计工具", color: "#ef6f6c" },
+];
+
 const categories = computed(() => {
-  const set = new Set(websites.value.map((s) => s.category));
+  const set = new Set(websites.value.map((site) => site.category).filter(Boolean));
   return ["全部", ...Array.from(set)];
 });
 
 const filtered = computed(() => {
   let list = websites.value;
   if (selectedCategory.value !== "全部") {
-    list = list.filter((s) => s.category === selectedCategory.value);
+    list = list.filter((site) => site.category === selectedCategory.value);
   }
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase();
-    list = list.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q)
+  const query = searchQuery.value.trim().toLowerCase();
+  if (query) {
+    list = list.filter((site) =>
+      site.name.toLowerCase().includes(query) ||
+      site.description.toLowerCase().includes(query)
     );
   }
   return list;
@@ -33,25 +41,16 @@ const openWebsite = (url: string) => {
   window.open(url, "_blank", "noopener,noreferrer");
 };
 
-const getDefaultBookmarks = (): Website[] => [
-  { id: 1, name: "Reqable",       description: "API 抓包调试 + API 测试一站式工具",       url: "https://reqable.com/",          icon: "R", category: "开发工具", color: "#fff" },
-  { id: 2, name: "PowerToys",     description: "Microsoft Windows 实用工具集",            url: "https://learn.microsoft.com/zh-cn/windows/powertoys/install", icon: "P", category: "系统工具", color: "#fff" },
-  { id: 3, name: "Flow Launcher", description: "快速启动器和搜索工具",                    url: "https://www.flowlauncher.com/",  icon: "F", category: "效率工具", color: "#fff" },
-  { id: 4, name: "GitHub",        description: "全球最大的代码托管平台",                  url: "https://github.com/",            icon: "G", category: "开发工具", color: "#fff" },
-  { id: 5, name: "VS Code",       description: "微软开发的免费代码编辑器",                url: "https://code.visualstudio.com/", icon: "V", category: "开发工具", color: "#fff" },
-  { id: 6, name: "Figma",         description: "协作式界面设计工具",                      url: "https://www.figma.com/",         icon: "F", category: "设计工具", color: "#fff" },
-];
-
 const loadBookmarks = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const res = await bookmarkService.getAllBookmarks();
-    websites.value = res.success && res.data ? res.data : getDefaultBookmarks();
-    if (!res.success) error.value = res.error ?? "加载失败";
+    const result = await bookmarkService.getAllBookmarks();
+    websites.value = result.success && result.data?.length ? result.data : fallbackBookmarks();
+    if (!result.success) error.value = "收藏列表暂时同步失败，已显示精选入口。";
   } catch {
-    websites.value = getDefaultBookmarks();
-    error.value = "网络连接失败";
+    websites.value = fallbackBookmarks();
+    error.value = "收藏列表暂时同步失败，已显示精选入口。";
   } finally {
     loading.value = false;
   }
@@ -61,307 +60,187 @@ onMounted(loadBookmarks);
 </script>
 
 <template>
-  <div class="bookmarks-view">
+  <div class="bookmarks-view page-shell">
     <div class="container">
-      <!-- 页头 -->
-      <div class="page-head">
-        <span class="page-tag">BOOKMARKS</span>
-        <h1 class="page-title">网站收藏</h1>
-        <p class="page-sub">精选实用工具和网站，提升工作效率</p>
-      </div>
-
-      <!-- 搜索 & 分类 -->
-      <div class="toolbar">
-        <div class="search-wrap">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <circle cx="11" cy="11" r="7.5"/>
-            <path d="m20.5 20.5-4.8-4.8" stroke-linecap="round"/>
-          </svg>
-          <input
-            v-model="searchQuery"
-            class="search-input"
-            type="text"
-            placeholder="搜索网站…"
-          />
+      <header class="page-hero">
+        <div>
+          <span class="page-tag">Bookmarks</span>
+          <h1 class="page-title">常用网站收藏</h1>
+          <p class="page-sub">把开发、设计、系统和效率工具集中整理，打开后可以快速搜索和跳转。</p>
         </div>
+        <div class="hero-card panel">
+          <strong>{{ websites.length }}</strong>
+          <span>个入口</span>
+        </div>
+      </header>
 
+      <section class="toolbar panel">
+        <div class="search-box">
+          <input v-model="searchQuery" type="text" placeholder="搜索站点、描述或工具名" />
+        </div>
         <div class="category-tabs">
           <button
-            v-for="cat in categories"
-            :key="cat"
-            :class="['cat-btn', { active: selectedCategory === cat }]"
-            @click="selectedCategory = cat"
-          >{{ cat }}</button>
+            v-for="category in categories"
+            :key="category"
+            :class="['chip', { active: selectedCategory === category }]"
+            @click="selectedCategory = category"
+          >
+            {{ category }}
+          </button>
         </div>
-      </div>
+      </section>
 
-      <!-- 加载 -->
-      <div v-if="loading" class="state-box">
+      <p v-if="error" class="soft-alert">{{ error }}</p>
+
+      <div v-if="loading" class="state-box panel">
         <div class="spinner"></div>
-        <p>正在加载…</p>
+        <p>正在加载收藏</p>
       </div>
 
-      <!-- 网格 -->
-      <div v-else class="websites-grid">
-        <div
+      <section v-else class="bookmark-grid">
+        <article
           v-for="site in filtered"
           :key="site.id"
-          class="site-card"
-          @click="openWebsite(site.url)"
+          class="bookmark-card"
           role="link"
           tabindex="0"
+          @click="openWebsite(site.url)"
           @keydown.enter="openWebsite(site.url)"
         >
-          <div class="site-head">
-            <div class="site-icon">{{ (site.icon ?? site.name.charAt(0)).slice(0,2) }}</div>
-            <span class="site-cat">{{ site.category }}</span>
+          <div class="bookmark-top">
+            <span class="site-icon" :style="{ borderColor: site.color || 'var(--line)' }">
+              {{ (site.icon || site.name.slice(0, 2)).slice(0, 2) }}
+            </span>
+            <span class="chip">{{ site.category }}</span>
           </div>
-          <h3 class="site-name">{{ site.name }}</h3>
-          <p class="site-desc">{{ site.description }}</p>
-          <div class="site-foot">
-            <span class="visit-text">访问</span>
-            <svg class="ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <path d="M7 17L17 7M17 7H7M17 7v10" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
+          <h2>{{ site.name }}</h2>
+          <p>{{ site.description }}</p>
+          <small>{{ site.url.replace(/^https?:\/\//, "") }}</small>
+        </article>
 
-        <!-- 空状态 -->
-        <div v-if="filtered.length === 0" class="state-box full-width">
-          <p class="state-title">没有找到相关网站</p>
-          <p class="state-sub">调整关键词或选择其他分类</p>
+        <div v-if="filtered.length === 0" class="state-box panel empty">
+          <p>没有找到匹配的收藏。</p>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>
 
 <style scoped>
-.bookmarks-view {
-  min-height: 100vh;
-  padding-top: 5rem;
-  padding-bottom: 4rem;
+.hero-card {
+  min-height: 150px;
+  display: grid;
+  align-content: end;
+  padding: 22px;
 }
 
-/* ── 页头 ── */
-.page-head {
-  padding: 3rem 0 2.5rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 2.5rem;
+.hero-card strong {
+  color: var(--accent);
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 800;
 }
 
-.page-tag {
-  display: block;
-  font-size: 0.7rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 0.75rem;
-}
-
-.page-title {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 300;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-}
-
-.page-sub {
-  font-size: 0.95rem;
+.hero-card span {
   color: var(--text-muted);
+  font-weight: 800;
 }
 
-/* ── 工具栏 ── */
 .toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
+  display: grid;
+  grid-template-columns: minmax(220px, 420px) 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 18px;
 }
-
-.search-wrap {
-  position: relative;
-  max-width: 420px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--text-dim);
-}
-
-.search-input {
-  padding-left: 2.5rem !important;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 0.9rem;
-  border-radius: 2px;
-}
-
-.search-input:focus { border-color: var(--border-active); }
 
 .category-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.cat-btn {
-  padding: 0.35rem 0.9rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  color: var(--text-muted);
-  cursor: pointer;
-  background: transparent;
-  transition: all var(--transition);
+.chip.active {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
-.cat-btn:hover {
-  border-color: var(--border-hover);
-  color: var(--text);
+.soft-alert {
+  margin: 0 0 18px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
 }
 
-.cat-btn.active {
-  border-color: var(--text);
-  color: var(--text);
-  background: var(--bg-3);
-}
-
-/* ── 卡片网格 ── */
-.websites-grid {
+.bookmark-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1px;
-  border: 1px solid var(--border);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
 }
 
-.site-card {
-  padding: 1.75rem;
-  background: var(--bg);
-  cursor: pointer;
+.bookmark-card {
+  min-height: 260px;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  transition: background var(--transition);
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 
-.site-card:hover {
-  background: var(--bg-2);
+.bookmark-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.site-card:hover .ext-icon {
-  transform: translate(3px, -3px);
-  opacity: 1;
-}
-
-.site-head {
+.bookmark-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: auto;
 }
 
 .site-icon {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-radius: 2px;
-}
-
-.site-cat {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.site-name {
-  font-size: 1.05rem;
-  font-weight: 600;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
   color: var(--text);
+  font-weight: 800;
 }
 
-.site-desc {
-  font-size: 0.85rem;
+h2 {
+  margin-top: 34px;
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+p {
+  margin-top: 10px;
   color: var(--text-muted);
-  line-height: 1.6;
-  flex: 1;
 }
 
-.site-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.5rem;
+small {
+  margin-top: 18px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
 }
 
-.visit-text {
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-}
-
-.ext-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--text-muted);
-  opacity: 0.4;
-  transition: transform var(--transition), opacity var(--transition);
-}
-
-/* ── 状态 ── */
-.state-box {
-  padding: 4rem 2rem;
-  text-align: center;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.full-width {
+.empty {
   grid-column: 1 / -1;
 }
 
-.state-title {
-  font-size: 1rem;
-  color: var(--text);
-}
-
-.state-sub {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-}
-
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--border-hover);
-  border-top-color: var(--text);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 0.5rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@media (max-width: 640px) {
-  .websites-grid { grid-template-columns: 1fr; }
+@media (max-width: 760px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

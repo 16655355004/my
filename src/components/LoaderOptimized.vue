@@ -6,18 +6,17 @@ const isLoading = ref(true);
 const progress = ref(0);
 
 onMounted(() => {
-  // 模拟加载进度，1.5s 内线性完成
   gsap.to(progress, {
     value: 100,
-    duration: 1.4,
-    ease: "power1.inOut",
+    duration: 1.05,
+    ease: "power2.inOut",
     onUpdate: () => {
       progress.value = Math.round(progress.value);
     },
     onComplete: () => {
       gsap.to(".loader-screen", {
         opacity: 0,
-        duration: 0.5,
+        duration: 0.42,
         ease: "power2.in",
         onComplete: () => {
           isLoading.value = false;
@@ -31,13 +30,13 @@ onMounted(() => {
 
 <template>
   <div v-if="isLoading" class="loader-screen">
-    <div class="loader-inner">
-      <h1 class="loader-title">JisooLove</h1>
-      <p class="loader-sub">Personal Website</p>
-      <div class="loader-bar-wrap">
-        <div class="loader-bar" :style="{ width: progress + '%' }"></div>
+    <div class="loader-mark">
+      <span class="loader-kicker">JISOOLOVE</span>
+      <h1>JisooLove</h1>
+      <div class="loader-bar">
+        <span :style="{ width: progress + '%' }"></span>
       </div>
-      <span class="loader-pct">{{ progress }}%</span>
+      <p>{{ progress }}%</p>
     </div>
   </div>
 </template>
@@ -47,54 +46,53 @@ onMounted(() => {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #080808;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(240, 179, 91, 0.2), transparent 28rem),
+    #080a0f;
 }
 
-.loader-inner {
+.loader-mark {
+  width: min(420px, calc(100% - 48px));
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
 }
 
-.loader-title {
-  font-size: clamp(2.2rem, 6vw, 4rem);
-  font-weight: 300;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: #fff;
+.loader-kicker {
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.26em;
 }
 
-.loader-sub {
-  font-size: 0.8rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.loader-bar-wrap {
-  width: 200px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin-top: 1.5rem;
-  position: relative;
-  overflow: hidden;
+h1 {
+  margin: 10px 0 24px;
+  color: var(--text);
+  font-size: clamp(2.2rem, 8vw, 4.5rem);
+  font-weight: 800;
 }
 
 .loader-bar {
-  height: 100%;
-  background: #fff;
-  transition: width 0.05s linear;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.loader-pct {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.3);
-  font-variant-numeric: tabular-nums;
+.loader-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+
+p {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
 }
 </style>

@@ -1,42 +1,55 @@
-/* ── 极简 B&W 动画库 ─────────────────────────────────────── */
-
-/* 淡入上升 */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* 淡入 */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* 线条扫描 */
-@keyframes scanLine {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* 旋转（加载用）*/
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* 光标闪烁 */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(18px, -22px, 0) rotate(4deg);
+  }
 }
 
-/* 进度条填充 */
-@keyframes fillBar {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+@keyframes floatCard {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-/* 工具类 */
-.fade-up    { animation: fadeUp 0.5s ease forwards; }
-.fade-in    { animation: fadeIn 0.4s ease forwards; }
-.spin       { animation: spin 1s linear infinite; }
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulseLine {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.72);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.reveal-up {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}

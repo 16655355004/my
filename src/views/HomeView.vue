@@ -1,148 +1,141 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted } from "vue";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import ProjectLinks from "../components/ProjectLinks.vue";
 import WebsiteStatistics from "../components/WebsiteStatistics.vue";
+import heroImage from "../assets/001.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const router = useRouter();
+const capabilities = [
+  { title: "界面作品", desc: "用清晰的布局、细腻的动效和可靠的响应式体验呈现项目。", stat: "UI" },
+  { title: "实用工具", desc: "把视频、图片、提醒、收藏等常用入口集中到一个站点里。", stat: "TOOL" },
+  { title: "影像空间", desc: "用于展示照片、封面、灵感图和之后持续更新的视觉素材。", stat: "IMG" },
+  { title: "内容沉淀", desc: "把教程、留言、收藏和个人记录整理成长期可访问的页面。", stat: "DOC" },
+];
+
+const gallery = [
+  { title: "主视觉", desc: "JisooLove 形象图", src: heroImage },
+  { title: "灵感板", desc: "照片与素材合集", src: heroImage },
+  { title: "项目封面", desc: "作品展示图位", src: heroImage },
+];
 
 const navigateToSection = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 };
 
-const skills = ref([
-  { name: "Vue.js",       level: 90 },
-  { name: "JavaScript",   level: 85 },
-  { name: "Python",       level: 80 },
-  { name: "CSS / SCSS",   level: 85 },
-  { name: "TypeScript",   level: 70 },
-  { name: "GSAP",         level: 75 },
-]);
-
-const features = ref([
-  { title: "前端开发",   desc: "精通 Vue.js、React 等现代前端框架，构建响应式界面" },
-  { title: "动画设计",   desc: "熟练使用 GSAP 创建流畅的动画效果，提升用户体验" },
-  { title: "Python 编程", desc: "掌握 Python 后端开发，构建高效的 API 与数据处理系统" },
-  { title: "持续学习",   desc: "保持对新技术的热情，不断探索前沿技术栈" },
-]);
-
 onMounted(() => {
-  // Hero 入场
-  gsap.from(".hero-title", { opacity: 0, y: 60, duration: 1, ease: "power3.out", delay: 0.1 });
-  gsap.from(".hero-line",  { scaleX: 0, duration: 0.8, ease: "power3.out", delay: 0.7, transformOrigin: "left" });
-  gsap.from(".hero-sub",   { opacity: 0, y: 20, duration: 0.7, ease: "power2.out", delay: 0.9 });
-  gsap.from(".hero-btn",   { opacity: 0, y: 16, duration: 0.5, ease: "power2.out", delay: 1.1 });
-
-  // 技能条 ScrollTrigger
-  gsap.utils.toArray<HTMLElement>(".skill-fill").forEach((el) => {
-    const level = el.dataset.level ?? "0";
-    gsap.from(el, {
-      scaleX: 0,
-      duration: 1,
-      ease: "power2.out",
-      transformOrigin: "left",
-      scrollTrigger: {
-        trigger: el,
-        start: "top 90%",
-      },
-    });
+  gsap.from(".hero-copy > *", {
+    opacity: 0,
+    y: 26,
+    duration: 0.75,
+    stagger: 0.08,
+    ease: "power2.out",
   });
 
-  // Feature cards
-  gsap.from(".feature-card", {
+  gsap.from(".portrait-card", {
     opacity: 0,
-    y: 24,
-    stagger: 0.1,
-    duration: 0.6,
+    y: 34,
+    rotate: -2,
+    duration: 0.9,
     ease: "power2.out",
-    scrollTrigger: {
-      trigger: ".features-grid",
-      start: "top 80%",
-    },
+  });
+
+  gsap.utils.toArray<HTMLElement>(".reveal-block").forEach((el) => {
+    gsap.from(el, {
+      opacity: 0,
+      y: 28,
+      duration: 0.7,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: el,
+        start: "top 82%",
+      },
+    });
   });
 });
 </script>
 
 <template>
-  <div class="home-page">
-    <!-- ── Hero ── -->
-    <section class="hero-section" id="home">
-      <!-- 装饰网格 -->
-      <div class="hero-grid" aria-hidden="true">
-        <div v-for="i in 20" :key="i" class="grid-line-v"></div>
-      </div>
-
-      <div class="container hero-content">
-        <p class="hero-eyebrow">个人主页</p>
-        <h1 class="hero-title">JisooLove</h1>
-        <div class="hero-line"></div>
-        <p class="hero-sub">专注于创造优雅的数字体验</p>
-        <div class="hero-actions">
-          <button class="btn hero-btn" @click="navigateToSection('skills')">技能概览</button>
-          <button class="btn btn-ghost hero-btn" @click="navigateToSection('projects')">查看项目</button>
-        </div>
-      </div>
-
-      <!-- 滚动提示 -->
-      <div class="scroll-hint" aria-hidden="true">
-        <span class="scroll-line"></span>
-        <span class="scroll-label">向下滚动</span>
-      </div>
-    </section>
-
-    <!-- ── 项目 ── -->
-    <div id="projects">
-      <ProjectLinks />
-    </div>
-
-    <!-- ── 专业技能 ── -->
-    <section class="features-section section" id="about">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-tag">ABOUT</span>
-          <h2 class="section-title">我的专业技能</h2>
-        </div>
-        <div class="features-grid">
-          <div v-for="f in features" :key="f.title" class="feature-card">
-            <h3 class="feature-title">{{ f.title }}</h3>
-            <p class="feature-desc">{{ f.desc }}</p>
+  <div class="home-view">
+    <section class="hero" id="home">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">JisooLove Studio</span>
+          <h1>一个收纳作品、工具、影像和灵感的个人主页。</h1>
+          <p>
+            这里集中展示我的项目入口、常用工具、图片内容和技术记录。页面以沉浸式视觉为主，适合浏览，也方便之后持续扩展。
+          </p>
+          <div class="hero-actions">
+            <button class="btn" @click="navigateToSection('gallery')">浏览图片</button>
+            <button class="btn btn-ghost" @click="navigateToSection('projects')">查看项目</button>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- ── 技能熟练度 ── -->
-    <section class="skills-section section" id="skills">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-tag">SKILLS</span>
-          <h2 class="section-title">技能熟练度</h2>
-        </div>
-        <div class="skills-grid">
-          <div v-for="s in skills" :key="s.name" class="skill-row">
-            <div class="skill-meta">
-              <span class="skill-name">{{ s.name }}</span>
-              <span class="skill-pct">{{ s.level }}%</span>
-            </div>
-            <div class="skill-track">
-              <div class="skill-fill" :data-level="s.level" :style="{ width: s.level + '%' }"></div>
-            </div>
+        <aside class="portrait-card">
+          <div class="portrait-frame">
+            <img :src="heroImage" alt="JisooLove 主视觉图片" />
           </div>
+          <div class="portrait-meta">
+            <span>VISUAL 01</span>
+            <strong>主视觉图片区</strong>
+          </div>
+        </aside>
+      </div>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>作品展示</span><span>图片空间</span><span>工具入口</span><span>技术记录</span><span>留言互动</span>
+          <span>作品展示</span><span>图片空间</span><span>工具入口</span><span>技术记录</span><span>留言互动</span>
         </div>
       </div>
     </section>
 
-    <!-- ── 网站统计 ── -->
-    <section class="stats-section section">
+    <section class="capability-section section reveal-block" id="about">
       <div class="container">
         <div class="section-head">
-          <span class="section-tag">STATS</span>
-          <h2 class="section-title">网站统计</h2>
+          <span class="section-kicker">What Is Inside</span>
+          <h2 class="section-title">清晰的内容分区，配合更有记忆点的视觉动效。</h2>
         </div>
+        <div class="capability-grid">
+          <article v-for="item in capabilities" :key="item.title" class="capability-card">
+            <span>{{ item.stat }}</span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.desc }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <ProjectLinks />
+
+    <section class="gallery-section section reveal-block" id="gallery">
+      <div class="container">
+        <div class="section-head two-col">
+          <div>
+            <span class="section-kicker">Gallery</span>
+            <h2 class="section-title">影像展示区</h2>
+          </div>
+          <p class="section-copy">
+            用来陈列照片、封面、灵感图和个人视觉素材。图片区会成为整个站点最直观的视觉记忆点。
+          </p>
+        </div>
+
+        <div class="gallery-grid">
+          <article v-for="item in gallery" :key="item.title" class="gallery-card">
+            <img :src="item.src" :alt="item.title" />
+            <div>
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.desc }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-section section reveal-block">
+      <div class="container">
         <WebsiteStatistics />
       </div>
     </section>
@@ -150,213 +143,240 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.home-page {
-  width: 100%;
+.hero {
   min-height: 100vh;
-  background: var(--bg);
-}
-
-/* ── Hero ── */
-.hero-section {
-  min-height: 100vh;
-  display: flex;
+  display: grid;
   align-items: center;
-  justify-content: center;
+  padding: 118px 0 40px;
   position: relative;
-  overflow: hidden;
 }
 
-/* 背景网格 */
 .hero-grid {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  pointer-events: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.72fr);
+  gap: 42px;
+  align-items: center;
 }
 
-.grid-line-v {
-  flex: 1;
-  border-right: 1px solid var(--border);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  padding-top: 80px;
-}
-
-.hero-eyebrow {
-  font-size: 0.75rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 1.5rem;
-}
-
-.hero-title {
-  font-size: clamp(3.5rem, 10vw, 8rem);
-  font-weight: 300;
-  letter-spacing: -0.03em;
-  line-height: 1;
+.hero-copy h1 {
+  max-width: 880px;
+  margin-top: 18px;
   color: var(--text);
-  margin-bottom: 1.5rem;
+  font-size: clamp(3rem, 7vw, 6.9rem);
+  font-weight: 800;
 }
 
-.hero-line {
-  width: 80px;
-  height: 1px;
-  background: var(--text);
-  margin-bottom: 1.5rem;
-}
-
-.hero-sub {
-  font-size: 1.1rem;
+.hero-copy p {
+  max-width: 680px;
+  margin-top: 22px;
   color: var(--text-muted);
-  margin-bottom: 2.5rem;
-  max-width: 400px;
+  font-size: 1.08rem;
 }
 
 .hero-actions {
   display: flex;
-  gap: 1rem;
+  gap: 12px;
   flex-wrap: wrap;
+  margin-top: 32px;
 }
 
-/* 滚动提示 */
-.scroll-hint {
-  position: absolute;
-  bottom: 2.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  z-index: 2;
-}
-
-.scroll-line {
-  display: block;
-  width: 1px;
-  height: 40px;
-  background: var(--border-hover);
-  animation: scrollPulse 2s ease-in-out infinite;
-}
-
-@keyframes scrollPulse {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 1; }
-}
-
-.scroll-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-/* ── section 通用头部 ── */
-.section-head {
-  margin-bottom: 3rem;
-}
-
-.section-tag {
-  display: block;
-  font-size: 0.7rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 0.75rem;
-}
-
-.section-title {
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 400;
-  color: var(--text);
-}
-
-/* ── 特性网格 ── */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1px;
-  border: 1px solid var(--border);
-}
-
-.feature-card {
-  padding: 2rem;
-  border: none;
-  background: var(--bg);
-  transition: background var(--transition);
-}
-
-.feature-card:hover {
-  background: var(--bg-2);
-}
-
-.feature-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 0.75rem;
-  letter-spacing: 0.02em;
-}
-
-.feature-desc {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-}
-
-/* ── 技能条 ── */
-.skills-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 640px;
-}
-
-.skill-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.skill-meta {
-  display: flex;
-  justify-content: space-between;
-}
-
-.skill-name {
-  font-size: 0.85rem;
-  color: var(--text);
-  letter-spacing: 0.02em;
-}
-
-.skill-pct {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
-}
-
-.skill-track {
-  height: 1px;
-  background: var(--border);
+.portrait-card {
   position: relative;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  box-shadow: var(--shadow);
+  animation: floatCard 6s ease-in-out infinite;
 }
 
-.skill-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
+.portrait-frame {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+}
+
+.portrait-frame img {
+  width: 100%;
   height: 100%;
-  background: var(--text);
+  object-fit: cover;
 }
 
-/* ── 响应式 ── */
-@media (max-width: 768px) {
-  .hero-title { font-size: clamp(3rem, 12vw, 5rem); }
-  .features-grid { grid-template-columns: 1fr; }
-  .hero-actions { flex-direction: column; align-items: flex-start; }
+.portrait-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 4px 0;
+}
+
+.portrait-meta span {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.portrait-meta strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.ticker {
+  overflow: hidden;
+  margin-top: 56px;
+  border-block: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ticker-track {
+  width: max-content;
+  display: flex;
+  gap: 42px;
+  padding: 14px 0;
+  animation: marquee 22s linear infinite;
+}
+
+.ticker span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.section-head {
+  margin-bottom: 28px;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  gap: 28px;
+  align-items: end;
+}
+
+.capability-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.capability-card {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.capability-card span {
+  color: var(--accent-2);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.capability-card h3 {
+  margin-top: 34px;
+  color: var(--text);
+  font-size: 1.24rem;
+  font-weight: 800;
+}
+
+.capability-card p {
+  margin-top: 10px;
+  color: var(--text-muted);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr;
+  gap: 14px;
+}
+
+.gallery-card {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+}
+
+.gallery-card:first-child {
+  min-height: 480px;
+}
+
+.gallery-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.06) contrast(1.02);
+  transition: transform 600ms ease;
+}
+
+.gallery-card:hover img {
+  transform: scale(1.04);
+}
+
+.gallery-card div {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(8, 10, 15, 0.68);
+  backdrop-filter: blur(14px);
+}
+
+.gallery-card strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.gallery-card span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 980px) {
+  .hero-grid,
+  .two-col,
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .capability-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .hero {
+    padding-top: 102px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.5rem, 15vw, 4.6rem);
+  }
+
+  .capability-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-card,
+  .gallery-card:first-child {
+    min-height: 320px;
+  }
 }
 </style>
