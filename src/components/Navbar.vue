@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 
 const isScrolled = ref(false);
@@ -7,18 +7,13 @@ const isMenuOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 
-const navigateToSection = (sectionId: string) => {
-  closeMenu();
-  if (route.path !== "/") {
-    router.push("/").then(() => {
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    });
-  } else {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
-  }
-};
+const links = [
+  { label: "首页", to: "/", section: "home" },
+  { label: "收藏", to: "/bookmarks" },
+  { label: "留言", to: "/messages" },
+  { label: "教程", to: "/tutorial" },
+  { label: "密钥", to: "/apikeys" },
+];
 
 const closeMenu = () => {
   isMenuOpen.value = false;
@@ -30,52 +25,69 @@ const toggleMenu = () => {
   document.body.style.overflow = isMenuOpen.value ? "hidden" : "";
 };
 
+const navigateHome = async (sectionId = "home") => {
+  closeMenu();
+  if (route.path !== "/") {
+    await router.push("/");
+    window.setTimeout(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" }), 120);
+    return;
+  }
+  document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
+};
+
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 40;
+  isScrolled.value = window.scrollY > 18;
 };
 
 onMounted(() => {
   window.addEventListener("scroll", handleScroll, { passive: true });
+  handleScroll();
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  document.body.style.overflow = "";
 });
 
-watch(route, () => {
-  if (isMenuOpen.value) closeMenu();
-});
+watch(route, closeMenu);
 </script>
 
 <template>
   <header :class="['navbar', { scrolled: isScrolled }]">
     <div class="container navbar-inner">
-      <RouterLink to="/" class="logo" @click="closeMenu">KONG</RouterLink>
+      <button class="brand" @click="navigateHome('home')" aria-label="回到首页">
+        <span class="brand-mark">JL</span>
+        <span class="brand-text">JisooLove</span>
+      </button>
 
-      <!-- 桌面端导航 -->
-      <nav class="nav-desktop">
-        <a @click="navigateToSection('home')" class="nav-link">首页</a>
-        <RouterLink to="/bookmarks" class="nav-link">收藏</RouterLink>
-        <RouterLink to="/messages"  class="nav-link">留言</RouterLink>
-        <RouterLink to="/tutorial"  class="nav-link">教程</RouterLink>
-        <RouterLink to="/apikeys"   class="nav-link">密钥</RouterLink>
+      <nav class="nav-desktop" aria-label="主导航">
+        <template v-for="link in links" :key="link.label">
+          <button v-if="link.section" class="nav-link" @click="navigateHome(link.section)">
+            {{ link.label }}
+          </button>
+          <RouterLink v-else class="nav-link" :to="link.to">
+            {{ link.label }}
+          </RouterLink>
+        </template>
       </nav>
 
-      <!-- 移动端汉堡按钮 -->
-      <button class="hamburger" :class="{ open: isMenuOpen }" @click="toggleMenu" aria-label="菜单">
-        <span></span>
+      <button class="menu-btn" :class="{ open: isMenuOpen }" @click="toggleMenu" aria-label="打开菜单">
         <span></span>
         <span></span>
       </button>
     </div>
 
-    <!-- 移动端菜单 -->
-    <div class="nav-mobile" :class="{ open: isMenuOpen }">
-      <a @click="navigateToSection('home')" class="mobile-link">首页</a>
-      <RouterLink to="/bookmarks" class="mobile-link" @click="closeMenu">收藏</RouterLink>
-      <RouterLink to="/messages"  class="mobile-link" @click="closeMenu">留言</RouterLink>
-      <RouterLink to="/tutorial"  class="mobile-link" @click="closeMenu">教程</RouterLink>
-      <RouterLink to="/apikeys"   class="mobile-link" @click="closeMenu">密钥</RouterLink>
+    <div class="mobile-panel" :class="{ open: isMenuOpen }">
+      <div class="container mobile-links">
+        <template v-for="link in links" :key="link.label">
+          <button v-if="link.section" class="mobile-link" @click="navigateHome(link.section)">
+            {{ link.label }}
+          </button>
+          <RouterLink v-else class="mobile-link" :to="link.to">
+            {{ link.label }}
+          </RouterLink>
+        </template>
+      </div>
     </div>
   </header>
 </template>
@@ -83,135 +95,211 @@ watch(route, () => {
 <style scoped>
 .navbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 200;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.3s ease, background 0.3s ease;
-}
-
-.navbar.scrolled {
-  background: rgba(8, 8, 8, 0.92);
-  border-bottom-color: var(--border);
-  backdrop-filter: blur(12px);
+  inset: 16px 0 auto;
+  z-index: 1000;
+  pointer-events: none;
 }
 
 .navbar-inner {
+  height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  padding: 0 10px 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)),
+    rgba(8, 10, 15, 0.42);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(14px);
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  pointer-events: auto;
 }
 
-/* ── Logo ── */
-.logo {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+.navbar.scrolled .navbar-inner,
+.mobile-panel.open {
+  border-color: rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
+    rgba(8, 10, 15, 0.82);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 10px 0 2px;
+  border-radius: var(--radius);
+  font-weight: 800;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.brand:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--accent), #ffd08a 52%, var(--accent-2));
+  color: var(--ink);
+  font-size: 0.84rem;
+  box-shadow: 0 10px 24px rgba(240, 179, 91, 0.28);
+}
+
+.brand-text {
   color: var(--text);
-  text-decoration: none;
-  opacity: 1;
-  transition: opacity var(--transition);
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
 }
 
-.logo:hover { opacity: 0.6; }
-
-/* ── 桌面导航 ── */
 .nav-desktop {
   display: flex;
   align-items: center;
-  gap: 2.5rem;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .nav-link {
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  text-decoration: none;
-  cursor: pointer;
   position: relative;
-  padding-bottom: 2px;
-  transition: color var(--transition);
-}
-
-.nav-link::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: var(--text);
-  transition: width 0.25s ease;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 15px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: color var(--transition), background var(--transition), transform var(--transition);
 }
 
 .nav-link:hover,
 .nav-link.router-link-active {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text);
-  opacity: 1;
+  transform: translateY(-1px);
 }
 
-.nav-link:hover::after,
 .nav-link.router-link-active::after {
-  width: 100%;
+  content: "";
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
 }
 
-/* ── 汉堡 ── */
-.hamburger {
+.menu-btn {
   display: none;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
-  gap: 5px;
-  padding: 4px;
-  cursor: pointer;
-  background: none;
-  border: none;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.06);
+  transition: background var(--transition), border-color var(--transition);
 }
 
-.hamburger span {
-  display: block;
-  width: 22px;
-  height: 1px;
+.menu-btn:hover,
+.menu-btn.open {
+  border-color: rgba(240, 179, 91, 0.38);
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.menu-btn span {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
   background: var(--text);
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition: transform var(--transition);
 }
 
-.hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
-.hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+.menu-btn.open span:first-child {
+  transform: translateY(4.5px) rotate(45deg);
+}
 
-/* ── 移动端菜单 ── */
-.nav-mobile {
+.menu-btn.open span:last-child {
+  transform: translateY(-4.5px) rotate(-45deg);
+}
+
+.mobile-panel {
   display: none;
-  flex-direction: column;
-  padding: 1.5rem;
-  border-top: 1px solid var(--border);
-  background: rgba(8, 8, 8, 0.98);
-  gap: 0;
+  margin-top: 10px;
+  pointer-events: auto;
+}
+
+.mobile-links {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .mobile-link {
-  padding: 0.9rem 0;
-  font-size: 1rem;
-  letter-spacing: 0.06em;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius);
+  padding: 0 14px;
   color: var(--text-muted);
-  text-decoration: none;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: color var(--transition);
+  font-weight: 800;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
 }
 
-.mobile-link:last-child { border-bottom: none; }
-
-.mobile-link:hover,
-.mobile-link.router-link-active {
+.mobile-link.router-link-active,
+.mobile-link:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text);
+  transform: translateX(2px);
 }
 
-@media (max-width: 768px) {
-  .nav-desktop { display: none; }
-  .hamburger   { display: flex; }
-  .nav-mobile.open { display: flex; }
+@media (max-width: 760px) {
+  .navbar {
+    inset: 12px 0 auto;
+  }
+
+  .navbar-inner {
+    height: 58px;
+    padding-left: 12px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-text {
+    font-size: 0.94rem;
+  }
+
+  .nav-desktop {
+    display: none;
+  }
+
+  .menu-btn {
+    display: flex;
+  }
+
+  .mobile-panel.open {
+    display: block;
+  }
 }
 </style>
