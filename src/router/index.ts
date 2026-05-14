@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 
-const routeOrder = ["home", "image", "bookmarks", "messages", "tutorial", "apikeys", "admin"];
+const routeOrder = ["home", "image", "bookmarks", "shortlinks", "messages", "tutorial", "apikeys", "admin"];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,6 +25,11 @@ const router = createRouter({
       path: "/admin",
       name: "admin",
       component: () => import("../views/AdminView.vue"),
+    },
+    {
+      path: "/links",
+      name: "shortlinks",
+      component: () => import("../views/ShortLinksView.vue"),
     },
     {
       path: "/messages",

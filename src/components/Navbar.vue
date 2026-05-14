@@ -11,6 +11,7 @@ const links = [
   { label: "首页", to: "/", section: "home" },
   { label: "图片", to: "/image" },
   { label: "收藏", to: "/bookmarks" },
+  { label: "短链", to: "/links" },
   { label: "留言", to: "/messages" },
   { label: "教程", to: "/tutorial" },
   { label: "密钥", to: "/apikeys" },
