@@ -261,8 +261,10 @@ onMounted(() => {
 
             <div class="short-line">
               <code>{{ link.shortUrl }}</code>
-              <button class="icon-btn" @click="copyShortUrl(link)">复制</button>
-              <button class="icon-btn" @click="openShortUrl(link)">打开</button>
+              <div class="line-actions">
+                <button class="icon-btn" @click="copyShortUrl(link)">复制</button>
+                <button class="icon-btn" @click="openShortUrl(link)">打开</button>
+              </div>
             </div>
 
             <div class="stats-row">
@@ -275,7 +277,7 @@ onMounted(() => {
             <p v-if="link.description" class="description">{{ link.description }}</p>
             <p class="meta">最后访问 {{ shortLinkService.formatDate(link.lastAccessedAt) }}</p>
 
-            <footer>
+            <footer class="card-actions">
               <button class="btn btn-ghost" @click="showStats(link)">统计</button>
               <button class="btn btn-ghost" @click="showEdit(link)">编辑</button>
               <button class="btn btn-ghost danger" @click="deleteLink(link)">删除</button>
@@ -452,26 +454,37 @@ onMounted(() => {
 
 .link-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: 14px;
 }
 
 .link-card {
+  min-width: 0;
   display: grid;
   gap: 16px;
   padding: 20px;
 }
 
+.link-card header > div {
+  min-width: 0;
+}
+
 .link-card h2 {
+  overflow: hidden;
   color: var(--text);
   font-size: 1.18rem;
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .link-card a {
+  display: block;
+  overflow: hidden;
   color: var(--text-soft);
   font-size: 0.82rem;
-  word-break: break-all;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .status-pill.active {
@@ -486,6 +499,10 @@ onMounted(() => {
 }
 
 .short-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -500,12 +517,28 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+.line-actions,
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .short-line .icon-btn {
   width: auto;
+  min-width: 48px;
   padding: 0 10px;
   color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.card-actions .btn {
+  min-height: 38px;
+  flex: 1 1 72px;
+  padding-inline: 12px;
 }
 
 .stats-row {
@@ -642,5 +675,19 @@ onMounted(() => {
   .link-grid {
     grid-template-columns: 1fr;
   }
+
+  .short-line {
+    grid-template-columns: 1fr;
+  }
+
+  .line-actions,
+  .card-actions {
+    justify-content: stretch;
+  }
+
+  .line-actions .icon-btn {
+    flex: 1 1 0;
+  }
 }
+
 </style>

@@ -36,6 +36,8 @@ export interface ShortLinkTotalStats {
   code: string;
   totalClicks: number;
   uniqueVisitors: number;
+  todayClicks?: number;
+  todayKey?: string;
   lastAccessedAt?: string;
   updatedAt: string;
 }
@@ -186,17 +188,21 @@ export const buildShortUrl = (request: Request, code: string) => `${new URL(requ
 export const isExpired = (link: ShortLink) => !!link.expiresAt && new Date(link.expiresAt).getTime() <= Date.now();
 
 export const makeSummary = async (env: Env, request: Request, link: ShortLink): Promise<ShortLinkSummary> => {
-  const total = await getTotalStats(env, link.code);
-  const today = await getDailyStats(env, link.code, todayKey());
-  return {
-    ...link,
-    shortUrl: buildShortUrl(request, link.code),
-    totalClicks: total.totalClicks,
-    todayClicks: today.clicks,
-    uniqueVisitors: total.uniqueVisitors,
-    lastAccessedAt: total.lastAccessedAt || link.lastAccessedAt,
-  };
+  return makeSummaryFromStats(request, link, await getTotalStats(env, link.code));
 };
+
+export const makeSummaryFromStats = (
+  request: Request,
+  link: ShortLink,
+  total: ShortLinkTotalStats,
+): ShortLinkSummary => ({
+  ...link,
+  shortUrl: buildShortUrl(request, link.code),
+  totalClicks: total.totalClicks,
+  todayClicks: total.todayKey === todayKey() ? total.todayClicks || 0 : 0,
+  uniqueVisitors: total.uniqueVisitors,
+  lastAccessedAt: total.lastAccessedAt || link.lastAccessedAt,
+});
 
 const normalizeReferrer = (value: string | null) => {
   if (!value) return "direct";
@@ -233,6 +239,8 @@ export const recordShortLinkClick = async (env: Env, request: Request, link: Sho
   ]);
 
   total.totalClicks += 1;
+  total.todayClicks = total.todayKey === date ? (total.todayClicks || 0) + 1 : 1;
+  total.todayKey = date;
   total.updatedAt = now;
   total.lastAccessedAt = now;
   if (!totalSeen) total.uniqueVisitors += 1;

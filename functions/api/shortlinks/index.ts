@@ -3,10 +3,10 @@ import {
   getIndex,
   getShortLink,
   getTotalStats,
-  getDailyStats,
   isValidCode,
   jsonResponse,
   makeSummary,
+  makeSummaryFromStats,
   optionsResponse,
   putIndex,
   putShortLink,
@@ -29,7 +29,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     const index = await getIndex(env);
     const links = (await Promise.all(index.codes.map((code) => getShortLink(env, code)))).filter(Boolean) as ShortLink[];
     const visibleLinks = links.filter((link) => !link.deletedAt);
-    const summaries = await Promise.all(visibleLinks.map((link) => makeSummary(env, request, link)));
+    const totalStats = await Promise.all(visibleLinks.map((link) => getTotalStats(env, link.code)));
+    const summaries = visibleLinks.map((link, index) => makeSummaryFromStats(request, link, totalStats[index]));
     summaries.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 
     const totals = summaries.reduce((acc, link) => ({
@@ -95,9 +96,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         code,
         totalClicks: 0,
         uniqueVisitors: 0,
+        todayClicks: 0,
+        todayKey: todayKey(),
         updatedAt: now,
       }),
-      getDailyStats(env, code, todayKey()).then((stats) => env.MY_KV.put(`shortlink:stats:${code}:day:${todayKey()}`, JSON.stringify(stats))),
     ]);
 
     return jsonResponse({ success: true, data: await makeSummary(env, request, link) }, 201);
