@@ -386,9 +386,6 @@ onMounted(() => {
 }
 
 .head-actions,
-.link-card header,
-.link-card footer,
-.short-line,
 .modal header,
 .modal footer,
 .stats-detail header,
@@ -402,6 +399,19 @@ onMounted(() => {
 .head-actions {
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+.link-card header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+}
+
+.link-card header .status-pill {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .metrics {
@@ -454,15 +464,17 @@ onMounted(() => {
 
 .link-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 14px;
 }
 
 .link-card {
   min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 16px;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .link-card header > div {
@@ -503,6 +515,9 @@ onMounted(() => {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -517,12 +532,22 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.line-actions,
-.card-actions {
+.line-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.link-card footer.card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
 }
 
 .short-line .icon-btn {
@@ -535,33 +560,38 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.card-actions .btn {
+.link-card footer.card-actions .btn {
   min-height: 38px;
-  flex: 1 1 72px;
-  padding-inline: 12px;
+  min-width: 0;
+  padding-inline: 10px;
 }
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
 .stats-row span,
 .stats-overview span {
   display: grid;
   gap: 4px;
+  min-width: 0;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.04);
   font-size: 0.78rem;
+  overflow-wrap: anywhere;
 }
 
 .stats-row strong,
 .stats-overview strong,
 .daily-item strong,
 .top-grid strong {
+  overflow-wrap: anywhere;
   color: var(--text);
 }
 
@@ -680,8 +710,7 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .line-actions,
-  .card-actions {
+  .line-actions {
     justify-content: stretch;
   }
 
