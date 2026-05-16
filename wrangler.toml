@@ -5,3 +5,7 @@ pages_build_output_dir = "dist"
 [[kv_namespaces]]
 binding = "MY_KV"
 id = "b0f52d8d37e749a9a5725b04f26412da"
+
+[[r2_buckets]]
+binding = "IMAGES_BUCKET"
+bucket_name = "jisoolove-images"

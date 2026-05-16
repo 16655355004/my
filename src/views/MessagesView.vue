@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import TurnstileWidget from "../components/TurnstileWidget.vue";
 import { messageService, type Message, type MessageInput } from "../services/bookmarkService";
 
 const messages = ref<Message[]>([]);
@@ -7,9 +8,13 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const submitting = ref(false);
 const toastVisible = ref(false);
+const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null);
+const turnstileToken = ref("");
 const form = ref<MessageInput>({ name: "", content: "" });
 
-const isFormValid = computed(() => form.value.name.trim().length > 0 && form.value.content.trim().length > 0);
+const isFormValid = computed(() =>
+  form.value.name.trim().length > 0 && form.value.content.trim().length > 0 && turnstileToken.value.length > 0,
+);
 
 const loadMessages = async () => {
   loading.value = true;
@@ -40,17 +45,24 @@ const submitMessage = async () => {
     const result = await messageService.addMessage({
       name: form.value.name.trim(),
       content: form.value.content.trim(),
+      turnstileToken: turnstileToken.value,
     });
     if (result.success) {
       form.value = { name: "", content: "" };
+      turnstileToken.value = "";
+      turnstileRef.value?.reset();
       await loadMessages();
       toastVisible.value = true;
       window.setTimeout(() => (toastVisible.value = false), 2600);
     } else {
-      error.value = "留言发送失败，请稍后再试。";
+      error.value = result.error || "留言发送失败，请稍后再试。";
+      turnstileToken.value = "";
+      turnstileRef.value?.reset();
     }
   } catch {
     error.value = "留言发送失败，请稍后再试。";
+    turnstileToken.value = "";
+    turnstileRef.value?.reset();
   } finally {
     submitting.value = false;
   }
@@ -92,6 +104,12 @@ onMounted(loadMessages);
             内容
             <textarea v-model="form.content" maxlength="500" rows="6" placeholder="写下想留下的话" required></textarea>
           </label>
+          <TurnstileWidget
+            ref="turnstileRef"
+            @verified="turnstileToken = $event"
+            @expired="turnstileToken = ''"
+            @error="turnstileToken = ''"
+          />
           <div class="form-foot">
             <span>{{ form.content.length }} / 500</span>
             <button class="btn" type="submit" :disabled="!isFormValid || submitting">

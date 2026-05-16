@@ -1,4 +1,5 @@
 import {
+  assessTargetUrl,
   getIndex,
   getShortLink,
   isValidCode,
@@ -8,7 +9,6 @@ import {
   putIndex,
   putShortLink,
   requireAuth,
-  validateTargetUrl,
   type Env,
   type ShortLinkInput,
 } from "../../_shared/shortlinks";
@@ -47,17 +47,20 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, params })
 
     const body = await request.json() as ShortLinkInput;
     const nextTargetUrl = body.targetUrl?.trim() ?? link.targetUrl;
-    const urlError = validateTargetUrl(nextTargetUrl, new URL(request.url), code);
-    if (urlError) return jsonResponse({ success: false, error: urlError }, 400);
+    const risk = assessTargetUrl(nextTargetUrl, new URL(request.url), code, env);
+    if (risk.status === "blocked") {
+      return jsonResponse({ success: false, error: risk.reasons[0]?.message || "目标 URL 风险过高", data: { risk } }, 400);
+    }
 
     const nextLink = {
       ...link,
       title: body.title?.trim() || link.title,
-      targetUrl: nextTargetUrl,
+      targetUrl: risk.normalizedUrl || nextTargetUrl,
       description: body.description !== undefined ? body.description.trim() || undefined : link.description,
       enabled: body.enabled ?? link.enabled,
       expiresAt: body.expiresAt !== undefined ? body.expiresAt || null : link.expiresAt,
       updatedAt: new Date().toISOString(),
+      risk,
     };
 
     await putShortLink(env, nextLink);

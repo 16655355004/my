@@ -1,8 +1,31 @@
 export interface Env {
   MY_KV: KVNamespace;
+  IMAGES_BUCKET?: R2Bucket;
   ADMIN_PASSWORD?: string;
   STATS_SALT?: string;
   SITE_STARTED_AT?: string;
+  TURNSTILE_SECRET_KEY?: string;
+  IMAGE_MAX_BYTES?: string;
+  SHORTLINK_RISK_ALLOWLIST?: string;
+  SHORTLINK_RISK_BLOCKLIST?: string;
+  REPORT_RETENTION_DAYS?: string;
+}
+
+export type RiskStatus = "safe" | "warning" | "blocked";
+
+export interface RiskReason {
+  code: string;
+  severity: RiskStatus;
+  message: string;
+}
+
+export interface LinkRiskAssessment {
+  status: RiskStatus;
+  score: number;
+  reasons: RiskReason[];
+  normalizedUrl?: string;
+  hostname?: string;
+  checkedAt: string;
 }
 
 export interface ShortLink {
@@ -16,6 +39,7 @@ export interface ShortLink {
   expiresAt?: string | null;
   lastAccessedAt?: string;
   deletedAt?: string;
+  risk?: LinkRiskAssessment;
 }
 
 export interface ShortLinkInput {
@@ -164,17 +188,129 @@ export const putDailyStats = async (env: Env, stats: ShortLinkDailyStats) => {
   await env.MY_KV.put(`shortlink:stats:${stats.code}:day:${stats.date}`, JSON.stringify(stats));
 };
 
-export const validateTargetUrl = (targetUrl: string, requestUrl?: URL, code?: string): string | null => {
+const parseList = (value?: string) => new Set((value || "")
+  .split(",")
+  .map((item) => item.trim().toLowerCase())
+  .filter(Boolean));
+
+const isIpv4 = (hostname: string) => /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname);
+
+const isPrivateIpv4 = (hostname: string) => {
+  if (!isIpv4(hostname)) return false;
+  const parts = hostname.split(".").map(Number);
+  if (parts.some((part) => part < 0 || part > 255)) return true;
+  const [first, second] = parts;
+  return first === 10 ||
+    first === 127 ||
+    first === 0 ||
+    first === 169 && second === 254 ||
+    first === 172 && second >= 16 && second <= 31 ||
+    first === 192 && second === 168 ||
+    first >= 224;
+};
+
+const addRiskReason = (reasons: RiskReason[], code: string, severity: RiskStatus, message: string) => {
+  reasons.push({ code, severity, message });
+};
+
+export const assessTargetUrl = (
+  targetUrl: string,
+  requestUrl?: URL,
+  code?: string,
+  env?: Pick<Env, "SHORTLINK_RISK_ALLOWLIST" | "SHORTLINK_RISK_BLOCKLIST">,
+): LinkRiskAssessment => {
+  const reasons: RiskReason[] = [];
+  const checkedAt = new Date().toISOString();
+  let url: URL;
+
   try {
-    const url = new URL(targetUrl);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return "目标 URL 只支持 http 或 https";
-    if (requestUrl && code && url.origin === requestUrl.origin && url.pathname === `/s/${code}`) {
-      return "目标 URL 不能指向自身短链";
-    }
-    return null;
+    url = new URL(targetUrl.trim());
   } catch {
-    return "请输入有效 URL";
+    return {
+      status: "blocked",
+      score: 100,
+      reasons: [{ code: "invalid-url", severity: "blocked", message: "请输入有效 URL" }],
+      checkedAt,
+    };
   }
+
+  const hostname = url.hostname.toLowerCase();
+  const blocklist = parseList(env?.SHORTLINK_RISK_BLOCKLIST);
+  const allowlist = parseList(env?.SHORTLINK_RISK_ALLOWLIST);
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    addRiskReason(reasons, "protocol", "blocked", "目标 URL 只支持 http 或 https");
+  }
+
+  if (requestUrl && code && url.origin === requestUrl.origin && url.pathname === `/s/${code}`) {
+    addRiskReason(reasons, "self-redirect", "blocked", "目标 URL 不能指向自身短链");
+  }
+
+  if (hostname === "localhost" || hostname.endsWith(".localhost")) {
+    addRiskReason(reasons, "localhost", "blocked", "不能跳转到 localhost");
+  }
+
+  if (isPrivateIpv4(hostname)) {
+    addRiskReason(reasons, "private-ip", "blocked", "不能跳转到私有或保留 IP");
+  } else if (isIpv4(hostname)) {
+    addRiskReason(reasons, "raw-ip", "warning", "目标使用裸 IP，建议确认来源可信");
+  }
+
+  if (hostname === "169.254.169.254") {
+    addRiskReason(reasons, "metadata-ip", "blocked", "不能跳转到云元数据地址");
+  }
+
+  if (blocklist.has(hostname)) {
+    addRiskReason(reasons, "blocklist", "blocked", "目标域名命中阻止列表");
+  }
+
+  if (allowlist.size > 0 && !allowlist.has(hostname)) {
+    addRiskReason(reasons, "not-allowlisted", "warning", "目标域名不在允许列表中");
+  }
+
+  if (url.username || url.password) {
+    addRiskReason(reasons, "credentials", "warning", "URL 包含用户名或密码信息");
+  }
+
+  if (url.href.length > 240) {
+    addRiskReason(reasons, "long-url", "warning", "URL 过长，建议确认没有隐藏跳转参数");
+  }
+
+  if (hostname.split(".").length > 4) {
+    addRiskReason(reasons, "deep-subdomain", "warning", "子域层级较深，请确认域名可信");
+  }
+
+  if (/\.(?:exe|msi|scr|bat|cmd|apk)(?:$|[?#])/i.test(url.pathname)) {
+    addRiskReason(reasons, "downloadable", "warning", "目标可能直接下载可执行文件");
+  }
+
+  if (["bit.ly", "tinyurl.com", "t.co", "is.gd", "goo.gl", "ow.ly"].includes(hostname)) {
+    addRiskReason(reasons, "nested-shortener", "warning", "目标本身是短链服务，可能隐藏真实地址");
+  }
+
+  if (hostname.includes("xn--")) {
+    addRiskReason(reasons, "punycode", "warning", "目标域名包含 punycode，建议确认不是仿冒域名");
+  }
+
+  const status: RiskStatus = reasons.some((reason) => reason.severity === "blocked")
+    ? "blocked"
+    : reasons.length > 0 ? "warning" : "safe";
+  const score = Math.min(100, reasons.reduce((total, reason) => total + (reason.severity === "blocked" ? 60 : 18), 0));
+
+  return {
+    status,
+    score,
+    reasons,
+    normalizedUrl: url.href,
+    hostname,
+    checkedAt,
+  };
+};
+
+export const validateTargetUrl = (targetUrl: string, requestUrl?: URL, code?: string): string | null => {
+  const assessment = assessTargetUrl(targetUrl, requestUrl, code);
+  const blockedReason = assessment.reasons.find((reason) => reason.severity === "blocked");
+  return blockedReason?.message || null;
 };
 
 export const generateCode = () => {

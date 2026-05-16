@@ -1,27 +1,61 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import displayImage from "../assets/001.png";
+import imageService, { type GalleryImage } from "../services/imageService";
 
 gsap.registerPlugin(ScrollTrigger);
 
+interface GalleryItem {
+  id: string | number;
+  src: string;
+  title: string;
+  alt: string;
+  tone: string;
+  remote?: GalleryImage;
+}
+
 const pageRef = ref<HTMLElement | null>(null);
+const loading = ref(false);
+const error = ref<string | null>(null);
+const notice = ref<string | null>(null);
+const remoteImages = ref<GalleryImage[]>([]);
+const adminToken = ref(imageService.getAdminToken() || "");
+const adminOpen = ref(false);
+const uploading = ref(false);
+const uploadFile = ref<File | null>(null);
+const uploadForm = ref({ title: "", alt: "", tone: "Cloudflare R2" });
 let gsapContext: gsap.Context | null = null;
 
-const images = Array.from({ length: 50 }, (_, index) => {
+const fallbackImages: GalleryItem[] = Array.from({ length: 50 }, (_, index) => {
   const number = index + 1;
   return {
     id: number,
     src: displayImage,
     title: `Image ${String(number).padStart(2, "0")}`,
+    alt: `Image ${String(number).padStart(2, "0")}`,
     tone: ["Warm", "Soft", "Bright", "Clean", "Focus"][index % 5],
   };
 });
 
-onMounted(() => {
+const images = computed<GalleryItem[]>(() => remoteImages.value.length
+  ? remoteImages.value.map((image) => ({
+      id: image.id,
+      src: image.url,
+      title: image.title,
+      alt: image.alt,
+      tone: image.tone,
+      remote: image,
+    }))
+  : fallbackImages,
+);
+
+const animateCards = async () => {
   const page = pageRef.value;
   if (!page) return;
+  gsapContext?.revert();
+  await nextTick();
 
   gsapContext = gsap.context(() => {
     gsap.from(".image-hero > *", {
@@ -47,7 +81,63 @@ onMounted(() => {
       });
     });
   }, page);
-});
+};
+
+const loadImages = async () => {
+  loading.value = true;
+  error.value = null;
+  const result = await imageService.getImages();
+  if (result.success && result.data) remoteImages.value = result.data.images;
+  else error.value = result.error || "R2 图库暂时不可用，正在显示本地展示位。";
+  loading.value = false;
+  await animateCards();
+};
+
+const saveToken = () => {
+  if (!adminToken.value.trim()) return;
+  imageService.setAdminToken(adminToken.value.trim());
+  notice.value = "图片管理已解锁";
+};
+
+const selectFile = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  uploadFile.value = target.files?.[0] || null;
+  if (uploadFile.value && !uploadForm.value.title) {
+    uploadForm.value.title = uploadFile.value.name.replace(/\.[^.]+$/, "");
+    uploadForm.value.alt = uploadForm.value.title;
+  }
+};
+
+const uploadImage = async () => {
+  if (!uploadFile.value) return;
+  saveToken();
+  uploading.value = true;
+  error.value = null;
+  const result = await imageService.uploadImage(uploadFile.value, uploadForm.value);
+  if (result.success) {
+    notice.value = "图片已上传到 R2";
+    uploadFile.value = null;
+    uploadForm.value = { title: "", alt: "", tone: "Cloudflare R2" };
+    adminOpen.value = false;
+    await loadImages();
+  } else {
+    error.value = result.error || "图片上传失败";
+  }
+  uploading.value = false;
+};
+
+const deleteImage = async (image: GalleryImage) => {
+  if (!confirm(`确定删除图片 ${image.title}？`)) return;
+  const result = await imageService.deleteImage(image.id);
+  if (result.success) {
+    notice.value = "图片已删除";
+    await loadImages();
+  } else {
+    error.value = result.error || "图片删除失败";
+  }
+};
+
+onMounted(loadImages);
 
 onUnmounted(() => {
   gsapContext?.revert();
@@ -57,27 +147,57 @@ onUnmounted(() => {
 <template>
   <main ref="pageRef" class="image-page">
     <section class="container image-hero">
-      <span class="page-tag">Gallery</span>
-      <h1 class="page-title">图片展示</h1>
-      <p class="page-sub">整理了 50 张图片展示位，使用 GSAP 做入场和滚动动效。</p>
+      <div>
+        <span class="page-tag">Gallery</span>
+        <h1 class="page-title">图片展示</h1>
+        <p class="page-sub">使用 Cloudflare R2 承载图片，保留 GSAP 入场和滚动动效。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-ghost" :disabled="loading" @click="loadImages">{{ loading ? "同步中" : "同步 R2" }}</button>
+        <button class="btn" @click="adminOpen = true">上传图片</button>
+      </div>
     </section>
 
     <section class="container image-grid-section">
+      <p v-if="notice" class="soft-alert success">{{ notice }} <button @click="notice = null">关闭</button></p>
+      <p v-if="error" class="soft-alert">{{ error }} <button @click="error = null">关闭</button></p>
       <div class="image-grid">
         <article
-          v-for="image in images"
+          v-for="(image, index) in images"
           :key="image.id"
           class="image-card"
-          :class="{ wide: image.id % 11 === 1, tall: image.id % 7 === 0 }"
+          :class="{ wide: index % 11 === 0, tall: index % 7 === 6 }"
         >
-          <img :src="image.src" :alt="image.title" loading="lazy" />
+          <img :src="image.src" :alt="image.alt" loading="lazy" />
           <div class="image-meta">
             <strong>{{ image.title }}</strong>
             <span>{{ image.tone }}</span>
           </div>
+          <button v-if="image.remote && imageService.getAdminToken()" class="delete-image" @click="deleteImage(image.remote)">删除</button>
         </article>
       </div>
     </section>
+
+    <div v-if="adminOpen" class="modal-overlay" @click="adminOpen = false">
+      <form class="upload-modal panel" @click.stop @submit.prevent="uploadImage">
+        <header>
+          <div>
+            <span class="section-kicker">Cloudflare R2</span>
+            <h2>上传图片</h2>
+          </div>
+          <button type="button" @click="adminOpen = false">关闭</button>
+        </header>
+        <label>管理员密码<input v-model="adminToken" type="password" placeholder="ADMIN_PASSWORD" /></label>
+        <label>图片文件<input type="file" accept="image/*" required @change="selectFile" /></label>
+        <label>标题<input v-model="uploadForm.title" placeholder="图片标题" /></label>
+        <label>替代文本<input v-model="uploadForm.alt" placeholder="用于无障碍和加载失败时展示" /></label>
+        <label>标签<input v-model="uploadForm.tone" placeholder="Cloudflare R2" /></label>
+        <footer>
+          <button type="button" class="btn btn-ghost" @click="adminOpen = false">取消</button>
+          <button class="btn" :disabled="uploading || !uploadFile || !adminToken.trim()">{{ uploading ? "上传中" : "上传到 R2" }}</button>
+        </footer>
+      </form>
+    </div>
   </main>
 </template>
 
@@ -88,16 +208,48 @@ onUnmounted(() => {
 }
 
 .image-hero {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
 }
 
 .image-hero .page-title {
   margin-top: 0;
 }
 
+.hero-actions,
+.upload-modal header,
+.upload-modal footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .image-grid-section {
   margin-top: 18px;
+}
+
+.soft-alert {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(239, 111, 108, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(239, 111, 108, 0.08);
+  color: var(--text-soft);
+}
+
+.soft-alert.success {
+  border-color: rgba(83, 198, 176, 0.35);
+  background: rgba(83, 198, 176, 0.08);
+}
+
+.soft-alert button {
+  margin-left: 10px;
+  color: var(--accent);
+  font-weight: 800;
 }
 
 .image-grid {
@@ -157,9 +309,12 @@ onUnmounted(() => {
 }
 
 .image-meta strong {
+  overflow: hidden;
   color: var(--text);
   font-size: 0.86rem;
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .image-meta span {
@@ -168,6 +323,56 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.delete-image {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(239, 111, 108, 0.82);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 800;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.image-card:hover .delete-image {
+  opacity: 1;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.upload-modal {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.upload-modal h2 {
+  color: var(--text);
+  font-size: 1.5rem;
+}
+
+.upload-modal label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 @media (max-width: 1120px) {
@@ -177,6 +382,11 @@ onUnmounted(() => {
 }
 
 @media (max-width: 860px) {
+  .image-hero {
+    align-items: start;
+    flex-direction: column;
+  }
+
   .image-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

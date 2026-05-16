@@ -19,6 +19,11 @@ export interface AccessAnalytics {
   total: number
   countries: Array<{ name: string; value: number }>
   chinaCities: Array<{ name: string; value: [number, number, number] }>
+  geoPoints: Array<{ name: string; value: [number, number, number] }>
+  chinaHeatmap: Array<[number, number, number]>
+  topPaths: Array<{ name: string; value: number }>
+  hourly: Array<{ hour: string; value: number }>
+  updatedAt: string
   recent: AccessLogEntry[]
 }
 

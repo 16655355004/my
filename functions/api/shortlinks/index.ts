@@ -1,4 +1,5 @@
 import {
+  assessTargetUrl,
   generateCode,
   getIndex,
   getShortLink,
@@ -13,7 +14,6 @@ import {
   putTotalStats,
   requireAuth,
   todayKey,
-  validateTargetUrl,
   type Env,
   type ShortLink,
   type ShortLinkInput,
@@ -71,8 +71,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       } while (index.codes.includes(code) || await getShortLink(env, code));
     }
 
-    const urlError = validateTargetUrl(targetUrl, new URL(request.url), code);
-    if (urlError) return jsonResponse({ success: false, error: urlError }, 400);
+    const risk = assessTargetUrl(targetUrl, new URL(request.url), code, env);
+    if (risk.status === "blocked") {
+      return jsonResponse({ success: false, error: risk.reasons[0]?.message || "目标 URL 风险过高", data: { risk } }, 400);
+    }
 
     if (index.codes.includes(code) || await getShortLink(env, code)) {
       return jsonResponse({ success: false, error: "短码已存在" }, 409);
@@ -82,11 +84,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const link: ShortLink = {
       code,
       title,
-      targetUrl,
+      targetUrl: risk.normalizedUrl || targetUrl,
       description: body.description?.trim() || undefined,
       enabled: body.enabled ?? true,
       expiresAt: body.expiresAt || null,
       createdAt: now,
+      risk,
     };
 
     await Promise.all([

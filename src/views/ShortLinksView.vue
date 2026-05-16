@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import shortLinkService, {
+  type LinkRiskAssessment,
   type ShortLinkDailyStats,
   type ShortLinkInput,
   type ShortLinkStatsData,
@@ -18,6 +19,9 @@ const showForm = ref(false);
 const editingLink = ref<ShortLinkSummary | null>(null);
 const selectedStats = ref<ShortLinkStatsData | null>(null);
 const statsLoading = ref(false);
+const riskLoading = ref(false);
+const riskAssessment = ref<LinkRiskAssessment | null>(null);
+const riskConfirmed = ref(false);
 const links = ref<ShortLinkSummary[]>([]);
 const totals = ref<ShortLinkTotals>({ totalLinks: 0, activeLinks: 0, totalClicks: 0, todayClicks: 0 });
 
@@ -30,7 +34,14 @@ const formData = ref<ShortLinkInput>({
   expiresAt: "",
 });
 
-const isFormValid = computed(() => formData.value.title.trim() && formData.value.targetUrl.trim());
+const isFormValid = computed(() =>
+  formData.value.title.trim() &&
+  formData.value.targetUrl.trim() &&
+  !riskLoading.value &&
+  !!riskAssessment.value &&
+  riskAssessment.value.status !== "blocked" &&
+  (riskAssessment.value?.status !== "warning" || riskConfirmed.value),
+);
 const topReferrers = computed(() => mergeTopItems("referrers"));
 const topCountries = computed(() => mergeTopItems("countries"));
 
@@ -81,6 +92,8 @@ const refreshData = async () => {
 const resetForm = () => {
   formData.value = { title: "", targetUrl: "", code: "", description: "", enabled: true, expiresAt: "" };
   editingLink.value = null;
+  riskAssessment.value = null;
+  riskConfirmed.value = false;
   showForm.value = false;
 };
 
@@ -99,7 +112,25 @@ const showEdit = (link: ShortLinkSummary) => {
     enabled: link.enabled,
     expiresAt: link.expiresAt ? link.expiresAt.split("T")[0] : "",
   };
+  riskAssessment.value = link.risk || null;
+  riskConfirmed.value = link.risk?.status !== "warning";
   showForm.value = true;
+};
+
+const runRiskCheck = async () => {
+  const targetUrl = formData.value.targetUrl.trim();
+  if (!targetUrl) {
+    riskAssessment.value = null;
+    return;
+  }
+
+  riskLoading.value = true;
+  const result = await shortLinkService.assessTargetUrl(targetUrl, editingLink.value?.code || formData.value.code?.trim() || undefined);
+  if (result.success && result.data) {
+    riskAssessment.value = result.data;
+    if (result.data.status !== "warning") riskConfirmed.value = false;
+  }
+  riskLoading.value = false;
 };
 
 const submitForm = async () => {
@@ -189,6 +220,13 @@ function mergeTopItems(key: "referrers" | "countries") {
   return Array.from(counts.entries()).sort((left, right) => right[1] - left[1]).slice(0, 5);
 }
 
+let riskTimer: number | undefined;
+watch(() => [formData.value.targetUrl, formData.value.code, editingLink.value?.code], () => {
+  riskConfirmed.value = false;
+  window.clearTimeout(riskTimer);
+  riskTimer = window.setTimeout(runRiskCheck, 420);
+});
+
 onMounted(() => {
   const token = shortLinkService.getAdminToken();
   if (token) {
@@ -254,9 +292,14 @@ onMounted(() => {
                 <h2>{{ link.title }}</h2>
                 <a :href="link.targetUrl" target="_blank" rel="noreferrer">{{ link.targetUrl.replace(/^https?:\/\//, "") }}</a>
               </div>
-              <span :class="['status-pill', shortLinkService.statusOf(link)]">
-                {{ shortLinkService.statusLabel(shortLinkService.statusOf(link)) }}
-              </span>
+              <div class="pill-stack">
+                <span :class="['status-pill', shortLinkService.statusOf(link)]">
+                  {{ shortLinkService.statusLabel(shortLinkService.statusOf(link)) }}
+                </span>
+                <span :class="['status-pill', 'risk', link.risk?.status || 'safe']">
+                  {{ shortLinkService.riskLabel(link.risk?.status) }}
+                </span>
+              </div>
             </header>
 
             <div class="short-line">
@@ -339,6 +382,21 @@ onMounted(() => {
         </header>
         <label>标题<input v-model="formData.title" required placeholder="项目首页" /></label>
         <label>目标 URL<input v-model="formData.targetUrl" type="url" required placeholder="https://example.com" /></label>
+        <div v-if="riskLoading || riskAssessment" class="risk-panel">
+          <span v-if="riskLoading" class="status-pill">检测中</span>
+          <template v-else-if="riskAssessment">
+            <span :class="['status-pill', 'risk', riskAssessment.status]">
+              {{ shortLinkService.riskLabel(riskAssessment.status) }} · {{ riskAssessment.score }}
+            </span>
+            <div class="risk-reasons">
+              <span v-for="reason in riskAssessment.reasons" :key="reason.code" :class="['chip', reason.severity]">{{ reason.message }}</span>
+              <span v-if="riskAssessment.reasons.length === 0" class="chip safe">未发现明显风险</span>
+            </div>
+            <label v-if="riskAssessment.status === 'warning'" class="check-line">
+              <input v-model="riskConfirmed" type="checkbox" /> 我已确认这个警告链接仍然需要保存
+            </label>
+          </template>
+        </div>
         <div class="form-row">
           <label>短码<input v-model="formData.code" :disabled="!!editingLink" placeholder="留空自动生成" /></label>
           <label>过期时间<input v-model="formData.expiresAt" type="date" /></label>
@@ -412,6 +470,12 @@ onMounted(() => {
 .link-card header .status-pill {
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+.pill-stack {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
 }
 
 .metrics {
@@ -499,13 +563,20 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.status-pill.active {
+.status-pill.active,
+.status-pill.risk.safe {
   border-color: rgba(83, 198, 176, 0.5);
   color: var(--accent-2);
 }
 
+.status-pill.risk.warning {
+  border-color: rgba(240, 179, 91, 0.6);
+  color: var(--accent);
+}
+
 .status-pill.paused,
-.status-pill.expired {
+.status-pill.expired,
+.status-pill.risk.blocked {
   border-color: rgba(239, 111, 108, 0.6);
   color: var(--accent-3);
 }
@@ -667,6 +738,36 @@ onMounted(() => {
   color: var(--text-muted);
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.risk-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.risk-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip.safe {
+  border-color: rgba(83, 198, 176, 0.42);
+  color: var(--accent-2);
+}
+
+.chip.warning {
+  border-color: rgba(240, 179, 91, 0.5);
+  color: var(--accent);
+}
+
+.chip.blocked {
+  border-color: rgba(239, 111, 108, 0.5);
+  color: var(--accent-3);
 }
 
 .form-row {

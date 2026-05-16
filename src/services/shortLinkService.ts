@@ -1,3 +1,20 @@
+export type RiskStatus = 'safe' | 'warning' | 'blocked'
+
+export interface RiskReason {
+  code: string
+  severity: RiskStatus
+  message: string
+}
+
+export interface LinkRiskAssessment {
+  status: RiskStatus
+  score: number
+  reasons: RiskReason[]
+  normalizedUrl?: string
+  hostname?: string
+  checkedAt: string
+}
+
 export interface ShortLink {
   code: string
   title: string
@@ -9,6 +26,7 @@ export interface ShortLink {
   expiresAt?: string | null
   lastAccessedAt?: string
   deletedAt?: string
+  risk?: LinkRiskAssessment
 }
 
 export interface ShortLinkInput {
@@ -204,6 +222,19 @@ class ShortLinkService {
     }
   }
 
+  async assessTargetUrl(targetUrl: string, code?: string): Promise<ApiResponse<LinkRiskAssessment>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/shortlinks/risk`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ targetUrl, code }),
+      })
+      return await this.handleResponse<LinkRiskAssessment>(response)
+    } catch {
+      return { success: false, error: '网络错误' }
+    }
+  }
+
   buildShortUrl(code: string): string {
     const origin = this.baseUrl || window.location.origin
     return `${origin}/s/${code}`
@@ -231,6 +262,10 @@ class ShortLinkService {
 
   statusLabel(status: string): string {
     return ({ active: '启用', paused: '停用', expired: '过期' } as Record<string, string>)[status] || status
+  }
+
+  riskLabel(status?: RiskStatus): string {
+    return ({ safe: '安全', warning: '注意', blocked: '阻止' } as Record<string, string>)[status || 'safe'] || '安全'
   }
 }
 

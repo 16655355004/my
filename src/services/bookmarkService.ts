@@ -226,6 +226,7 @@ export interface Message {
 export interface MessageInput {
   name: string
   content: string
+  turnstileToken?: string
 }
 
 // 留言服务类
