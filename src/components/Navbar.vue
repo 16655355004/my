@@ -15,6 +15,7 @@ const links = [
   { label: "留言", to: "/messages" },
   { label: "教程", to: "/tutorial" },
   { label: "密钥", to: "/apikeys" },
+  { label: "访问", to: "/visits" },
 ];
 
 const closeMenu = () => {
