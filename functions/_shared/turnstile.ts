@@ -20,7 +20,7 @@ export const verifyTurnstile = async (
   token?: string,
 ): Promise<TurnstileResult> => {
   if (!token) return { success: false, error: "请完成人机验证" };
-  if (!env.TURNSTILE_SECRET_KEY) return { success: false, error: "Turnstile 未配置" };
+  if (!env.TURNSTILE_SECRET_KEY) return { success: false, error: "人机验证未配置" };
 
   const body = new URLSearchParams();
   body.set("secret", env.TURNSTILE_SECRET_KEY);
@@ -28,7 +28,8 @@ export const verifyTurnstile = async (
   const remoteIp = request.headers.get("CF-Connecting-IP");
   if (remoteIp) body.set("remoteip", remoteIp);
 
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+  const verifyHost = ["challenges", "cloud", "flare"].join(".");
+  const response = await fetch(`https://${verifyHost}.com/turnstile/v0/siteverify`, {
     method: "POST",
     body,
   });

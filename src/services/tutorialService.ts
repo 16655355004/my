@@ -1,6 +1,6 @@
 /**
  * Tutorial Authentication Service
- * Handles password protection for the Cloudflare KV tutorial page
+ * Handles password protection for the KV tutorial page
  */
 
 class TutorialService {

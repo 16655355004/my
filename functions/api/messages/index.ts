@@ -19,10 +19,10 @@ interface MessageInput {
 }
 
 const messagesKey = "messages:list";
+const legacyMessagesKey = "messages";
 const maxMessages = 100;
 
-const getMessages = async (env: Env): Promise<Message[]> => {
-  const json = await env.MY_KV.get(messagesKey);
+const parseMessages = (json: string | null): Message[] => {
   if (!json) return [];
   try {
     const parsed = JSON.parse(json);
@@ -30,6 +30,22 @@ const getMessages = async (env: Env): Promise<Message[]> => {
   } catch {
     return [];
   }
+};
+
+const getMessages = async (env: Env): Promise<Message[]> => {
+  const [currentJson, legacyJson] = await Promise.all([
+    env.MY_KV.get(messagesKey),
+    env.MY_KV.get(legacyMessagesKey),
+  ]);
+  const seen = new Set<string>();
+  return [...parseMessages(currentJson), ...parseMessages(legacyJson)]
+    .filter((message) => {
+      if (seen.has(message.id)) return false;
+      seen.add(message.id);
+      return true;
+    })
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, maxMessages);
 };
 
 const hashCooldown = async (request: Request, env: Env) => {
@@ -79,6 +95,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     await Promise.all([
       env.MY_KV.put(messagesKey, JSON.stringify(messages)),
+      env.MY_KV.put(legacyMessagesKey, JSON.stringify(messages)),
       env.MY_KV.put(cooldownKey, "1", { expirationTtl: 90 }),
     ]);
 

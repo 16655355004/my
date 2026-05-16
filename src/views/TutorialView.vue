@@ -11,10 +11,10 @@ const activeSection = ref("overview");
 
 const tutorials = {
   kv: {
-    name: "Cloudflare KV",
+    name: "KV",
     desc: "轻量数据存储笔记，记录站点数据如何保存、读取和维护。",
     sections: [
-      { id: "overview", title: "概览", body: "Cloudflare KV 适合保存读多写少的键值数据，例如收藏、留言、统计和配置。" },
+      { id: "overview", title: "概览", body: "键值存储适合保存读多写少的数据，例如收藏、留言、统计和配置。" },
       { id: "setup", title: "环境配置", body: "创建 KV 命名空间后，将它绑定到 Pages Functions 或 Workers，再通过绑定名读写数据。" },
       { id: "usage", title: "读写方式", body: "常见操作包括 put、get、delete 和 list。结构化内容建议统一使用 JSON 保存。" },
       { id: "practice", title: "实践建议", body: "键名使用稳定前缀，例如 bookmarks:、messages:、stats:，后续排查和迁移会更清楚。" },
@@ -106,7 +106,7 @@ onMounted(() => {
 
         <div class="tutorial-tabs">
           <button :class="['tab', { active: selectedTutorial === 'kv' }]" @click="changeTutorial('kv')">
-            Cloudflare KV
+            KV
           </button>
           <button :class="['tab', { active: selectedTutorial === 'github-cli' }]" @click="changeTutorial('github-cli')">
             GitHub CLI

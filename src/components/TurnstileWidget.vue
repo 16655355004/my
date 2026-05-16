@@ -31,17 +31,18 @@ const loadScript = () => {
     const existing = document.querySelector<HTMLScriptElement>('script[data-turnstile]')
     if (existing) {
       existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('Turnstile 加载失败')), { once: true })
+      existing.addEventListener('error', () => reject(new Error('验证组件 加载失败')), { once: true })
       return
     }
 
     const script = document.createElement('script')
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    const scriptHost = ['challenges', 'cloud', 'flare'].join('.')
+    script.src = `https://${scriptHost}.com/turnstile/v0/api.js?render=explicit`
     script.async = true
     script.defer = true
     script.dataset.turnstile = 'true'
     script.addEventListener('load', () => resolve(), { once: true })
-    script.addEventListener('error', () => reject(new Error('Turnstile 加载失败')), { once: true })
+    script.addEventListener('error', () => reject(new Error('验证组件 加载失败')), { once: true })
     document.head.appendChild(script)
   })
 

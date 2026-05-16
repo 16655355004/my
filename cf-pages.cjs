@@ -1,4 +1,4 @@
-// Cloudflare Pages configuration
+// Pages build configuration
 const fs = require('fs');
 const path = require('path');
 
@@ -56,4 +56,4 @@ publicFilesToCopy.forEach(file => {
   }
 });
 
-console.log('Cloudflare Pages build completed successfully!');
+console.log('Pages build completed successfully!');

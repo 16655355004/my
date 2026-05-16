@@ -22,9 +22,12 @@ const notice = ref<string | null>(null);
 const remoteImages = ref<GalleryImage[]>([]);
 const adminToken = ref(imageService.getAdminToken() || "");
 const adminOpen = ref(false);
+const deletingImage = ref<GalleryImage | null>(null);
+const deletePassword = ref("");
 const uploading = ref(false);
+const deleting = ref(false);
 const uploadFile = ref<File | null>(null);
-const uploadForm = ref({ title: "", alt: "", tone: "Cloudflare R2" });
+const uploadForm = ref({ title: "", alt: "", tone: "图片存储" });
 let gsapContext: gsap.Context | null = null;
 
 const images = computed<GalleryItem[]>(() => remoteImages.value.map((image) => ({
@@ -73,7 +76,7 @@ const loadImages = async () => {
   error.value = null;
   const result = await imageService.getImages();
   if (result.success && result.data) remoteImages.value = result.data.images;
-  else error.value = result.error || "R2 图库暂时不可用。";
+  else error.value = result.error || "图库暂时不可用。";
   loading.value = false;
   await animateCards();
 };
@@ -100,9 +103,9 @@ const uploadImage = async () => {
   error.value = null;
   const result = await imageService.uploadImage(uploadFile.value, uploadForm.value);
   if (result.success) {
-    notice.value = "图片已上传到 R2";
+    notice.value = "图片已上传图片";
     uploadFile.value = null;
-    uploadForm.value = { title: "", alt: "", tone: "Cloudflare R2" };
+    uploadForm.value = { title: "", alt: "", tone: "图片存储" };
     adminOpen.value = false;
     await loadImages();
   } else {
@@ -111,15 +114,29 @@ const uploadImage = async () => {
   uploading.value = false;
 };
 
-const deleteImage = async (image: GalleryImage) => {
-  if (!confirm(`确定删除图片 ${image.title}？`)) return;
-  const result = await imageService.deleteImage(image.id);
+const showDelete = (image: GalleryImage) => {
+  deletingImage.value = image;
+  deletePassword.value = "";
+};
+
+const closeDelete = () => {
+  deletingImage.value = null;
+  deletePassword.value = "";
+};
+
+const deleteImage = async () => {
+  if (!deletingImage.value || !deletePassword.value.trim()) return;
+  imageService.setAdminToken(deletePassword.value.trim());
+  deleting.value = true;
+  const result = await imageService.deleteImage(deletingImage.value.id);
   if (result.success) {
     notice.value = "图片已删除";
+    closeDelete();
     await loadImages();
   } else {
     error.value = result.error || "图片删除失败";
   }
+  deleting.value = false;
 };
 
 onMounted(loadImages);
@@ -135,10 +152,10 @@ onUnmounted(() => {
       <div>
         <span class="page-tag">Gallery</span>
         <h1 class="page-title">图片展示</h1>
-        <p class="page-sub">使用 Cloudflare R2 承载图片，保留 GSAP 入场和滚动动效。</p>
+        <p class="page-sub">上传后的图片会进入站点图库，保留 GSAP 入场和滚动动效。</p>
       </div>
       <div class="hero-actions">
-        <button class="btn btn-ghost" :disabled="loading" @click="loadImages">{{ loading ? "同步中" : "同步 R2" }}</button>
+        <button class="btn btn-ghost" :disabled="loading" @click="loadImages">{{ loading ? "同步中" : "同步图库" }}</button>
         <button class="btn" @click="adminOpen = true">上传图片</button>
       </div>
     </section>
@@ -148,7 +165,7 @@ onUnmounted(() => {
       <p v-if="error" class="soft-alert">{{ error }} <button @click="error = null">关闭</button></p>
       <div v-if="loading" class="state-box panel gallery-empty">
         <div class="spinner"></div>
-        <p>正在同步 R2 图库</p>
+        <p>正在同步 图库</p>
       </div>
       <div v-else-if="images.length" class="image-grid">
         <article
@@ -162,11 +179,11 @@ onUnmounted(() => {
             <strong>{{ image.title }}</strong>
             <span>{{ image.tone }}</span>
           </div>
-          <button v-if="image.remote && imageService.getAdminToken()" class="delete-image" @click="deleteImage(image.remote)">删除</button>
+          <button v-if="image.remote" class="delete-image" @click="showDelete(image.remote)">删除</button>
         </article>
       </div>
       <div v-else class="state-box panel gallery-empty">
-        <p>还没有上传图片，点击右上角「上传图片」把第一张放进 R2。</p>
+        <p>还没有上传图片，点击右上角「上传图片」把第一张加入图库。</p>
       </div>
     </section>
 
@@ -175,19 +192,46 @@ onUnmounted(() => {
         <form class="upload-modal panel" @click.stop @submit.prevent="uploadImage">
           <header>
             <div>
-              <span class="section-kicker">Cloudflare R2</span>
+              <span class="section-kicker">图片存储</span>
               <h2>上传图片</h2>
             </div>
             <button type="button" @click="adminOpen = false">关闭</button>
           </header>
           <label>管理员密码<input v-model="adminToken" type="password" placeholder="ADMIN_PASSWORD" /></label>
-          <label>图片文件<input type="file" accept="image/*" required @change="selectFile" /></label>
+          <label>
+            图片文件
+            <input id="gallery-file" class="file-input" type="file" accept="image/*" required @change="selectFile" />
+            <label class="file-picker" for="gallery-file">
+              <span>{{ uploadFile ? uploadFile.name : "选择图片" }}</span>
+              <strong>浏览</strong>
+            </label>
+          </label>
           <label>标题<input v-model="uploadForm.title" placeholder="图片标题" /></label>
           <label>替代文本<input v-model="uploadForm.alt" placeholder="用于无障碍和加载失败时展示" /></label>
-          <label>标签<input v-model="uploadForm.tone" placeholder="Cloudflare R2" /></label>
+          <label>标签<input v-model="uploadForm.tone" placeholder="图片存储" /></label>
           <footer>
             <button type="button" class="btn btn-ghost" @click="adminOpen = false">取消</button>
-            <button class="btn" :disabled="uploading || !uploadFile || !adminToken.trim()">{{ uploading ? "上传中" : "上传到 R2" }}</button>
+            <button class="btn" :disabled="uploading || !uploadFile || !adminToken.trim()">{{ uploading ? "上传中" : "上传图片" }}</button>
+          </footer>
+        </form>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div v-if="deletingImage" class="modal-overlay" @click="closeDelete">
+        <form class="delete-modal panel" @click.stop @submit.prevent="deleteImage">
+          <header>
+            <div>
+              <span class="section-kicker">Delete</span>
+              <h2>删除图片</h2>
+            </div>
+            <button type="button" @click="closeDelete">关闭</button>
+          </header>
+          <p>请输入管理员密码后删除「{{ deletingImage.title }}」。</p>
+          <label>管理员密码<input v-model="deletePassword" type="password" placeholder="ADMIN_PASSWORD" /></label>
+          <footer>
+            <button type="button" class="btn btn-ghost" @click="closeDelete">取消</button>
+            <button class="btn danger-btn" :disabled="deleting || !deletePassword.trim()">{{ deleting ? "删除中" : "确认删除" }}</button>
           </footer>
         </form>
       </div>
@@ -214,7 +258,9 @@ onUnmounted(() => {
 
 .hero-actions,
 .upload-modal header,
-.upload-modal footer {
+.upload-modal footer,
+.delete-modal header,
+.delete-modal footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -359,24 +405,77 @@ onUnmounted(() => {
   backdrop-filter: blur(12px);
 }
 
-.upload-modal {
+.upload-modal,
+.delete-modal {
   width: min(560px, 100%);
   display: grid;
   gap: 16px;
   padding: 24px;
 }
 
-.upload-modal h2 {
+.delete-modal {
+  width: min(460px, 100%);
+}
+
+.upload-modal h2,
+.delete-modal h2 {
   color: var(--text);
   font-size: 1.5rem;
 }
 
-.upload-modal label {
+.upload-modal label,
+.delete-modal label {
   display: grid;
   gap: 8px;
   color: var(--text-muted);
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.delete-modal p {
+  color: var(--text-muted);
+}
+
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-picker {
+  min-height: 54px;
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(240, 179, 91, 0.45);
+  border-radius: var(--radius-sm);
+  background: rgba(240, 179, 91, 0.08);
+  cursor: pointer;
+}
+
+.file-picker span {
+  overflow: hidden;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-picker strong {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.danger-btn {
+  background: var(--accent-3);
 }
 
 @media (max-width: 1120px) {

@@ -1,4 +1,4 @@
-// API密钥管理服务 - 与 Cloudflare KV API 交互
+// API密钥管理服务 - 与 KV API 交互
 export interface ApiKey {
     id: number
     website: string // 官网 (服务名称)

@@ -56,7 +56,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       id,
       title: String(form.get("title") || file.name.replace(/\.[^.]+$/, "") || "Untitled").trim().slice(0, 60),
       alt: String(form.get("alt") || form.get("title") || file.name || "Gallery image").trim().slice(0, 120),
-      tone: String(form.get("tone") || "Cloudflare R2").trim().slice(0, 32),
+      tone: String(form.get("tone") || "图片存储").trim().slice(0, 32),
       r2Key,
       contentType: file.type,
       size: file.size,

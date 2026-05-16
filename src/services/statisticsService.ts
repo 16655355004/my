@@ -1,4 +1,4 @@
-// 统计服务 - 与 Cloudflare KV API 交互
+// 统计服务 - 与 KV API 交互
 export interface Statistics {
   totalVisitors: number
   todayVisitors: number
