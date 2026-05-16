@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import type { ECharts } from "echarts";
-import { statisticsService } from "../services/statisticsService";
 import siteReportService, { type DailySiteReport, type DailySiteReportSummary } from "../services/siteReportService";
 import { visitAnalyticsService, type AccessAnalytics } from "../services/visitAnalyticsService";
 
@@ -163,9 +162,6 @@ const resize = () => chart?.resize();
 
 onMounted(() => {
   window.addEventListener("resize", resize);
-  statisticsService.recordVisit().catch(() => {
-    // Visit tracking should not block the analytics page.
-  });
   const token = siteReportService.getAdminToken();
   if (token) {
     reportPassword.value = token;

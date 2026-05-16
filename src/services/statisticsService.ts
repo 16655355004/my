@@ -161,62 +161,34 @@ class StatisticsService {
 
 
   // 记录访问
-  async recordVisit(): Promise<ApiResponse<{ totalVisitors: number; todayVisitors: number }>> {
+  async recordVisit(path = window.location.pathname): Promise<ApiResponse<{ totalVisitors: number; todayVisitors: number }>> {
     try {
-      // 检查是否是新访问者（基于localStorage）
-      const lastVisitDate = localStorage.getItem('last_visit_date')
-      const lastVisitTime = localStorage.getItem('last_visit_time')
       const today = new Date().toISOString().split('T')[0]
       const now = Date.now()
-      
-      // 如果是同一天且距离上次访问不到1小时，则跳过记录
-      const oneHour = 60 * 60 * 1000
-      if (lastVisitDate === today && lastVisitTime && (now - parseInt(lastVisitTime)) < oneHour) {
-        console.log('Skipping visit record - too recent')
-        return {
-          success: true,
-          data: {
-            totalVisitors: 0, // 使用缓存数据
-            todayVisitors: 0
-          }
-        }
-      }
-
-      const isNewVisitor = !lastVisitDate || lastVisitDate !== today
 
       const response = await fetch(`${this.baseUrl}/api/statistics/visit`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify({
           visitorId: this.visitorId,
-          isNewVisitor
+          path,
         }),
       })
 
       const result = await this.handleResponse<{ totalVisitors: number; todayVisitors: number }>(response)
 
       if (result.success) {
-        // 更新最后访问日期和时间
         localStorage.setItem('last_visit_date', today)
         localStorage.setItem('last_visit_time', now.toString())
+        this.cache.delete('statistics')
       }
 
       return result
     } catch (error) {
       console.error('Failed to record visit:', error)
-
-      // 如果网络错误，更新本地访问日期并返回模拟数据
-      const today = new Date().toISOString().split('T')[0]
-      const now = Date.now()
-      localStorage.setItem('last_visit_date', today)
-      localStorage.setItem('last_visit_time', now.toString())
-
       return {
-        success: true,
-        data: {
-          totalVisitors: 1234 + Math.floor(Math.random() * 10),
-          todayVisitors: 56 + Math.floor(Math.random() * 5)
-        }
+        success: false,
+        error: 'Network error'
       }
     }
   }

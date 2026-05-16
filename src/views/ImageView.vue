@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import displayImage from "../assets/001.png";
 import imageService, { type GalleryImage } from "../services/imageService";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -28,28 +27,14 @@ const uploadFile = ref<File | null>(null);
 const uploadForm = ref({ title: "", alt: "", tone: "Cloudflare R2" });
 let gsapContext: gsap.Context | null = null;
 
-const fallbackImages: GalleryItem[] = Array.from({ length: 50 }, (_, index) => {
-  const number = index + 1;
-  return {
-    id: number,
-    src: displayImage,
-    title: `Image ${String(number).padStart(2, "0")}`,
-    alt: `Image ${String(number).padStart(2, "0")}`,
-    tone: ["Warm", "Soft", "Bright", "Clean", "Focus"][index % 5],
-  };
-});
-
-const images = computed<GalleryItem[]>(() => remoteImages.value.length
-  ? remoteImages.value.map((image) => ({
-      id: image.id,
-      src: image.url,
-      title: image.title,
-      alt: image.alt,
-      tone: image.tone,
-      remote: image,
-    }))
-  : fallbackImages,
-);
+const images = computed<GalleryItem[]>(() => remoteImages.value.map((image) => ({
+  id: image.id,
+  src: image.url,
+  title: image.title,
+  alt: image.alt,
+  tone: image.tone,
+  remote: image,
+})));
 
 const animateCards = async () => {
   const page = pageRef.value;
@@ -88,7 +73,7 @@ const loadImages = async () => {
   error.value = null;
   const result = await imageService.getImages();
   if (result.success && result.data) remoteImages.value = result.data.images;
-  else error.value = result.error || "R2 图库暂时不可用，正在显示本地展示位。";
+  else error.value = result.error || "R2 图库暂时不可用。";
   loading.value = false;
   await animateCards();
 };
@@ -161,7 +146,11 @@ onUnmounted(() => {
     <section class="container image-grid-section">
       <p v-if="notice" class="soft-alert success">{{ notice }} <button @click="notice = null">关闭</button></p>
       <p v-if="error" class="soft-alert">{{ error }} <button @click="error = null">关闭</button></p>
-      <div class="image-grid">
+      <div v-if="loading" class="state-box panel gallery-empty">
+        <div class="spinner"></div>
+        <p>正在同步 R2 图库</p>
+      </div>
+      <div v-else-if="images.length" class="image-grid">
         <article
           v-for="(image, index) in images"
           :key="image.id"
@@ -176,28 +165,33 @@ onUnmounted(() => {
           <button v-if="image.remote && imageService.getAdminToken()" class="delete-image" @click="deleteImage(image.remote)">删除</button>
         </article>
       </div>
+      <div v-else class="state-box panel gallery-empty">
+        <p>还没有上传图片，点击右上角「上传图片」把第一张放进 R2。</p>
+      </div>
     </section>
 
-    <div v-if="adminOpen" class="modal-overlay" @click="adminOpen = false">
-      <form class="upload-modal panel" @click.stop @submit.prevent="uploadImage">
-        <header>
-          <div>
-            <span class="section-kicker">Cloudflare R2</span>
-            <h2>上传图片</h2>
-          </div>
-          <button type="button" @click="adminOpen = false">关闭</button>
-        </header>
-        <label>管理员密码<input v-model="adminToken" type="password" placeholder="ADMIN_PASSWORD" /></label>
-        <label>图片文件<input type="file" accept="image/*" required @change="selectFile" /></label>
-        <label>标题<input v-model="uploadForm.title" placeholder="图片标题" /></label>
-        <label>替代文本<input v-model="uploadForm.alt" placeholder="用于无障碍和加载失败时展示" /></label>
-        <label>标签<input v-model="uploadForm.tone" placeholder="Cloudflare R2" /></label>
-        <footer>
-          <button type="button" class="btn btn-ghost" @click="adminOpen = false">取消</button>
-          <button class="btn" :disabled="uploading || !uploadFile || !adminToken.trim()">{{ uploading ? "上传中" : "上传到 R2" }}</button>
-        </footer>
-      </form>
-    </div>
+    <Teleport to="body">
+      <div v-if="adminOpen" class="modal-overlay" @click="adminOpen = false">
+        <form class="upload-modal panel" @click.stop @submit.prevent="uploadImage">
+          <header>
+            <div>
+              <span class="section-kicker">Cloudflare R2</span>
+              <h2>上传图片</h2>
+            </div>
+            <button type="button" @click="adminOpen = false">关闭</button>
+          </header>
+          <label>管理员密码<input v-model="adminToken" type="password" placeholder="ADMIN_PASSWORD" /></label>
+          <label>图片文件<input type="file" accept="image/*" required @change="selectFile" /></label>
+          <label>标题<input v-model="uploadForm.title" placeholder="图片标题" /></label>
+          <label>替代文本<input v-model="uploadForm.alt" placeholder="用于无障碍和加载失败时展示" /></label>
+          <label>标签<input v-model="uploadForm.tone" placeholder="Cloudflare R2" /></label>
+          <footer>
+            <button type="button" class="btn btn-ghost" @click="adminOpen = false">取消</button>
+            <button class="btn" :disabled="uploading || !uploadFile || !adminToken.trim()">{{ uploading ? "上传中" : "上传到 R2" }}</button>
+          </footer>
+        </form>
+      </div>
+    </Teleport>
   </main>
 </template>
 
@@ -250,6 +244,16 @@ onUnmounted(() => {
   margin-left: 10px;
   color: var(--accent);
   font-weight: 800;
+}
+
+.gallery-empty {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  color: var(--text-muted);
+  font-weight: 800;
+  text-align: center;
 }
 
 .image-grid {

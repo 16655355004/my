@@ -48,14 +48,7 @@ const formatNumber = (value: number) =>
   : value >= 1000 ? `${(value / 1000).toFixed(1)}K`
   : value.toString();
 
-onMounted(async () => {
-  try {
-    await statisticsService.recordVisit();
-  } catch {
-    // Visitor tracking should not block the page.
-  }
-  await fetchStatistics();
-});
+onMounted(fetchStatistics);
 </script>
 
 <template>

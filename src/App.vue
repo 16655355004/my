@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { RouterView } from "vue-router";
+import { onMounted, watch } from "vue";
+import { RouterView, useRoute } from "vue-router";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
 import Loader from "./components/LoaderOptimized.vue";
 import Navbar from "./components/Navbar.vue";
+import { statisticsService } from "./services/statisticsService";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
+const route = useRoute();
+
 onMounted(() => {
+  statisticsService.recordVisit(route.fullPath).catch(() => {
+    // Visit tracking should not block the app shell.
+  });
+
   document.addEventListener("loader-complete", () => {
     gsap.to(".page-content", {
       opacity: 1,
@@ -18,6 +25,12 @@ onMounted(() => {
       ease: "power2.out",
     });
     ScrollTrigger.refresh();
+  });
+});
+
+watch(() => route.fullPath, (path) => {
+  statisticsService.recordVisit(path).catch(() => {
+    // Route tracking should not block navigation.
   });
 });
 </script>

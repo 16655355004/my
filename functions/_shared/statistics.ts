@@ -206,6 +206,7 @@ export const recordAccessLog = async (
   request: Request,
   env: Env,
   status = 200,
+  pathOverride?: string,
 ) => {
   const url = new URL(request.url);
   const logs = await getAccessLogs(env);
@@ -213,7 +214,7 @@ export const recordAccessLog = async (
     id: crypto.randomUUID(),
     time: new Date().toISOString(),
     method: request.method,
-    path: url.pathname,
+    path: pathOverride || url.pathname,
     status,
     userAgent: request.headers.get("User-Agent") || "",
     referer: request.headers.get("Referer") || "",
@@ -298,7 +299,7 @@ const hashVisitor = async (request: Request, env: Env, visitorId: string) => {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
-export const recordVisit = async (request: Request, env: Env, visitorId: string) => {
+export const recordVisit = async (request: Request, env: Env, visitorId: string, pagePath?: string) => {
   const date = todayKey();
   const visitorHash = await hashVisitor(request, env, visitorId || "anonymous");
   const totalVisitorKey = `stats:visitor:${visitorHash}`;
@@ -311,15 +312,15 @@ export const recordVisit = async (request: Request, env: Env, visitorId: string)
   ]);
 
   const now = new Date().toISOString();
-  if (!totalSeen) globalStats.totalVisitors += 1;
-  if (!daySeen) dayStats.visitors += 1;
+  globalStats.totalVisitors += 1;
+  dayStats.visitors += 1;
   globalStats.updatedAt = now;
   dayStats.updatedAt = now;
 
   await Promise.all([
     putGlobalStats(env, globalStats),
     putDayStats(env, dayStats),
-    recordAccessLog(request, env, 200),
+    recordAccessLog(request, env, 200, pagePath),
     totalSeen ? Promise.resolve() : env.MY_KV.put(totalVisitorKey, "1"),
     daySeen ? Promise.resolve() : env.MY_KV.put(dayVisitorKey, "1", { expirationTtl: 60 * 60 * 24 * 45 }),
   ]);
