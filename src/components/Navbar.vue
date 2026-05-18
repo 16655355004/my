@@ -137,7 +137,7 @@ watch(() => route.fullPath, closeMenu);
 .navbar-inner {
   height: 70px;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
@@ -163,7 +163,7 @@ watch(() => route.fullPath, closeMenu);
   width: 100%;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  align-items: stretch;
+  align-items: center;
   gap: 6px;
 }
 
@@ -172,11 +172,15 @@ watch(() => route.fullPath, closeMenu);
   min-width: 0;
   width: 100%;
   height: 54px;
-  display: grid;
-  place-items: center;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 2px;
   padding: 0 8px;
+  margin: 0;
+  border: 0;
+  background: transparent;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 0.88rem;
@@ -190,11 +194,12 @@ watch(() => route.fullPath, closeMenu);
   display: block;
   width: 100%;
   max-width: 100%;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
-  line-height: 1.12;
+  line-height: 1;
 }
 
 .nav-link small {
@@ -235,6 +240,8 @@ watch(() => route.fullPath, closeMenu);
 
 .tools-menu {
   position: relative;
+  display: flex;
+  align-items: center;
   min-width: 0;
   height: 54px;
 }
