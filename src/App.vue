@@ -4,6 +4,7 @@ import { RouterView, useRoute } from "vue-router";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
+import { emojiCursor, type CursorEffectResult } from "cursor-effects";
 import Loader from "./components/LoaderOptimized.vue";
 import Navbar from "./components/Navbar.vue";
 import { statisticsService } from "./services/statisticsService";
@@ -11,6 +12,7 @@ import { statisticsService } from "./services/statisticsService";
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 const route = useRoute();
+let cursorEffect: CursorEffectResult | null = null;
 
 const handleLoaderComplete = () => {
   gsap.to(".page-content", {
@@ -26,7 +28,7 @@ const handleLoaderComplete = () => {
     { opacity: 1, y: 0, scale: 1, duration: 0.72, ease: "power3.out" },
   );
 
-  gsap.from(".brand-mark, .nav-link, .menu-btn", {
+  gsap.from(".nav-link, .menu-btn", {
     opacity: 0,
     y: 12,
     duration: 0.42,
@@ -43,10 +45,20 @@ onMounted(() => {
     // Visit tracking should not block the app shell.
   });
 
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(pointer: fine)").matches;
+  if (!prefersReducedMotion && finePointer) {
+    cursorEffect = emojiCursor({
+      emoji: ["🐾", "🐱", "✨"],
+      delay: 26,
+    });
+  }
+
   document.addEventListener("loader-complete", handleLoaderComplete);
 });
 
 onUnmounted(() => {
+  cursorEffect?.destroy();
   document.removeEventListener("loader-complete", handleLoaderComplete);
 });
 
@@ -147,7 +159,7 @@ watch(() => route.fullPath, (path) => {
 .page-content {
   position: relative;
   z-index: 1;
-  padding-bottom: 116px;
+  padding-bottom: 124px;
   opacity: 0;
   transform: translateY(12px);
 }

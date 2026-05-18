@@ -65,11 +65,6 @@ watch(() => route.fullPath, closeMenu);
 <template>
   <header :class="['navbar', { scrolled: isScrolled }]">
     <div class="container navbar-inner">
-      <button class="brand" type="button" @click="navigateHome('home')" aria-label="返回首页">
-        <span class="brand-mark">空</span>
-        <span class="brand-text">空空</span>
-      </button>
-
       <nav class="nav-desktop" aria-label="主导航">
         <template v-for="link in links" :key="link.label">
           <button v-if="link.section" class="nav-link" type="button" @click="navigateHome(link.section)">
@@ -142,7 +137,7 @@ watch(() => route.fullPath, closeMenu);
 .navbar-inner {
   height: 70px;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: center;
   gap: 6px;
   padding: 8px;
@@ -164,51 +159,6 @@ watch(() => route.fullPath, closeMenu);
     rgba(8, 10, 15, 0.82);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(18px);
-}
-
-.brand {
-  display: inline-flex;
-  min-width: 0;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 0 10px;
-  border-radius: var(--radius);
-  font-weight: 800;
-  background: rgba(255, 255, 255, 0.055);
-  transition: background var(--transition), transform var(--transition), border-color var(--transition);
-}
-
-.brand:hover {
-  background:
-    radial-gradient(circle at 50% 0%, rgba(83, 198, 176, 0.18), transparent 58%),
-    rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 11px;
-  background: linear-gradient(135deg, var(--accent), #ffd08a 52%, var(--accent-2));
-  color: var(--ink);
-  font-size: 0.84rem;
-  font-weight: 900;
-  box-shadow: 0 10px 24px rgba(240, 179, 91, 0.28);
-}
-
-.brand-text {
-  overflow: hidden;
-  color: var(--text);
-  font-size: 0.98rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .nav-desktop {
@@ -257,7 +207,7 @@ watch(() => route.fullPath, closeMenu);
     radial-gradient(circle at 50% 0%, rgba(240, 179, 91, 0.2), transparent 58%),
     rgba(255, 255, 255, 0.1);
   color: var(--text);
-  transform: translateY(-1px);
+  transform: translateY(-4px);
 }
 
 .nav-link:hover small,
@@ -435,19 +385,10 @@ watch(() => route.fullPath, closeMenu);
   }
 
   .navbar-inner {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto;
     height: 58px;
     padding: 8px 10px 8px 12px;
-  }
-
-  .brand-mark {
-    width: 34px;
-    height: 34px;
-  }
-
-  .brand-text {
-    font-size: 0.94rem;
   }
 
   .nav-desktop {
