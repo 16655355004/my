@@ -35,6 +35,7 @@
 
 html {
   font-size: 16px;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -105,7 +106,7 @@ h4 {
 
 .page-shell {
   min-height: 100vh;
-  padding: 112px 0 72px;
+  padding: 96px 0 132px;
 }
 
 .page-hero {
@@ -313,7 +314,7 @@ textarea::placeholder {
   }
 
   .page-shell {
-    padding-top: 96px;
+    padding: 78px 0 140px;
   }
 
   .page-hero {

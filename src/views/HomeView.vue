@@ -11,22 +11,28 @@ gsap.registerPlugin(ScrollTrigger);
 const pageRef = ref<HTMLElement | null>(null);
 let gsapContext: gsap.Context | null = null;
 
+const signals = [
+  { label: "身份", value: "空空", note: "个人网站" },
+  { label: "内容", value: "作品 / 影像", note: "前台优先展示" },
+  { label: "节奏", value: "GSAP Motion", note: "滚动驱动层次" },
+];
+
 const principles = [
-  { title: "视觉入口", desc: "用强主视觉、清晰层级和稳定节奏建立第一印象。", stat: "01" },
-  { title: "作品导航", desc: "把真正重要的项目放到前台，把管理工具收进后台。", stat: "02" },
-  { title: "轻量体验", desc: "动画服务于叙事，只把性能预算花在关键段落上。", stat: "03" },
+  { title: "先看见人", desc: "首屏先交代空空是谁，再让作品、影像和入口自然展开。", stat: "01" },
+  { title: "内容收束", desc: "前台只放访问者该看到的东西，管理入口收进工具菜单。", stat: "02" },
+  { title: "动效服务内容", desc: "动画用来建立节奏、层次和方向，不抢走作品本身。", stat: "03" },
 ];
 
 const process = [
-  { label: "Concept", title: "把想法压缩成一个清楚的页面结构。" },
-  { label: "Motion", title: "用滚动、遮罩和时间线建立可感知的节奏。" },
-  { label: "Ship", title: "部署到 Cloudflare，把图片、短链和统计接进真实环境。" },
+  { label: "Scene", title: "先用一张有气质的视觉定调，让首页第一眼像作品封面。" },
+  { label: "Motion", title: "用进场、滚动和悬停动效把页面串成一条叙事线。" },
+  { label: "Focus", title: "把工具和后台能力收拢，只保留作品、影像、状态和留言。" },
 ];
 
 const gallery = [
-  { title: "主视觉", desc: "暗色角色图与个人站的第一记忆点", src: heroImage },
-  { title: "作品封面", desc: "后续用于承载项目截图和设计稿", src: heroImage },
-  { title: "影像素材", desc: "沉淀图片、灵感和视觉碎片", src: heroImage },
+  { title: "首屏影像", desc: "负责建立第一记忆点。", src: heroImage },
+  { title: "作品封面", desc: "后续用于承载真实项目截图。", src: heroImage },
+  { title: "情绪切片", desc: "让页面从工具感里脱离出来。", src: heroImage },
 ];
 
 const navigateToSection = (id: string) => {
@@ -39,21 +45,35 @@ onMounted(() => {
   gsapContext = gsap.context(() => {
     const heroTimeline = gsap.timeline({ defaults: { ease: "power3.out" } });
     heroTimeline
-      .from(".hero-visual img", { opacity: 0, scale: 1.08, duration: 1.1 })
-      .from(".hero-kicker", { opacity: 0, y: 18, duration: 0.55 }, "-=0.75")
-      .from(".hero-title span", { opacity: 0, yPercent: 110, duration: 0.82, stagger: 0.08 }, "-=0.25")
-      .from(".hero-copy p, .hero-actions, .hero-proof, .hero-index", { opacity: 0, y: 22, duration: 0.65, stagger: 0.08 }, "-=0.35")
-      .from(".kinetic-word", { opacity: 0, y: 18, duration: 0.52, stagger: 0.05 }, "-=0.35");
+      .from(".hero-visual img", { opacity: 0, scale: 1.08, duration: 1.05 })
+      .from(".hero-kicker", { opacity: 0, y: 16, duration: 0.5 }, "-=0.72")
+      .from(".hero-title span", { opacity: 0, y: 46, duration: 0.78, stagger: 0.08 }, "-=0.22")
+      .from(".hero-copy p, .hero-actions", { opacity: 0, y: 22, duration: 0.58, stagger: 0.08 }, "-=0.34")
+      .from(".proof-pill", { opacity: 0, y: 14, duration: 0.42, stagger: 0.06 }, "-=0.22")
+      .from(".signal-card", { opacity: 0, y: 22, duration: 0.55, stagger: 0.08 }, "-=0.2")
+      .from(".hero-frame", { opacity: 0, y: 28, scale: 0.97, duration: 0.72 }, "-=0.44");
 
     gsap.to(".hero-visual img", {
-      yPercent: -9,
+      yPercent: -8,
       scale: 1.08,
       ease: "none",
       scrollTrigger: {
         trigger: ".hero",
         start: "top top",
         end: "bottom top",
-        scrub: true,
+        scrub: 0.8,
+      },
+    });
+
+    gsap.to(".hero-frame", {
+      y: -22,
+      rotate: 1.2,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: 0.7,
       },
     });
 
@@ -81,9 +101,24 @@ onMounted(() => {
       });
     });
 
+    gsap.utils.toArray<HTMLElement>(".principle-card, .project-card, .gallery-card").forEach((card, index) => {
+      gsap.from(card, {
+        opacity: 0,
+        y: 30,
+        scale: 0.97,
+        duration: 0.62,
+        delay: (index % 3) * 0.045,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: card,
+          start: "top 86%",
+        },
+      });
+    });
+
     gsap.utils.toArray<HTMLElement>(".story-step").forEach((step, index) => {
       gsap.from(step, {
-        opacity: 0.28,
+        opacity: 0.18,
         x: index % 2 === 0 ? -34 : 34,
         duration: 0.75,
         ease: "power2.out",
@@ -112,45 +147,58 @@ onUnmounted(() => {
 
       <div class="container hero-overlay">
         <div class="hero-copy">
-          <span class="hero-kicker">JisooLove Personal Site</span>
+          <span class="hero-kicker">空空 / Personal Site</span>
           <h1 class="hero-title">
-            <span>不是工具箱。</span>
-            <span>是一个有镜头感的</span>
-            <span>个人数字现场。</span>
+            <span>空空。</span>
+            <span>一个更像作品的</span>
+            <span>个人网站。</span>
           </h1>
           <p>
-            前台只留下作品、影像和站点气质；后台负责图片、短链、密钥和访问分析。视觉先抓住人，工具藏在该在的位置。
+            前台先给气质、作品和影像，后台能力收进工具菜单。页面的重点是让访问者停下来，而不是把一堆入口塞到最上面。
           </p>
+
           <div class="hero-actions">
-            <button class="btn" @click="navigateToSection('projects')">查看作品</button>
-            <button class="btn btn-ghost" @click="navigateToSection('gallery')">进入影像</button>
+            <button class="btn" type="button" @click="navigateToSection('projects')">查看作品</button>
+            <button class="btn btn-ghost" type="button" @click="navigateToSection('gallery')">进入影像</button>
           </div>
+
           <div class="hero-proof" aria-label="站点特征">
-            <span>Vue 3</span>
-            <span>Cloudflare Pages</span>
-            <span>GSAP Motion</span>
+            <span class="proof-pill">Vue 3</span>
+            <span class="proof-pill">GSAP Motion</span>
+            <span class="proof-pill">Responsive Layout</span>
+          </div>
+
+          <div class="hero-signal" aria-label="页面状态">
+            <article v-for="item in signals" :key="item.label" class="signal-card">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+              <small>{{ item.note }}</small>
+            </article>
           </div>
         </div>
 
-        <aside class="hero-index">
-          <span>LIVE INDEX</span>
-          <strong>Pages · R2 · KV · Motion</strong>
-          <p>公开页面负责表达，管理入口收束到工具菜单。</p>
+        <aside class="hero-frame panel">
+          <span class="frame-tag">Current Layer</span>
+          <img :src="heroImage" alt="空空个人网站视觉预览" />
+          <div class="frame-copy">
+            <strong>当前焦点</strong>
+            <p>名字、作品和影像先出现，数据和工具在后续章节展开。</p>
+          </div>
         </aside>
       </div>
 
       <div class="kinetic-strip" aria-hidden="true">
         <div class="kinetic-track">
-          <span class="kinetic-word">Portfolio</span>
-          <span class="kinetic-word">Gallery</span>
-          <span class="kinetic-word">Motion</span>
-          <span class="kinetic-word">Cloudflare</span>
-          <span class="kinetic-word">Studio</span>
-          <span class="kinetic-word">Portfolio</span>
-          <span class="kinetic-word">Gallery</span>
-          <span class="kinetic-word">Motion</span>
-          <span class="kinetic-word">Cloudflare</span>
-          <span class="kinetic-word">Studio</span>
+          <span class="kinetic-word">空空</span>
+          <span class="kinetic-word">作品</span>
+          <span class="kinetic-word">影像</span>
+          <span class="kinetic-word">动效</span>
+          <span class="kinetic-word">留言</span>
+          <span class="kinetic-word">空空</span>
+          <span class="kinetic-word">作品</span>
+          <span class="kinetic-word">影像</span>
+          <span class="kinetic-word">动效</span>
+          <span class="kinetic-word">留言</span>
         </div>
       </div>
     </section>
@@ -160,12 +208,13 @@ onUnmounted(() => {
         <div class="section-head two-col">
           <div>
             <span class="section-kicker">Direction</span>
-            <h2 class="section-title">从工具合集，转成真正的个人数字名片。</h2>
+            <h2 class="section-title">把个人站从入口合集，改成能被记住的现场。</h2>
           </div>
           <p class="section-copy">
-            首页只承载公开表达和关键入口，复杂管理能力收进后台，让访客看到的是作品和气质，而不是维护面板。
+            首页不再强调平台、部署和后台能力，而是把空空、作品和影像放到第一层。管理功能继续存在，但不会抢前台表达。
           </p>
         </div>
+
         <div class="principle-grid">
           <article v-for="item in principles" :key="item.title" class="principle-card">
             <span>{{ item.stat }}</span>
@@ -181,9 +230,10 @@ onUnmounted(() => {
     <section class="story-section section reveal-block">
       <div class="container story-grid">
         <div class="story-copy">
-          <span class="section-kicker">Workflow</span>
-          <h2 class="section-title">页面的节奏应该像作品集，而不是后台目录。</h2>
+          <span class="section-kicker">Flow</span>
+          <h2 class="section-title">页面应该有节奏，而不是一屏把所有信息塞满。</h2>
         </div>
+
         <div class="story-list">
           <article v-for="item in process" :key="item.label" class="story-step">
             <span>{{ item.label }}</span>
@@ -198,10 +248,10 @@ onUnmounted(() => {
         <div class="section-head two-col">
           <div>
             <span class="section-kicker">Gallery</span>
-            <h2 class="section-title">影像区负责建立记忆点。</h2>
+            <h2 class="section-title">影像区负责建立第二层记忆点。</h2>
           </div>
           <p class="section-copy">
-            当前先用主视觉撑起节奏，后续可以替换为真实项目截图、摄影、封面和动效帧，让网站从模板感里脱离出来。
+            当前先用主视觉撑起节奏，后续可以替换成真实摄影、项目封面、动态截图和视觉碎片。
           </p>
         </div>
 
@@ -233,7 +283,7 @@ onUnmounted(() => {
   align-items: end;
   overflow: hidden;
   isolation: isolate;
-  padding: 118px 0 120px;
+  padding: 112px 0 182px;
   background: #05070b;
 }
 
@@ -249,32 +299,32 @@ onUnmounted(() => {
   height: 112%;
   object-fit: cover;
   object-position: 56% center;
-  filter: saturate(1.05) contrast(1.06);
+  filter: saturate(1.06) contrast(1.06);
 }
 
 .hero-shade {
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(5, 7, 11, 0.92) 0%, rgba(5, 7, 11, 0.74) 35%, rgba(5, 7, 11, 0.18) 68%, rgba(5, 7, 11, 0.72) 100%),
-    linear-gradient(0deg, rgba(5, 7, 11, 0.94) 0%, rgba(5, 7, 11, 0.18) 45%, rgba(5, 7, 11, 0.42) 100%);
+    linear-gradient(90deg, rgba(5, 7, 11, 0.94) 0%, rgba(5, 7, 11, 0.72) 34%, rgba(5, 7, 11, 0.18) 70%, rgba(5, 7, 11, 0.74) 100%),
+    linear-gradient(0deg, rgba(5, 7, 11, 0.96) 0%, rgba(5, 7, 11, 0.24) 48%, rgba(5, 7, 11, 0.45) 100%);
 }
 
 .hero-overlay {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 330px);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 38px;
   align-items: end;
 }
 
 .hero-copy {
-  max-width: 980px;
+  max-width: 960px;
 }
 
 .hero-kicker {
   display: inline-flex;
   color: var(--accent);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 850;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -282,18 +332,17 @@ onUnmounted(() => {
 .hero-title {
   margin-top: 18px;
   color: var(--text);
-  font-size: clamp(3.4rem, 8.5vw, 8.6rem);
+  font-size: clamp(3.4rem, 8vw, 8.2rem);
   font-weight: 900;
   letter-spacing: 0;
 }
 
 .hero-title span {
   display: block;
-  overflow: hidden;
 }
 
 .hero-copy p {
-  max-width: 700px;
+  max-width: 720px;
   margin-top: 24px;
   color: rgba(247, 242, 232, 0.78);
   font-size: 1.08rem;
@@ -311,7 +360,7 @@ onUnmounted(() => {
   margin-top: 20px;
 }
 
-.hero-proof span {
+.proof-pill {
   min-height: 32px;
   display: inline-flex;
   align-items: center;
@@ -324,38 +373,98 @@ onUnmounted(() => {
   font-weight: 800;
 }
 
-.hero-index {
+.hero-signal {
+  max-width: 780px;
   display: grid;
-  gap: 8px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(240, 179, 91, 0.44);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--line);
 }
 
-.hero-index span {
+.signal-card {
+  min-height: 112px;
+  display: grid;
+  align-content: end;
+  gap: 6px;
+  padding: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+    rgba(8, 10, 15, 0.62);
+}
+
+.signal-card span {
   color: var(--accent);
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.hero-index strong {
+.signal-card strong {
   color: var(--text);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
+  font-weight: 850;
 }
 
-.hero-index p {
-  color: rgba(247, 242, 232, 0.62);
-  font-size: 0.88rem;
+.signal-card small {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.hero-frame {
+  min-height: 430px;
+  display: grid;
+  gap: 14px;
+  align-content: end;
+  padding: 16px;
+}
+
+.hero-frame img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius-sm);
+  filter: saturate(1.04) contrast(1.04);
+}
+
+.frame-tag {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.frame-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.frame-copy strong {
+  color: var(--text);
+  font-size: 1.02rem;
+  font-weight: 850;
+}
+
+.frame-copy p {
+  color: var(--text-muted);
+  font-size: 0.86rem;
 }
 
 .kinetic-strip {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 28px;
+  bottom: 98px;
   overflow: hidden;
   border-block: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(5, 7, 11, 0.34);
+  background: rgba(5, 7, 11, 0.36);
 }
 
 .kinetic-track {
@@ -531,26 +640,38 @@ onUnmounted(() => {
   .principle-grid {
     grid-template-columns: 1fr;
   }
+
+  .hero-frame {
+    min-height: auto;
+  }
 }
 
 @media (max-width: 620px) {
   .hero {
     min-height: 100svh;
-    padding-top: 100px;
+    padding: 88px 0 182px;
   }
 
   .hero-title {
-    font-size: clamp(2.7rem, 15vw, 5rem);
+    font-size: clamp(2.8rem, 16vw, 5rem);
+  }
+
+  .hero-signal {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-frame {
+    display: none;
   }
 
   .hero-shade {
     background:
-      linear-gradient(90deg, rgba(5, 7, 11, 0.92), rgba(5, 7, 11, 0.48)),
+      linear-gradient(90deg, rgba(5, 7, 11, 0.92), rgba(5, 7, 11, 0.5)),
       linear-gradient(0deg, rgba(5, 7, 11, 0.96), rgba(5, 7, 11, 0.24));
   }
 
-  .hero-index {
-    display: none;
+  .kinetic-strip {
+    bottom: 92px;
   }
 
   .gallery-card,

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import gsap from "gsap";
 import { statisticsService, type Statistics } from "../services/statisticsService";
 
+const panelRef = ref<HTMLElement | null>(null);
 const statistics = ref<Statistics | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+let gsapContext: gsap.Context | null = null;
 
 const fallback: Statistics = {
   totalVisitors: 12880,
@@ -17,6 +20,22 @@ const fallback: Statistics = {
     formatted: "128 days",
   },
   lastUpdated: new Date().toISOString(),
+};
+
+const animatePanel = async () => {
+  await nextTick();
+  if (!panelRef.value) return;
+
+  gsapContext?.revert();
+  gsapContext = gsap.context(() => {
+    gsap.from(".stats-head, .stat-item, .stat-note", {
+      opacity: 0,
+      y: 18,
+      duration: 0.56,
+      ease: "power2.out",
+      stagger: 0.06,
+    });
+  }, panelRef.value);
 };
 
 const fetchStatistics = async () => {
@@ -40,6 +59,7 @@ const fetchStatistics = async () => {
     error.value = "站点状态暂时未同步。";
   } finally {
     loading.value = false;
+    await animatePanel();
   }
 };
 
@@ -49,14 +69,21 @@ const formatNumber = (value: number) =>
   : value.toString();
 
 onMounted(fetchStatistics);
+
+onUnmounted(() => {
+  gsapContext?.revert();
+});
 </script>
 
 <template>
-  <div class="stats-panel panel">
+  <div ref="panelRef" class="stats-panel panel">
     <div class="stats-head">
-      <span class="section-kicker">Site Status</span>
+      <div>
+        <span class="section-kicker">Signal</span>
+        <h2>站点实时状态</h2>
+      </div>
       <button class="btn btn-ghost" @click="fetchStatistics" :disabled="loading">
-        {{ loading ? "刷新中" : "刷新" }}
+        {{ loading ? "更新中" : "刷新" }}
       </button>
     </div>
 
@@ -68,7 +95,7 @@ onMounted(fetchStatistics);
     <div v-else-if="statistics" class="stat-grid">
       <div class="stat-item">
         <strong>{{ formatNumber(statistics.totalVisitors) }}</strong>
-        <span>总访问</span>
+        <span>累计访问</span>
       </div>
       <div class="stat-item">
         <strong>{{ formatNumber(statistics.todayVisitors) }}</strong>
@@ -84,7 +111,8 @@ onMounted(fetchStatistics);
       </div>
     </div>
 
-    <p v-if="error" class="stat-note">{{ error }}</p>
+    <p v-if="error" class="stat-note warning">{{ error }}</p>
+    <p v-else class="stat-note">访问、响应和运行时长会在这里汇总。</p>
   </div>
 </template>
 
@@ -95,10 +123,17 @@ onMounted(fetchStatistics);
 
 .stats-head {
   display: flex;
-  align-items: center;
+  align-items: end;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+}
+
+.stats-head h2 {
+  margin-top: 8px;
+  color: var(--text);
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+  font-weight: 850;
 }
 
 .stats-head .btn {
@@ -122,17 +157,19 @@ onMounted(fetchStatistics);
   flex-direction: column;
   justify-content: end;
   padding: 18px;
-  background: rgba(8, 10, 15, 0.58);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
+    rgba(8, 10, 15, 0.58);
 }
 
 strong {
   color: var(--text);
   font-size: clamp(1.6rem, 3vw, 2.3rem);
   line-height: 1;
-  font-weight: 800;
+  font-weight: 850;
 }
 
-span {
+.stat-item span {
   margin-top: 8px;
   color: var(--text-muted);
   font-size: 0.82rem;
@@ -145,7 +182,16 @@ span {
   font-size: 0.82rem;
 }
 
+.stat-note.warning {
+  color: var(--accent);
+}
+
 @media (max-width: 740px) {
+  .stats-head {
+    align-items: start;
+    flex-direction: column;
+  }
+
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }

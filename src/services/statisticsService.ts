@@ -1,4 +1,4 @@
-// 统计服务 - 与 KV API 交互
+// 统计服务 - 与数据 API 交互
 import { getApiBaseUrl } from './adminAuthService'
 
 export interface Statistics {
@@ -233,7 +233,7 @@ class StatisticsService {
     return !lastVisitDate || lastVisitDate !== today
   }
 
-  // 重置响应时间数据（清除KV中的历史数据）
+  // 重置响应时间数据（清除历史数据）
   async resetResponseTimeData(): Promise<ApiResponse<{ message: string }>> {
     try {
       const response = await fetch(`${this.baseUrl}/api/statistics/reset-response-time`, {

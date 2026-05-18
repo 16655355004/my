@@ -2,27 +2,30 @@
 const projects = [
   {
     id: "video-player",
-    title: "Video Space",
-    desc: "把在线媒体入口整理成一个更安静、更直接的观看空间。",
+    title: "视频空间",
+    desc: "把长视频、剪辑和观看入口整理成一个更安静的作品空间。",
     url: "https://video.jisoolove.top",
     tag: "MEDIA",
     tone: "amber",
+    action: "打开空间",
   },
   {
     id: "image-hosting",
-    title: "Image Room",
-    desc: "承载图片、封面和灵感素材，让视觉内容拥有独立入口。",
+    title: "图像空间",
+    desc: "承载封面、截图和灵感素材，让影像内容拥有独立入口。",
     url: "https://img.jisoolove.top",
     tag: "IMAGE",
     tone: "mint",
+    action: "查看影像",
   },
   {
     id: "subscription-manager",
-    title: "Reminder Center",
+    title: "提醒中心",
     desc: "把订阅、提醒和重要事项放进可追踪的时间线。",
     url: "https://remind.jisoolove.top",
     tag: "SYSTEM",
     tone: "coral",
+    action: "进入中心",
   },
 ];
 
@@ -36,11 +39,11 @@ const openProject = (url: string) => {
     <div class="container">
       <div class="section-head">
         <div>
-          <span class="section-kicker">Projects</span>
-          <h2 class="section-title">正在维护的三个核心入口。</h2>
+          <span class="section-kicker">Works</span>
+          <h2 class="section-title">空空正在维护的三个公开入口。</h2>
         </div>
         <p class="section-copy">
-          首页只展示可以代表站点能力的公开项目。管理类页面被收进工具菜单，避免前台像后台目录。
+          首页只保留会被访问者真正使用的内容入口，管理类能力收进工具菜单，避免前台变成后台目录。
         </p>
       </div>
 
@@ -53,6 +56,7 @@ const openProject = (url: string) => {
           tabindex="0"
           @click="openProject(project.url)"
           @keydown.enter="openProject(project.url)"
+          @keydown.space.prevent="openProject(project.url)"
         >
           <div class="project-top">
             <span>{{ project.tag }}</span>
@@ -62,7 +66,7 @@ const openProject = (url: string) => {
           </div>
           <h3>{{ project.title }}</h3>
           <p>{{ project.desc }}</p>
-          <small>{{ project.url.replace("https://", "") }}</small>
+          <small>{{ project.action }}</small>
         </article>
       </div>
     </div>
@@ -85,11 +89,13 @@ const openProject = (url: string) => {
 }
 
 .project-card {
+  position: relative;
   min-height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 22px;
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
@@ -100,9 +106,28 @@ const openProject = (url: string) => {
   transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 
-.project-card:hover {
+.project-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 16px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
+  opacity: 0;
+  transform: scaleX(0.72);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.project-card:hover,
+.project-card:focus-visible {
   transform: translateY(-6px) scale(1.01);
   border-color: var(--line-strong);
+  outline: none;
+}
+
+.project-card:hover::after,
+.project-card:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .project-card.amber {
@@ -146,9 +171,11 @@ p {
 
 small {
   margin-top: 24px;
-  color: var(--text-soft);
+  color: var(--accent);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 900px) {

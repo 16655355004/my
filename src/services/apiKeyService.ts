@@ -1,6 +1,6 @@
 import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
 
-// API密钥管理服务 - 与 KV API 交互
+// API密钥管理服务 - 与数据 API 交互
 export interface ApiKey {
     id: number
     website: string // 官网 (服务名称)

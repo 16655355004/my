@@ -6,16 +6,16 @@ const isAuthenticated = ref(false);
 const password = ref("");
 const loading = ref(false);
 const error = ref<string | null>(null);
-const selectedTutorial = ref<"kv" | "github-cli">("kv");
+const selectedTutorial = ref<"storage" | "github-cli">("storage");
 const activeSection = ref("overview");
 
 const tutorials = {
-  kv: {
-    name: "KV",
+  storage: {
+    name: "轻量存储",
     desc: "轻量数据存储笔记，记录站点数据如何保存、读取和维护。",
     sections: [
       { id: "overview", title: "概览", body: "键值存储适合保存读多写少的数据，例如收藏、留言、统计和配置。" },
-      { id: "setup", title: "环境配置", body: "创建 KV 命名空间后，将它绑定到 Pages Functions 或 Workers，再通过绑定名读写数据。" },
+      { id: "setup", title: "环境配置", body: "创建数据命名空间后，将它绑定到后台接口，再通过绑定名读写数据。" },
       { id: "usage", title: "读写方式", body: "常见操作包括 put、get、delete 和 list。结构化内容建议统一使用 JSON 保存。" },
       { id: "practice", title: "实践建议", body: "键名使用稳定前缀，例如 bookmarks:、messages:、stats:，后续排查和迁移会更清楚。" },
     ],
@@ -65,7 +65,7 @@ const logout = () => {
   password.value = "";
 };
 
-const changeTutorial = (key: "kv" | "github-cli") => {
+const changeTutorial = (key: "storage" | "github-cli") => {
   selectedTutorial.value = key;
   activeSection.value = "overview";
 };
@@ -105,8 +105,8 @@ onMounted(async () => {
         </header>
 
         <div class="tutorial-tabs">
-          <button :class="['tab', { active: selectedTutorial === 'kv' }]" @click="changeTutorial('kv')">
-            KV
+          <button :class="['tab', { active: selectedTutorial === 'storage' }]" @click="changeTutorial('storage')">
+            轻量存储
           </button>
           <button :class="['tab', { active: selectedTutorial === 'github-cli' }]" @click="changeTutorial('github-cli')">
             GitHub CLI
@@ -131,7 +131,7 @@ onMounted(async () => {
             <h2>{{ currentSection.title }}</h2>
             <p>{{ currentSection.body }}</p>
             <div class="code-card">
-              <pre><code>{{ selectedTutorial === "kv" ? "await MY_KV.put('bookmarks:list', JSON.stringify(data))" : "gh auth status && gh pr list" }}</code></pre>
+              <pre><code>{{ selectedTutorial === "storage" ? "await store.put('bookmarks:list', JSON.stringify(data))" : "gh auth status && gh pr list" }}</code></pre>
             </div>
           </article>
         </div>

@@ -2,7 +2,7 @@ import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
 
 /**
  * Tutorial Authentication Service
- * Handles password protection for the KV tutorial page
+ * Handles password protection for the private tutorial page
  */
 
 class TutorialService {

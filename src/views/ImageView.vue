@@ -296,7 +296,7 @@ onUnmounted(() => {
             </div>
             <button type="button" @click="closeDelete">关闭</button>
           </header>
-          <p>确认删除“{{ deletingImage.title }}”？此操作会同时删除 R2 中的图片文件。</p>
+          <p>确认删除“{{ deletingImage.title }}”？此操作会同时删除对象存储中的图片文件。</p>
           <footer>
             <button type="button" class="btn btn-ghost" @click="closeDelete">取消</button>
             <button class="btn danger-btn" :disabled="deleting">{{ deleting ? "删除中" : "确认删除" }}</button>

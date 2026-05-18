@@ -16,8 +16,8 @@ const links = [
 ];
 
 const toolLinks = [
-  { label: "图片管理", to: "/image" },
-  { label: "收藏", to: "/bookmarks" },
+  { label: "图片", to: "/image" },
+  { label: "书签", to: "/bookmarks" },
   { label: "短链", to: "/links" },
   { label: "教程", to: "/tutorial" },
   { label: "密钥", to: "/apikeys" },
@@ -59,26 +59,27 @@ onUnmounted(() => {
   document.body.style.overflow = "";
 });
 
-watch(route, closeMenu);
+watch(() => route.fullPath, closeMenu);
 </script>
 
 <template>
   <header :class="['navbar', { scrolled: isScrolled }]">
     <div class="container navbar-inner">
-      <button class="brand" @click="navigateHome('home')" aria-label="回到首页">
-        <span class="brand-mark">JL</span>
-        <span class="brand-text">JisooLove</span>
+      <button class="brand" type="button" @click="navigateHome('home')" aria-label="返回首页">
+        <span class="brand-mark">空</span>
+        <span class="brand-text">空空</span>
       </button>
 
       <nav class="nav-desktop" aria-label="主导航">
         <template v-for="link in links" :key="link.label">
-          <button v-if="link.section" class="nav-link" @click="navigateHome(link.section)">
+          <button v-if="link.section" class="nav-link" type="button" @click="navigateHome(link.section)">
             {{ link.label }}
           </button>
           <RouterLink v-else class="nav-link" :to="link.to">
             {{ link.label }}
           </RouterLink>
         </template>
+
         <div class="tools-menu">
           <button class="nav-link tools-trigger" type="button">工具</button>
           <div class="tools-popover">
@@ -89,24 +90,33 @@ watch(route, closeMenu);
         </div>
       </nav>
 
-      <button class="menu-btn" :class="{ open: isMenuOpen }" @click="toggleMenu" aria-label="打开菜单">
+      <button
+        class="menu-btn"
+        :class="{ open: isMenuOpen }"
+        type="button"
+        :aria-expanded="isMenuOpen"
+        aria-controls="mobile-navigation"
+        aria-label="打开菜单"
+        @click="toggleMenu"
+      >
         <span></span>
         <span></span>
       </button>
     </div>
 
-    <div class="mobile-panel" :class="{ open: isMenuOpen }">
+    <div id="mobile-navigation" class="mobile-panel" :class="{ open: isMenuOpen }">
       <div class="container mobile-links">
         <template v-for="link in links" :key="link.label">
-          <button v-if="link.section" class="mobile-link" @click="navigateHome(link.section)">
+          <button v-if="link.section" class="mobile-link" type="button" @click="navigateHome(link.section)">
             {{ link.label }}
           </button>
           <RouterLink v-else class="mobile-link" :to="link.to">
             {{ link.label }}
           </RouterLink>
         </template>
+
         <div class="mobile-tools">
-          <span>管理工具</span>
+          <span>工具入口</span>
           <RouterLink v-for="link in toolLinks" :key="link.label" class="mobile-link tool" :to="link.to">
             {{ link.label }}
           </RouterLink>
@@ -119,7 +129,7 @@ watch(route, closeMenu);
 <style scoped>
 .navbar {
   position: fixed;
-  inset: 16px 0 auto;
+  inset: auto 0 calc(16px + env(safe-area-inset-bottom));
   z-index: 1000;
   pointer-events: none;
 }
@@ -141,8 +151,7 @@ watch(route, closeMenu);
   pointer-events: auto;
 }
 
-.navbar.scrolled .navbar-inner,
-.mobile-panel.open {
+.navbar.scrolled .navbar-inner {
   border-color: rgba(255, 255, 255, 0.16);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
@@ -177,12 +186,14 @@ watch(route, closeMenu);
   background: linear-gradient(135deg, var(--accent), #ffd08a 52%, var(--accent-2));
   color: var(--ink);
   font-size: 0.84rem;
+  font-weight: 900;
   box-shadow: 0 10px 24px rgba(240, 179, 91, 0.28);
 }
 
 .brand-text {
   color: var(--text);
   font-size: 0.98rem;
+  font-weight: 900;
   letter-spacing: 0.02em;
 }
 
@@ -234,7 +245,7 @@ watch(route, closeMenu);
 
 .tools-popover {
   position: absolute;
-  top: calc(100% + 10px);
+  bottom: calc(100% + 10px);
   right: 0;
   width: 168px;
   display: grid;
@@ -246,7 +257,7 @@ watch(route, closeMenu);
   box-shadow: var(--shadow-soft);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px);
+  transform: translateY(-8px);
   transition: opacity var(--transition), transform var(--transition);
 }
 
@@ -311,16 +322,27 @@ watch(route, closeMenu);
 }
 
 .mobile-panel {
-  display: none;
-  margin-top: 10px;
-  pointer-events: auto;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 10px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px);
+  transition: opacity var(--transition), transform var(--transition);
 }
 
 .mobile-links {
   display: grid;
   gap: 7px;
   padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
+    rgba(8, 10, 15, 0.86);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
 }
 
 .mobile-link {
@@ -363,7 +385,7 @@ watch(route, closeMenu);
 
 @media (max-width: 760px) {
   .navbar {
-    inset: 12px 0 auto;
+    inset: auto 0 calc(12px + env(safe-area-inset-bottom));
   }
 
   .navbar-inner {
@@ -389,7 +411,9 @@ watch(route, closeMenu);
   }
 
   .mobile-panel.open {
-    display: block;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 }
 </style>

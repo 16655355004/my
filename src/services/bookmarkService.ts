@@ -1,6 +1,6 @@
 import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
 
-// 书签服务 - 与 KV API 交互
+// 书签服务 - 与数据 API 交互
 export interface Website {
   id: number
   name: string
