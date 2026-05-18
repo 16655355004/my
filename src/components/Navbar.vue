@@ -8,11 +8,11 @@ const route = useRoute();
 const router = useRouter();
 
 const links = [
-  { label: "首页", to: "/", section: "home" },
-  { label: "作品", to: "/", section: "projects" },
-  { label: "影像", to: "/", section: "gallery" },
-  { label: "状态", to: "/", section: "status" },
-  { label: "留言", to: "/messages" },
+  { label: "首页", meta: "Home", to: "/", section: "home" },
+  { label: "作品", meta: "Works", to: "/", section: "projects" },
+  { label: "影像", meta: "Gallery", to: "/", section: "gallery" },
+  { label: "状态", meta: "Signal", to: "/", section: "status" },
+  { label: "留言", meta: "Message", to: "/messages" },
 ];
 
 const toolLinks = [
@@ -73,15 +73,20 @@ watch(() => route.fullPath, closeMenu);
       <nav class="nav-desktop" aria-label="主导航">
         <template v-for="link in links" :key="link.label">
           <button v-if="link.section" class="nav-link" type="button" @click="navigateHome(link.section)">
-            {{ link.label }}
+            <span>{{ link.label }}</span>
+            <small>{{ link.meta }}</small>
           </button>
           <RouterLink v-else class="nav-link" :to="link.to">
-            {{ link.label }}
+            <span>{{ link.label }}</span>
+            <small>{{ link.meta }}</small>
           </RouterLink>
         </template>
 
         <div class="tools-menu">
-          <button class="nav-link tools-trigger" type="button">工具</button>
+          <button class="nav-link tools-trigger" type="button">
+            <span>工具</span>
+            <small>Tools</small>
+          </button>
           <div class="tools-popover">
             <RouterLink v-for="link in toolLinks" :key="link.label" class="tool-link" :to="link.to">
               {{ link.label }}
@@ -135,11 +140,12 @@ watch(() => route.fullPath, closeMenu);
 }
 
 .navbar-inner {
-  height: 62px;
-  display: flex;
+  height: 70px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   align-items: center;
-  justify-content: space-between;
-  padding: 0 10px 0 14px;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   background:
@@ -162,17 +168,22 @@ watch(() => route.fullPath, closeMenu);
 
 .brand {
   display: inline-flex;
+  min-width: 0;
+  height: 100%;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  min-height: 42px;
-  padding: 0 10px 0 2px;
+  padding: 0 10px;
   border-radius: var(--radius);
   font-weight: 800;
-  transition: background var(--transition), transform var(--transition);
+  background: rgba(255, 255, 255, 0.055);
+  transition: background var(--transition), transform var(--transition), border-color var(--transition);
 }
 
 .brand:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(83, 198, 176, 0.18), transparent 58%),
+    rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
 }
 
@@ -191,56 +202,91 @@ watch(() => route.fullPath, closeMenu);
 }
 
 .brand-text {
+  overflow: hidden;
   color: var(--text);
   font-size: 0.98rem;
   font-weight: 900;
   letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-desktop {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.045);
+  display: contents;
 }
 
 .nav-link {
   position: relative;
-  min-height: 38px;
+  min-width: 0;
+  min-height: 54px;
   display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding: 0 15px;
+  gap: 2px;
+  padding: 0 8px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 0.88rem;
   font-weight: 700;
+  text-align: center;
   transition: color var(--transition), background var(--transition), transform var(--transition);
+}
+
+.nav-link span,
+.nav-link small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-link small {
+  color: var(--text-soft);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color var(--transition);
 }
 
 .nav-link:hover,
 .nav-link.router-link-active {
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(240, 179, 91, 0.2), transparent 58%),
+    rgba(255, 255, 255, 0.1);
   color: var(--text);
   transform: translateY(-1px);
+}
+
+.nav-link:hover small,
+.nav-link.router-link-active small {
+  color: rgba(247, 242, 232, 0.68);
 }
 
 .nav-link.router-link-active::after {
   content: "";
   position: absolute;
-  left: 15px;
-  right: 15px;
-  bottom: 6px;
+  left: 50%;
+  bottom: 5px;
+  width: 28px;
   height: 2px;
   border-radius: 999px;
   background: var(--accent);
   box-shadow: 0 0 14px var(--accent-glow);
+  transform: translateX(-50%);
 }
 
 .tools-menu {
   position: relative;
+  min-width: 0;
+  height: 100%;
+}
+
+.tools-menu .nav-link {
+  width: 100%;
+  height: 100%;
 }
 
 .tools-popover {
@@ -389,8 +435,10 @@ watch(() => route.fullPath, closeMenu);
   }
 
   .navbar-inner {
+    display: flex;
+    justify-content: space-between;
     height: 58px;
-    padding-left: 12px;
+    padding: 8px 10px 8px 12px;
   }
 
   .brand-mark {
