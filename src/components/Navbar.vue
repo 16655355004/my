@@ -169,6 +169,7 @@ watch(() => route.fullPath, closeMenu);
 
 .nav-link {
   position: relative;
+  top: 0;
   min-width: 0;
   width: 100%;
   height: 54px;
@@ -186,7 +187,7 @@ watch(() => route.fullPath, closeMenu);
   font-size: 0.88rem;
   font-weight: 700;
   text-align: center;
-  transition: color var(--transition), background var(--transition), transform var(--transition);
+  transition: color var(--transition), background var(--transition), top var(--transition);
 }
 
 .nav-link span,
@@ -217,7 +218,7 @@ watch(() => route.fullPath, closeMenu);
     radial-gradient(circle at 50% 0%, rgba(240, 179, 91, 0.2), transparent 58%),
     rgba(255, 255, 255, 0.1);
   color: var(--text);
-  transform: translateY(-4px);
+  top: -4px;
 }
 
 .nav-link:hover small,

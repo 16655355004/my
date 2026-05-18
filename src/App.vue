@@ -25,16 +25,23 @@ const handleLoaderComplete = () => {
   gsap.fromTo(
     ".navbar-inner",
     { opacity: 0, y: 32, scale: 0.98 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.72, ease: "power3.out" },
+    {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.72,
+      ease: "power3.out",
+      clearProps: "transform",
+    },
   );
 
   gsap.from(".nav-link, .menu-btn", {
     opacity: 0,
-    y: 12,
     duration: 0.42,
     ease: "power2.out",
     stagger: 0.045,
     delay: 0.18,
+    clearProps: "transform",
   });
 
   ScrollTrigger.refresh();
