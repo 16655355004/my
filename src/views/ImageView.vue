@@ -200,7 +200,7 @@ onUnmounted(() => {
       <div>
         <span class="page-tag">Gallery</span>
         <h1 class="page-title">图片空间</h1>
-        <p class="page-sub">通过验证后管理站点图库。前台负责展示，后台负责上传、整理和清理素材。</p>
+        <p class="page-sub">验证后进入图库，上传、整理和清理属于空空的影像素材。</p>
       </div>
       <div v-if="isAuthenticated" class="hero-actions">
         <button class="btn btn-ghost" :disabled="loading" @click="loadImages">

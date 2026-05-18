@@ -136,10 +136,8 @@ watch(() => route.fullPath, closeMenu);
 
 .navbar-inner {
   height: 70px;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  align-items: center;
-  gap: 6px;
+  display: flex;
+  align-items: stretch;
   padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
@@ -162,17 +160,21 @@ watch(() => route.fullPath, closeMenu);
 }
 
 .nav-desktop {
-  display: contents;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 6px;
 }
 
 .nav-link {
   position: relative;
   min-width: 0;
-  min-height: 54px;
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  align-content: center;
   gap: 2px;
   padding: 0 8px;
   border-radius: var(--radius-sm);
@@ -186,10 +188,13 @@ watch(() => route.fullPath, closeMenu);
 .nav-link span,
 .nav-link small {
   display: block;
+  width: 100%;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
+  line-height: 1.12;
 }
 
 .nav-link small {
@@ -231,12 +236,12 @@ watch(() => route.fullPath, closeMenu);
 .tools-menu {
   position: relative;
   min-width: 0;
-  height: 100%;
+  height: 54px;
 }
 
 .tools-menu .nav-link {
   width: 100%;
-  height: 100%;
+  height: 54px;
 }
 
 .tools-popover {
@@ -387,6 +392,7 @@ watch(() => route.fullPath, closeMenu);
   .navbar-inner {
     display: grid;
     grid-template-columns: 1fr auto;
+    align-items: center;
     height: 58px;
     padding: 8px 10px 8px 12px;
   }

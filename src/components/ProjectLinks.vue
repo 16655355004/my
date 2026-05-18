@@ -43,7 +43,7 @@ const openProject = (url: string) => {
           <h2 class="section-title">空空正在维护的三个公开入口。</h2>
         </div>
         <p class="section-copy">
-          首页只保留会被访问者真正使用的内容入口，管理类能力收进工具菜单，避免前台变成后台目录。
+          视频、图像和提醒各自独立，想看什么就直接进入，不让多余信息打断浏览。
         </p>
       </div>
 

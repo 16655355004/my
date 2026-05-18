@@ -17,7 +17,7 @@ const tutorials = {
       { id: "overview", title: "概览", body: "键值存储适合保存读多写少的数据，例如收藏、留言、统计和配置。" },
       { id: "setup", title: "环境配置", body: "创建数据命名空间后，将它绑定到后台接口，再通过绑定名读写数据。" },
       { id: "usage", title: "读写方式", body: "常见操作包括 put、get、delete 和 list。结构化内容建议统一使用 JSON 保存。" },
-      { id: "practice", title: "实践建议", body: "键名使用稳定前缀，例如 bookmarks:、messages:、stats:，后续排查和迁移会更清楚。" },
+      { id: "practice", title: "实践建议", body: "键名使用稳定前缀，例如 bookmarks:、messages:、stats:，排查和迁移会更清楚。" },
     ],
   },
   "github-cli": {
@@ -82,7 +82,7 @@ onMounted(async () => {
         <div class="login-copy">
           <span class="page-tag">Tutorial</span>
           <h1 class="page-title">私有技术笔记</h1>
-          <p class="page-sub">这里整理部署、数据存储、仓库管理和日常开发流程。</p>
+          <p class="page-sub">这里整理数据存储、仓库管理和日常开发流程。</p>
         </div>
         <form class="login-panel panel" @submit.prevent="authenticate">
           <h2>访问教程</h2>

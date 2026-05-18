@@ -10,29 +10,46 @@ gsap.registerPlugin(ScrollTrigger);
 
 const pageRef = ref<HTMLElement | null>(null);
 let gsapContext: gsap.Context | null = null;
+let startHeroEntrance: (() => void) | null = null;
+let heroEntranceFallback: number | null = null;
 
 const signals = [
-  { label: "身份", value: "空空", note: "个人网站" },
-  { label: "内容", value: "作品 / 影像", note: "前台优先展示" },
-  { label: "节奏", value: "GSAP Motion", note: "滚动驱动层次" },
+  { label: "名字", value: "空空", note: "温柔、清醒、带一点闪光" },
+  { label: "氛围", value: "二次元 / 影像", note: "暗场、星光、柔色切片" },
+  { label: "互动", value: "轻动效", note: "停顿、呼吸、滑入" },
 ];
 
 const principles = [
-  { title: "先看见人", desc: "首屏先交代空空是谁，再让作品、影像和入口自然展开。", stat: "01" },
-  { title: "内容收束", desc: "前台只放访问者该看到的东西，管理入口收进工具菜单。", stat: "02" },
-  { title: "动效服务内容", desc: "动画用来建立节奏、层次和方向，不抢走作品本身。", stat: "03" },
+  { title: "第一眼有画面", desc: "暗色、星光和人物剪影先把情绪拉起来，名字自然留在视线里。", stat: "01" },
+  { title: "作品有路径", desc: "视频、图像和提醒入口保持清晰，浏览时不需要猜下一步去哪。", stat: "02" },
+  { title: "细节有温度", desc: "微动效、悬停反馈和可爱光点让页面更像空空自己的小宇宙。", stat: "03" },
 ];
 
 const process = [
-  { label: "Scene", title: "先用一张有气质的视觉定调，让首页第一眼像作品封面。" },
-  { label: "Motion", title: "用进场、滚动和悬停动效把页面串成一条叙事线。" },
-  { label: "Focus", title: "把工具和后台能力收拢，只保留作品、影像、状态和留言。" },
+  { label: "Night", title: "黑色背景压住噪音，星光和人物把第一屏带进安静的夜里。" },
+  { label: "Soft", title: "柔色卡片、漂浮影像和细小反馈，让浏览节奏慢下来。" },
+  { label: "Spark", title: "一点可爱、一点二次元、一点闪光，组成空空自己的识别感。" },
 ];
 
 const gallery = [
-  { title: "首屏影像", desc: "负责建立第一记忆点。", src: heroImage },
-  { title: "作品封面", desc: "后续用于承载真实项目截图。", src: heroImage },
-  { title: "情绪切片", desc: "让页面从工具感里脱离出来。", src: heroImage },
+  {
+    title: "星夜漂浮",
+    desc: "像一段安静的开场动画。",
+    src: "https://cdn.pixabay.com/photo/2024/09/21/10/53/anime-9063542_1280.png",
+    charm: "✦",
+  },
+  {
+    title: "蓝眼小伙伴",
+    desc: "把冷色光点带进影像区。",
+    src: "https://cdn.pixabay.com/photo/2024/11/29/14/59/ai-generated-9233165_1280.png",
+    charm: "♡",
+  },
+  {
+    title: "月色边界",
+    desc: "留一点轻盈、梦境和远处的风。",
+    src: "https://cdn.pixabay.com/photo/2025/04/17/12/03/girl-9540346_640.jpg",
+    charm: "☆",
+  },
 ];
 
 const navigateToSection = (id: string) => {
@@ -43,7 +60,8 @@ onMounted(() => {
   if (!pageRef.value) return;
 
   gsapContext = gsap.context(() => {
-    const heroTimeline = gsap.timeline({ defaults: { ease: "power3.out" } });
+    let heroEntranceStarted = false;
+    const heroTimeline = gsap.timeline({ defaults: { ease: "power3.out" }, paused: true });
     heroTimeline
       .from(".hero-visual img", { opacity: 0, scale: 1.08, duration: 1.05 })
       .from(".hero-kicker", { opacity: 0, y: 16, duration: 0.5 }, "-=0.72")
@@ -52,6 +70,19 @@ onMounted(() => {
       .from(".proof-pill", { opacity: 0, y: 14, duration: 0.42, stagger: 0.06 }, "-=0.22")
       .from(".signal-card", { opacity: 0, y: 22, duration: 0.55, stagger: 0.08 }, "-=0.2")
       .from(".hero-frame", { opacity: 0, y: 28, scale: 0.97, duration: 0.72 }, "-=0.44");
+
+    startHeroEntrance = () => {
+      if (heroEntranceStarted) return;
+      heroEntranceStarted = true;
+      heroTimeline.play(0);
+    };
+
+    if (document.querySelector(".loader-screen")) {
+      document.addEventListener("loader-complete", startHeroEntrance, { once: true });
+      heroEntranceFallback = window.setTimeout(() => startHeroEntrance?.(), 2600);
+    } else {
+      requestAnimationFrame(() => startHeroEntrance?.());
+    }
 
     gsap.to(".hero-visual img", {
       yPercent: -8,
@@ -129,11 +160,36 @@ onMounted(() => {
         },
       });
     });
+
+    gsap.to(".gallery-card", {
+      y: (index) => (index % 2 === 0 ? -10 : -18),
+      rotate: (index) => (index % 2 === 0 ? 0.8 : -0.8),
+      duration: 2.8,
+      ease: "sine.inOut",
+      stagger: 0.18,
+      repeat: -1,
+      yoyo: true,
+    });
+
+    gsap.to(".gallery-charm", {
+      y: -12,
+      scale: 1.12,
+      opacity: 0.95,
+      duration: 1.8,
+      ease: "sine.inOut",
+      stagger: 0.22,
+      repeat: -1,
+      yoyo: true,
+    });
   }, pageRef.value);
 });
 
 onUnmounted(() => {
+  if (startHeroEntrance) document.removeEventListener("loader-complete", startHeroEntrance);
+  if (heroEntranceFallback) window.clearTimeout(heroEntranceFallback);
   gsapContext?.revert();
+  startHeroEntrance = null;
+  heroEntranceFallback = null;
 });
 </script>
 
@@ -149,12 +205,12 @@ onUnmounted(() => {
         <div class="hero-copy">
           <span class="hero-kicker">空空 / Personal Site</span>
           <h1 class="hero-title">
-            <span>不是工具箱。</span>
-            <span>是一个有镜头感的</span>
-            <span>个人数字现场。</span>
+            <span>空空的</span>
+            <span>轻幻想</span>
+            <span>个人现场。</span>
           </h1>
           <p>
-            前台先给气质、作品和影像，后台能力收进工具菜单。页面的重点是让访问者停下来，而不是把一堆入口塞到最上面。
+            这里收着作品、影像、状态和留言。暗色镜头、星光切片和一点可爱的互动，让每次进入都像打开一间安静的小房间。
           </p>
 
           <div class="hero-actions">
@@ -163,9 +219,9 @@ onUnmounted(() => {
           </div>
 
           <div class="hero-proof" aria-label="站点特征">
-            <span class="proof-pill">Vue 3</span>
-            <span class="proof-pill">GSAP Motion</span>
-            <span class="proof-pill">Responsive Layout</span>
+            <span class="proof-pill">星夜影像</span>
+            <span class="proof-pill">二次元切片</span>
+            <span class="proof-pill">轻互动</span>
           </div>
 
           <div class="hero-signal" aria-label="页面状态">
@@ -178,11 +234,11 @@ onUnmounted(() => {
         </div>
 
         <aside class="hero-frame panel">
-          <span class="frame-tag">Current Layer</span>
+          <span class="frame-tag">Kongkong Mood</span>
           <img :src="heroImage" alt="空空个人网站视觉预览" />
           <div class="frame-copy">
-            <strong>当前焦点</strong>
-            <p>名字、作品和影像先出现，数据和工具在后续章节展开。</p>
+            <strong>今晚的空空</strong>
+            <p>黑色背景、星光、影像和一点可爱反应，先把情绪放到前面。</p>
           </div>
         </aside>
       </div>
@@ -208,10 +264,10 @@ onUnmounted(() => {
         <div class="section-head two-col">
           <div>
             <span class="section-kicker">Direction</span>
-            <h2 class="section-title">把个人站从入口合集，改成能被记住的现场。</h2>
+            <h2 class="section-title">把空空放在第一眼。</h2>
           </div>
           <p class="section-copy">
-            首页不再强调平台、部署和后台能力，而是把空空、作品和影像放到第一层。管理功能继续存在，但不会抢前台表达。
+            页面从名字、画面和作品开始，往下是影像、状态和留言。每一段都保持清楚的节奏，让人愿意停一会儿。
           </p>
         </div>
 
@@ -231,7 +287,7 @@ onUnmounted(() => {
       <div class="container story-grid">
         <div class="story-copy">
           <span class="section-kicker">Flow</span>
-          <h2 class="section-title">页面应该有节奏，而不是一屏把所有信息塞满。</h2>
+          <h2 class="section-title">从第一眼到最后一屏，都像在看一段短片。</h2>
         </div>
 
         <div class="story-list">
@@ -248,15 +304,16 @@ onUnmounted(() => {
         <div class="section-head two-col">
           <div>
             <span class="section-kicker">Gallery</span>
-            <h2 class="section-title">影像区负责建立第二层记忆点。</h2>
+            <h2 class="section-title">影像区换成更有二次元气质的画面。</h2>
           </div>
           <p class="section-copy">
-            当前先用主视觉撑起节奏，后续可以替换成真实摄影、项目封面、动态截图和视觉碎片。
+            星夜、月色、蓝眼光点和柔软角色，让第二段视觉从暗场里亮起来。
           </p>
         </div>
 
         <div class="gallery-grid">
           <article v-for="item in gallery" :key="item.title" class="gallery-card">
+            <span class="gallery-charm" aria-hidden="true">{{ item.charm }}</span>
             <img :src="item.src" :alt="item.title" loading="lazy" />
             <div>
               <strong>{{ item.title }}</strong>
@@ -595,6 +652,25 @@ onUnmounted(() => {
   object-position: center;
   filter: saturate(1.06) contrast(1.02);
   transition: transform 700ms ease;
+}
+
+.gallery-charm {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(8, 10, 15, 0.58);
+  color: #fff1c8;
+  font-size: 1.24rem;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.24), 0 0 24px rgba(240, 179, 91, 0.22);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
 }
 
 .gallery-card:hover img {
