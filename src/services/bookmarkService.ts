@@ -1,3 +1,5 @@
+import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
+
 // 书签服务 - 与 KV API 交互
 export interface Website {
   id: number
@@ -32,7 +34,7 @@ class BookmarkService {
 
   constructor() {
     // 在开发环境中使用完整URL，生产环境使用相对路径
-    this.baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
+    this.baseUrl = getApiBaseUrl()
   }
 
   // 设置管理员令牌
@@ -175,43 +177,17 @@ class BookmarkService {
 
   // 验证管理员密码
   async verifyAdminPassword(password: string): Promise<boolean> {
-    try {
-      // 临时设置令牌进行验证
-      const tempToken = password
-      const response = await fetch(`${this.baseUrl}/api/bookmarks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tempToken}`
-        },
-        body: JSON.stringify({
-          name: 'test',
-          description: 'test',
-          url: 'https://test.com',
-          icon: '🔗',
-          category: '测试',
-          color: '#00d4ff'
-        })
-      })
+    const previousToken = this.getAdminToken()
+    const nextToken = password.trim()
+    this.setAdminToken(nextToken)
 
-      const result = await response.json()
-
-      // 如果验证成功，删除测试数据
-      if (result.success && result.data) {
-        await fetch(`${this.baseUrl}/api/bookmarks/${result.data.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${tempToken}`
-          }
-        })
-        return true
-      }
-
-      return false
-    } catch (error) {
-      console.error('Failed to verify admin password:', error)
+    const result = await verifyAdminToken(nextToken)
+    if (!result.success) {
+      if (previousToken && previousToken !== nextToken) this.setAdminToken(previousToken)
+      else this.clearAdminToken()
       return false
     }
+    return true
   }
 }
 

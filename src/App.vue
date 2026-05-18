@@ -80,12 +80,12 @@ watch(() => route.fullPath, (path) => {
 
 .stage-gradient {
   position: absolute;
-  width: 42vw;
-  min-width: 380px;
+  width: 34vw;
+  min-width: 320px;
   aspect-ratio: 1;
   border-radius: 999px;
-  filter: blur(70px);
-  opacity: 0.42;
+  filter: blur(46px);
+  opacity: 0.32;
   animation: drift 12s ease-in-out infinite;
 }
 

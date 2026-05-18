@@ -45,7 +45,7 @@ const authenticate = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const ok = tutorialService.verifyTutorialPassword(password.value);
+    const ok = await tutorialService.verifyTutorialPassword(password.value);
     if (ok) {
       tutorialService.setTutorialToken(password.value);
       isAuthenticated.value = true;
@@ -70,8 +70,8 @@ const changeTutorial = (key: "kv" | "github-cli") => {
   activeSection.value = "overview";
 };
 
-onMounted(() => {
-  isAuthenticated.value = tutorialService.isAuthenticated();
+onMounted(async () => {
+  isAuthenticated.value = await tutorialService.isAuthenticated();
 });
 </script>
 

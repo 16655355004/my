@@ -2,24 +2,24 @@
 const projects = [
   {
     id: "video-player",
-    title: "视频空间",
-    desc: "集中观看和管理在线媒体内容，让视频入口更清楚、更好找。",
+    title: "Video Space",
+    desc: "把在线媒体入口整理成一个更安静、更直接的观看空间。",
     url: "https://video.jisoolove.top",
     tag: "MEDIA",
     tone: "amber",
   },
   {
     id: "image-hosting",
-    title: "图片空间",
-    desc: "用于保存、展示和分享图片，让视觉素材拥有独立入口。",
+    title: "Image Room",
+    desc: "承载图片、封面和灵感素材，让视觉内容拥有独立入口。",
     url: "https://img.jisoolove.top",
     tag: "IMAGE",
     tone: "mint",
   },
   {
     id: "subscription-manager",
-    title: "提醒中心",
-    desc: "管理订阅提醒与重要通知，把容易错过的事项放进时间线。",
+    title: "Reminder Center",
+    desc: "把订阅、提醒和重要事项放进可追踪的时间线。",
     url: "https://remind.jisoolove.top",
     tag: "SYSTEM",
     tone: "coral",
@@ -37,10 +37,10 @@ const openProject = (url: string) => {
       <div class="section-head">
         <div>
           <span class="section-kicker">Projects</span>
-          <h2 class="section-title">常用项目入口</h2>
+          <h2 class="section-title">正在维护的三个核心入口。</h2>
         </div>
         <p class="section-copy">
-          把视频、图片和提醒三个核心入口放在首页，打开站点就能直达常用服务。
+          首页只展示可以代表站点能力的公开项目。管理类页面被收进工具菜单，避免前台像后台目录。
         </p>
       </div>
 
@@ -93,15 +93,15 @@ const openProject = (url: string) => {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
-    radial-gradient(circle at 20% 10%, var(--card-glow), transparent 56%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    radial-gradient(circle at 16% 8%, var(--card-glow), transparent 48%);
   box-shadow: var(--shadow-soft);
   cursor: pointer;
   transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 
 .project-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-6px) scale(1.01);
   border-color: var(--line-strong);
 }
 

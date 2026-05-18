@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
-import type { ECharts } from "echarts";
+import { computed, onMounted, ref } from "vue";
 import siteReportService, { type DailySiteReport, type DailySiteReportSummary } from "../services/siteReportService";
 import { visitAnalyticsService, type AccessAnalytics } from "../services/visitAnalyticsService";
 
 const analytics = ref<AccessAnalytics | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const mapEl = ref<HTMLDivElement | null>(null);
 const mapMode = ref<"scatter" | "heatmap">("scatter");
 const reportPassword = ref("");
 const reportAuthenticated = ref(false);
@@ -15,89 +13,42 @@ const reportLoading = ref(false);
 const reportError = ref<string | null>(null);
 const reportSummaries = ref<DailySiteReportSummary[]>([]);
 const selectedReport = ref<DailySiteReport | null>(null);
-let chart: ECharts | null = null;
 
 const topCountries = computed(() => analytics.value?.countries.slice(0, 8) ?? []);
 const recentLogs = computed(() => analytics.value?.recent ?? []);
 const topPaths = computed(() => analytics.value?.topPaths ?? []);
 const hourly = computed(() => analytics.value?.hourly ?? []);
 const today = computed(() => new Date().toISOString().split("T")[0]);
+const mapPoints = computed(() => {
+  const points = analytics.value?.chinaCities ?? [];
+  const maxValue = Math.max(1, ...points.map((item) => item.value[2]));
+
+  return points.map((item) => {
+    const [lng, lat, value] = item.value;
+    const x = ((lng - 73) / (135 - 73)) * 100;
+    const y = (1 - (lat - 18) / (54 - 18)) * 100;
+    return {
+      name: item.name,
+      value,
+      x: Math.min(96, Math.max(4, x)),
+      y: Math.min(92, Math.max(8, y)),
+      size: mapMode.value === "heatmap"
+        ? Math.max(28, Math.min(96, 24 + value / maxValue * 72))
+        : Math.max(10, Math.min(30, 8 + value / maxValue * 22)),
+      opacity: mapMode.value === "heatmap"
+        ? Math.max(0.26, Math.min(0.72, value / maxValue))
+        : 0.9,
+    };
+  });
+});
 
 const formatTime = (value: string) => new Date(value).toLocaleString();
 const formatLocation = (log: { country?: string; region?: string; city?: string }) =>
   [log.country, log.region, log.city].filter(Boolean).join(" / ") || "-";
 const maxHourly = computed(() => Math.max(1, ...hourly.value.map((item) => item.value)));
 
-const renderMap = async () => {
-  if (!analytics.value || !mapEl.value) return;
-
-  const [echarts, mapModule] = await Promise.all([
-    import("echarts"),
-    import("china-map-geojson"),
-  ]);
-
-  echarts.registerMap("china", mapModule.ChinaData);
-  chart?.dispose();
-  chart = echarts.init(mapEl.value);
-  chart.setOption({
-    tooltip: {
-      trigger: "item",
-      formatter: (params: { name: string; value?: unknown }) => {
-        const value = Array.isArray(params.value) ? params.value : [];
-        return value.length >= 3 ? `${params.name}<br/>访问 ${value[2]} 次` : params.name;
-      },
-    },
-    geo: {
-      map: "china",
-      roam: true,
-      zoom: 1.12,
-      itemStyle: {
-        areaColor: "rgba(255, 255, 255, 0.08)",
-        borderColor: "rgba(255, 255, 255, 0.22)",
-      },
-      emphasis: {
-        itemStyle: {
-          areaColor: "rgba(240, 179, 91, 0.22)",
-        },
-      },
-    },
-    visualMap: mapMode.value === "heatmap" ? {
-      min: 0,
-      max: Math.max(1, ...analytics.value.chinaHeatmap.map((item) => item[2])),
-      calculable: true,
-      right: 10,
-      bottom: 10,
-      textStyle: { color: "#f7efe2" },
-      inRange: { color: ["rgba(83,198,176,0.18)", "#f0b35b", "#ef6f6c"] },
-    } : undefined,
-    series: [
-      mapMode.value === "heatmap"
-        ? {
-            name: "访问热力",
-            type: "heatmap",
-            coordinateSystem: "geo",
-            data: analytics.value.chinaHeatmap,
-            pointSize: 16,
-            blurSize: 18,
-          }
-        : {
-            name: "访问城市",
-            type: "scatter",
-            coordinateSystem: "geo",
-            data: analytics.value.chinaCities,
-            symbolSize: (value: number[]) => Math.max(8, Math.min(34, value[2] * 5)),
-            itemStyle: {
-              color: "#f0b35b",
-            },
-          },
-    ],
-  });
-};
-
-const switchMapMode = async (mode: "scatter" | "heatmap") => {
+const switchMapMode = (mode: "scatter" | "heatmap") => {
   mapMode.value = mode;
-  await nextTick();
-  await renderMap();
 };
 
 const loadAnalytics = async () => {
@@ -106,8 +57,6 @@ const loadAnalytics = async () => {
   const result = await visitAnalyticsService.getAnalytics();
   if (result.success && result.data) {
     analytics.value = result.data;
-    await nextTick();
-    await renderMap();
   } else {
     error.value = result.error || "访问日志暂时不可用";
   }
@@ -158,10 +107,7 @@ const regenerateReport = async () => {
   reportLoading.value = false;
 };
 
-const resize = () => chart?.resize();
-
 onMounted(() => {
-  window.addEventListener("resize", resize);
   const token = siteReportService.getAdminToken();
   if (token) {
     reportPassword.value = token;
@@ -169,11 +115,6 @@ onMounted(() => {
     loadReportSummaries().then(() => loadReport(reportSummaries.value[0]?.date || today.value));
   }
   loadAnalytics();
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", resize);
-  chart?.dispose();
 });
 </script>
 
@@ -246,8 +187,32 @@ onUnmounted(() => {
               <button :class="{ active: mapMode === 'heatmap' }" @click="switchMapMode('heatmap')">热力</button>
             </div>
           </div>
-          <div ref="mapEl" class="map-box">
-            <span v-if="!analytics.chinaCities.length">暂无中国城市访问点</span>
+          <div class="map-box" :class="mapMode">
+            <div class="map-frame" aria-hidden="true">
+              <span class="grid-line horizontal top"></span>
+              <span class="grid-line horizontal mid"></span>
+              <span class="grid-line horizontal bottom"></span>
+              <span class="grid-line vertical left"></span>
+              <span class="grid-line vertical mid"></span>
+              <span class="grid-line vertical right"></span>
+              <span
+                v-for="point in mapPoints"
+                :key="`${point.name}-${point.x}-${point.y}`"
+                class="map-point"
+                :style="{
+                  left: `${point.x}%`,
+                  top: `${point.y}%`,
+                  width: `${point.size}px`,
+                  height: `${point.size}px`,
+                  opacity: point.opacity,
+                }"
+                :title="`${point.name} · ${point.value}`"
+              ></span>
+            </div>
+            <div v-if="mapPoints.length" class="map-labels">
+              <span v-for="point in mapPoints.slice(0, 8)" :key="point.name">{{ point.name }} · {{ point.value }}</span>
+            </div>
+            <span v-else>暂无中国城市访问点</span>
           </div>
         </section>
 
@@ -460,19 +425,108 @@ onUnmounted(() => {
 }
 
 .map-box {
+  position: relative;
   width: 100%;
   height: 460px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: rgba(8, 10, 15, 0.44);
+  background:
+    radial-gradient(circle at 68% 45%, rgba(83, 198, 176, 0.12), transparent 26%),
+    radial-gradient(circle at 48% 54%, rgba(240, 179, 91, 0.12), transparent 24%),
+    rgba(8, 10, 15, 0.44);
 }
 
-.map-box span {
+.map-box > span {
   height: 100%;
   display: grid;
   place-items: center;
   color: var(--text-muted);
+  font-weight: 800;
+}
+
+.map-frame {
+  position: absolute;
+  inset: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.grid-line {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.grid-line.horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.grid-line.vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.grid-line.top {
+  top: 18%;
+}
+
+.grid-line.mid {
+  top: 50%;
+}
+
+.grid-line.bottom {
+  bottom: 18%;
+}
+
+.grid-line.left {
+  left: 22%;
+}
+
+.grid-line.mid.vertical {
+  left: 50%;
+}
+
+.grid-line.right {
+  right: 22%;
+}
+
+.map-point {
+  position: absolute;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 28px rgba(240, 179, 91, 0.42);
+  transform: translate(-50%, -50%);
+}
+
+.map-box.heatmap .map-point {
+  background: radial-gradient(circle, rgba(239, 111, 108, 0.92), rgba(240, 179, 91, 0.36) 42%, transparent 70%);
+  filter: blur(1px);
+  box-shadow: none;
+}
+
+.map-labels {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.map-labels span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(8, 10, 15, 0.68);
+  color: var(--text-muted);
+  font-size: 0.72rem;
   font-weight: 800;
 }
 

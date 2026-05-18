@@ -1,4 +1,6 @@
 // 统计服务 - 与 KV API 交互
+import { getApiBaseUrl } from './adminAuthService'
+
 export interface Statistics {
   totalVisitors: number
   todayVisitors: number
@@ -27,7 +29,7 @@ class StatisticsService {
 
   constructor() {
     // 在开发环境中使用完整URL，生产环境使用相对路径
-    this.baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
+    this.baseUrl = getApiBaseUrl()
     this.initializeVisitorId()
   }
 

@@ -1,3 +1,5 @@
+import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
+
 export type RiskStatus = 'safe' | 'warning' | 'blocked'
 
 export interface RiskReason {
@@ -92,7 +94,7 @@ class ShortLinkService {
   private adminToken: string | null = null
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'https://www.jisoolove.top' : '')
+    this.baseUrl = getApiBaseUrl()
   }
 
   setAdminToken(token: string) {
@@ -139,13 +141,15 @@ class ShortLinkService {
 
   async verifyAdminPassword(password: string): Promise<ApiResponse<ShortLinkListData>> {
     const previousToken = this.getAdminToken()
-    this.setAdminToken(password)
-    const result = await this.getAllShortLinks()
-    if (!result.success) {
-      if (previousToken) this.setAdminToken(previousToken)
+    const nextToken = password.trim()
+    this.setAdminToken(nextToken)
+    const authResult = await verifyAdminToken(nextToken)
+    if (!authResult.success) {
+      if (previousToken && previousToken !== nextToken) this.setAdminToken(previousToken)
       else this.clearAdminToken()
+      return { success: false, error: authResult.error || '验证失败' }
     }
-    return result
+    return this.getAllShortLinks()
   }
 
   async getAllShortLinks(): Promise<ApiResponse<ShortLinkListData>> {

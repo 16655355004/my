@@ -21,9 +21,11 @@ const error = ref<string | null>(null);
 const notice = ref<string | null>(null);
 const remoteImages = ref<GalleryImage[]>([]);
 const adminToken = ref(imageService.getAdminToken() || "");
+const isAuthenticated = ref(false);
+const authChecked = ref(false);
+const authenticating = ref(false);
 const adminOpen = ref(false);
 const deletingImage = ref<GalleryImage | null>(null);
-const deletePassword = ref("");
 const uploading = ref(false);
 const deleting = ref(false);
 const uploadFile = ref<File | null>(null);
@@ -46,19 +48,18 @@ const animateCards = async () => {
   await nextTick();
 
   gsapContext = gsap.context(() => {
-    gsap.from(".image-hero > *", {
+    gsap.timeline({ defaults: { ease: "power3.out" } }).from(".image-hero > *", {
       opacity: 0,
       y: 24,
       duration: 0.72,
       stagger: 0.08,
-      ease: "power2.out",
     });
 
     gsap.utils.toArray<HTMLElement>(".image-card").forEach((card, index) => {
       gsap.from(card, {
         opacity: 0,
         y: 34,
-        scale: 0.96,
+        scale: 0.94,
         duration: 0.62,
         delay: (index % 6) * 0.035,
         ease: "power2.out",
@@ -67,24 +68,71 @@ const animateCards = async () => {
           start: "top 88%",
         },
       });
+
+      gsap.to(card.querySelector("img"), {
+        yPercent: -6,
+        ease: "none",
+        scrollTrigger: {
+          trigger: card,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
     });
   }, page);
 };
 
 const loadImages = async () => {
+  if (!isAuthenticated.value) return;
   loading.value = true;
   error.value = null;
   const result = await imageService.getImages();
-  if (result.success && result.data) remoteImages.value = result.data.images;
-  else error.value = result.error || "图库暂时不可用。";
+  if (result.success && result.data) {
+    remoteImages.value = result.data.images;
+  } else {
+    remoteImages.value = [];
+    error.value = result.error === "Unauthorized" ? "登录已失效，请重新验证" : result.error || "图库暂时不可用";
+    if (result.error === "Unauthorized") {
+      imageService.clearAdminToken();
+      isAuthenticated.value = false;
+      adminToken.value = "";
+    }
+  }
   loading.value = false;
   await animateCards();
 };
 
-const saveToken = () => {
-  if (!adminToken.value.trim()) return;
-  imageService.setAdminToken(adminToken.value.trim());
-  notice.value = "图片管理已解锁";
+const authenticate = async () => {
+  const token = adminToken.value.trim();
+  if (!token) {
+    error.value = "请输入访问密码";
+    return;
+  }
+
+  authenticating.value = true;
+  error.value = null;
+  const result = await imageService.verifyAdminPassword(token);
+  if (result.success) {
+    isAuthenticated.value = true;
+    notice.value = null;
+    await loadImages();
+  } else {
+    isAuthenticated.value = false;
+    remoteImages.value = [];
+    error.value = result.error === "Unauthorized" ? "密码错误" : result.error || "验证失败";
+  }
+  authenticating.value = false;
+  authChecked.value = true;
+};
+
+const logout = () => {
+  imageService.clearAdminToken();
+  adminToken.value = "";
+  remoteImages.value = [];
+  isAuthenticated.value = false;
+  notice.value = null;
+  error.value = null;
 };
 
 const selectFile = (event: Event) => {
@@ -98,12 +146,11 @@ const selectFile = (event: Event) => {
 
 const uploadImage = async () => {
   if (!uploadFile.value) return;
-  saveToken();
   uploading.value = true;
   error.value = null;
   const result = await imageService.uploadImage(uploadFile.value, uploadForm.value);
   if (result.success) {
-    notice.value = "图片已上传图片";
+    notice.value = "图片已上传";
     uploadFile.value = null;
     uploadForm.value = { title: "", alt: "", tone: "图片存储" };
     adminOpen.value = false;
@@ -116,18 +163,16 @@ const uploadImage = async () => {
 
 const showDelete = (image: GalleryImage) => {
   deletingImage.value = image;
-  deletePassword.value = "";
 };
 
 const closeDelete = () => {
   deletingImage.value = null;
-  deletePassword.value = "";
 };
 
 const deleteImage = async () => {
-  if (!deletingImage.value || !deletePassword.value.trim()) return;
-  imageService.setAdminToken(deletePassword.value.trim());
+  if (!deletingImage.value) return;
   deleting.value = true;
+  error.value = null;
   const result = await imageService.deleteImage(deletingImage.value.id);
   if (result.success) {
     notice.value = "图片已删除";
@@ -139,7 +184,10 @@ const deleteImage = async () => {
   deleting.value = false;
 };
 
-onMounted(loadImages);
+onMounted(async () => {
+  if (adminToken.value.trim()) await authenticate();
+  else authChecked.value = true;
+});
 
 onUnmounted(() => {
   gsapContext?.revert();
@@ -151,21 +199,43 @@ onUnmounted(() => {
     <section class="container image-hero">
       <div>
         <span class="page-tag">Gallery</span>
-        <h1 class="page-title">图片展示</h1>
-        <p class="page-sub">上传后的图片会进入站点图库，保留 GSAP 入场和滚动动效。</p>
+        <h1 class="page-title">图片空间</h1>
+        <p class="page-sub">通过验证后管理站点图库。前台负责展示，后台负责上传、整理和清理素材。</p>
       </div>
-      <div class="hero-actions">
-        <button class="btn btn-ghost" :disabled="loading" @click="loadImages">{{ loading ? "同步中" : "同步图库" }}</button>
+      <div v-if="isAuthenticated" class="hero-actions">
+        <button class="btn btn-ghost" :disabled="loading" @click="loadImages">
+          {{ loading ? "同步中" : "同步图库" }}
+        </button>
         <button class="btn" @click="adminOpen = true">上传图片</button>
+        <button class="btn btn-ghost" @click="logout">退出</button>
       </div>
     </section>
 
-    <section class="container image-grid-section">
+    <section v-if="!isAuthenticated" class="container auth-section">
+      <form class="auth-panel panel" @submit.prevent="authenticate">
+        <span class="section-kicker">Access</span>
+        <h2>进入图片空间</h2>
+        <input
+          v-model="adminToken"
+          type="password"
+          placeholder="访问密码"
+          :disabled="authenticating"
+          autocomplete="current-password"
+        />
+        <button class="btn" type="submit" :disabled="authenticating || !adminToken.trim()">
+          {{ authenticating ? "验证中" : "进入" }}
+        </button>
+        <p v-if="!authChecked && authenticating" class="auth-hint">正在验证已保存的访问凭据</p>
+        <p v-if="error" class="auth-error">{{ error }}</p>
+      </form>
+    </section>
+
+    <section v-else class="container image-grid-section">
       <p v-if="notice" class="soft-alert success">{{ notice }} <button @click="notice = null">关闭</button></p>
       <p v-if="error" class="soft-alert">{{ error }} <button @click="error = null">关闭</button></p>
       <div v-if="loading" class="state-box panel gallery-empty">
         <div class="spinner"></div>
-        <p>正在同步 图库</p>
+        <p>正在同步图库</p>
       </div>
       <div v-else-if="images.length" class="image-grid">
         <article
@@ -183,7 +253,7 @@ onUnmounted(() => {
         </article>
       </div>
       <div v-else class="state-box panel gallery-empty">
-        <p>还没有上传图片，点击右上角「上传图片」把第一张加入图库。</p>
+        <p>还没有上传图片，点击右上角“上传图片”把第一张加入图库。</p>
       </div>
     </section>
 
@@ -197,7 +267,6 @@ onUnmounted(() => {
             </div>
             <button type="button" @click="adminOpen = false">关闭</button>
           </header>
-          <label>管理员密码<input v-model="adminToken" type="password" placeholder="ADMIN_PASSWORD" /></label>
           <label>
             图片文件
             <input id="gallery-file" class="file-input" type="file" accept="image/*" required @change="selectFile" />
@@ -211,7 +280,7 @@ onUnmounted(() => {
           <label>标签<input v-model="uploadForm.tone" placeholder="图片存储" /></label>
           <footer>
             <button type="button" class="btn btn-ghost" @click="adminOpen = false">取消</button>
-            <button class="btn" :disabled="uploading || !uploadFile || !adminToken.trim()">{{ uploading ? "上传中" : "上传图片" }}</button>
+            <button class="btn" :disabled="uploading || !uploadFile">{{ uploading ? "上传中" : "上传图片" }}</button>
           </footer>
         </form>
       </div>
@@ -227,11 +296,10 @@ onUnmounted(() => {
             </div>
             <button type="button" @click="closeDelete">关闭</button>
           </header>
-          <p>请输入管理员密码后删除「{{ deletingImage.title }}」。</p>
-          <label>管理员密码<input v-model="deletePassword" type="password" placeholder="ADMIN_PASSWORD" /></label>
+          <p>确认删除“{{ deletingImage.title }}”？此操作会同时删除 R2 中的图片文件。</p>
           <footer>
             <button type="button" class="btn btn-ghost" @click="closeDelete">取消</button>
-            <button class="btn danger-btn" :disabled="deleting || !deletePassword.trim()">{{ deleting ? "删除中" : "确认删除" }}</button>
+            <button class="btn danger-btn" :disabled="deleting">{{ deleting ? "删除中" : "确认删除" }}</button>
           </footer>
         </form>
       </div>
@@ -266,6 +334,31 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.auth-section {
+  min-height: calc(100vh - 320px);
+  display: grid;
+  place-items: center;
+  margin-top: 18px;
+}
+
+.auth-panel {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.auth-panel h2 {
+  color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.auth-hint,
+.auth-error {
+  color: var(--text-soft);
 }
 
 .image-grid-section {
@@ -304,18 +397,18 @@ onUnmounted(() => {
 
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-flow: dense;
-  gap: 14px;
+  gap: 16px;
 }
 
 .image-card {
   position: relative;
-  min-height: 220px;
+  min-height: 260px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.045);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
 }
 
@@ -325,7 +418,7 @@ onUnmounted(() => {
 
 .image-card.tall {
   grid-row: span 2;
-  min-height: 454px;
+  min-height: 536px;
 }
 
 .image-card img {
@@ -480,7 +573,7 @@ onUnmounted(() => {
 
 @media (max-width: 1120px) {
   .image-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -491,7 +584,7 @@ onUnmounted(() => {
   }
 
   .image-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

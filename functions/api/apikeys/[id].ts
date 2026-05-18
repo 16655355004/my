@@ -36,7 +36,8 @@ const verifyAuth = (request: Request, env: Env): boolean => {
 
     const token = authHeader.split(' ')[1];
     // Use configured password or fallback to "admin"
-    const expectedPassword = env.ADMIN_PASSWORD || "admin";
+    const expectedPassword = env.ADMIN_PASSWORD;
+    if (!expectedPassword) return false;
 
     return token === expectedPassword;
 };
@@ -59,6 +60,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
         if (isNaN(id)) {
             return jsonResponse({ success: false, error: 'Invalid ID' }, 400);
+        }
+
+        if (!verifyAuth(request, env)) {
+            return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
         }
 
         // 验证权限
@@ -96,11 +101,15 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
 export const onRequestDelete: PagesFunction<Env> = async (context) => {
     try {
-        const { env, params } = context;
+        const { request, env, params } = context;
         const id = parseInt(params.id as string);
 
         if (isNaN(id)) {
             return jsonResponse({ success: false, error: 'Invalid ID' }, 400);
+        }
+
+        if (!verifyAuth(request, env)) {
+            return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
         }
 
         // 验证权限

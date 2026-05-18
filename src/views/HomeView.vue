@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import ProjectLinks from "../components/ProjectLinks.vue";
@@ -8,17 +8,25 @@ import heroImage from "../assets/001.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const capabilities = [
-  { title: "界面作品", desc: "用清晰的布局、细腻的动效和可靠的响应式体验呈现项目。", stat: "UI" },
-  { title: "实用工具", desc: "把视频、图片、提醒、收藏等常用入口集中到一个站点里。", stat: "TOOL" },
-  { title: "影像空间", desc: "用于展示照片、封面、灵感图和之后持续更新的视觉素材。", stat: "IMG" },
-  { title: "内容沉淀", desc: "把教程、留言、收藏和个人记录整理成长期可访问的页面。", stat: "DOC" },
+const pageRef = ref<HTMLElement | null>(null);
+let gsapContext: gsap.Context | null = null;
+
+const principles = [
+  { title: "视觉入口", desc: "用强主视觉、清晰层级和稳定节奏建立第一印象。", stat: "01" },
+  { title: "作品导航", desc: "把真正重要的项目放到前台，把管理工具收进后台。", stat: "02" },
+  { title: "轻量体验", desc: "动画服务于叙事，只把性能预算花在关键段落上。", stat: "03" },
+];
+
+const process = [
+  { label: "Concept", title: "把想法压缩成一个清楚的页面结构。" },
+  { label: "Motion", title: "用滚动、遮罩和时间线建立可感知的节奏。" },
+  { label: "Ship", title: "部署到 Cloudflare，把图片、短链和统计接进真实环境。" },
 ];
 
 const gallery = [
-  { title: "主视觉", desc: "JisooLove 形象图", src: heroImage },
-  { title: "灵感板", desc: "照片与素材合集", src: heroImage },
-  { title: "项目封面", desc: "作品展示图位", src: heroImage },
+  { title: "主视觉", desc: "暗色角色图与个人站的第一记忆点", src: heroImage },
+  { title: "作品封面", desc: "后续用于承载项目截图和设计稿", src: heroImage },
+  { title: "影像素材", desc: "沉淀图片、灵感和视觉碎片", src: heroImage },
 ];
 
 const navigateToSection = (id: string) => {
@@ -26,80 +34,140 @@ const navigateToSection = (id: string) => {
 };
 
 onMounted(() => {
-  gsap.from(".hero-copy > *", {
-    opacity: 0,
-    y: 26,
-    duration: 0.75,
-    stagger: 0.08,
-    ease: "power2.out",
-  });
+  if (!pageRef.value) return;
 
-  gsap.from(".portrait-card", {
-    opacity: 0,
-    y: 34,
-    rotate: -2,
-    duration: 0.9,
-    ease: "power2.out",
-  });
+  gsapContext = gsap.context(() => {
+    const heroTimeline = gsap.timeline({ defaults: { ease: "power3.out" } });
+    heroTimeline
+      .from(".hero-visual img", { opacity: 0, scale: 1.08, duration: 1.1 })
+      .from(".hero-kicker", { opacity: 0, y: 18, duration: 0.55 }, "-=0.75")
+      .from(".hero-title span", { opacity: 0, yPercent: 110, duration: 0.82, stagger: 0.08 }, "-=0.25")
+      .from(".hero-copy p, .hero-actions, .hero-proof, .hero-index", { opacity: 0, y: 22, duration: 0.65, stagger: 0.08 }, "-=0.35")
+      .from(".kinetic-word", { opacity: 0, y: 18, duration: 0.52, stagger: 0.05 }, "-=0.35");
 
-  gsap.utils.toArray<HTMLElement>(".reveal-block").forEach((el) => {
-    gsap.from(el, {
-      opacity: 0,
-      y: 28,
-      duration: 0.7,
-      ease: "power2.out",
+    gsap.to(".hero-visual img", {
+      yPercent: -9,
+      scale: 1.08,
+      ease: "none",
       scrollTrigger: {
-        trigger: el,
-        start: "top 82%",
+        trigger: ".hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
       },
     });
-  });
+
+    gsap.to(".kinetic-track", {
+      xPercent: -50,
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: 0.8,
+      },
+    });
+
+    gsap.utils.toArray<HTMLElement>(".reveal-block").forEach((el) => {
+      gsap.from(el, {
+        opacity: 0,
+        y: 34,
+        duration: 0.72,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 82%",
+        },
+      });
+    });
+
+    gsap.utils.toArray<HTMLElement>(".story-step").forEach((step, index) => {
+      gsap.from(step, {
+        opacity: 0.28,
+        x: index % 2 === 0 ? -34 : 34,
+        duration: 0.75,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: step,
+          start: "top 78%",
+          toggleActions: "play none none reverse",
+        },
+      });
+    });
+  }, pageRef.value);
+});
+
+onUnmounted(() => {
+  gsapContext?.revert();
 });
 </script>
 
 <template>
-  <div class="home-view">
+  <div ref="pageRef" class="home-view">
     <section class="hero" id="home">
-      <div class="container hero-grid">
+      <div class="hero-visual" aria-hidden="true">
+        <img :src="heroImage" alt="" />
+      </div>
+      <div class="hero-shade" aria-hidden="true"></div>
+
+      <div class="container hero-overlay">
         <div class="hero-copy">
-          <span class="eyebrow">JisooLove Studio</span>
-          <h1>一个收纳作品、工具、影像和灵感的个人主页。</h1>
+          <span class="hero-kicker">JisooLove Personal Site</span>
+          <h1 class="hero-title">
+            <span>不是工具箱。</span>
+            <span>是一个有镜头感的</span>
+            <span>个人数字现场。</span>
+          </h1>
           <p>
-            这里集中展示我的项目入口、常用工具、图片内容和技术记录。页面以沉浸式视觉为主，适合浏览，也方便之后持续扩展。
+            前台只留下作品、影像和站点气质；后台负责图片、短链、密钥和访问分析。视觉先抓住人，工具藏在该在的位置。
           </p>
           <div class="hero-actions">
-            <button class="btn" @click="navigateToSection('gallery')">浏览图片</button>
-            <button class="btn btn-ghost" @click="navigateToSection('projects')">查看项目</button>
+            <button class="btn" @click="navigateToSection('projects')">查看作品</button>
+            <button class="btn btn-ghost" @click="navigateToSection('gallery')">进入影像</button>
+          </div>
+          <div class="hero-proof" aria-label="站点特征">
+            <span>Vue 3</span>
+            <span>Cloudflare Pages</span>
+            <span>GSAP Motion</span>
           </div>
         </div>
 
-        <aside class="portrait-card">
-          <div class="portrait-frame">
-            <img :src="heroImage" alt="JisooLove 主视觉图片" />
-          </div>
-          <div class="portrait-meta">
-            <span>VISUAL 01</span>
-            <strong>主视觉图片区</strong>
-          </div>
+        <aside class="hero-index">
+          <span>LIVE INDEX</span>
+          <strong>Pages · R2 · KV · Motion</strong>
+          <p>公开页面负责表达，管理入口收束到工具菜单。</p>
         </aside>
       </div>
 
-      <div class="ticker" aria-hidden="true">
-        <div class="ticker-track">
-          <span>作品展示</span><span>图片空间</span><span>工具入口</span><span>技术记录</span><span>留言互动</span>
-          <span>作品展示</span><span>图片空间</span><span>工具入口</span><span>技术记录</span><span>留言互动</span>
+      <div class="kinetic-strip" aria-hidden="true">
+        <div class="kinetic-track">
+          <span class="kinetic-word">Portfolio</span>
+          <span class="kinetic-word">Gallery</span>
+          <span class="kinetic-word">Motion</span>
+          <span class="kinetic-word">Cloudflare</span>
+          <span class="kinetic-word">Studio</span>
+          <span class="kinetic-word">Portfolio</span>
+          <span class="kinetic-word">Gallery</span>
+          <span class="kinetic-word">Motion</span>
+          <span class="kinetic-word">Cloudflare</span>
+          <span class="kinetic-word">Studio</span>
         </div>
       </div>
     </section>
 
-    <section class="capability-section section reveal-block" id="about">
+    <section class="principles-section section reveal-block" id="about">
       <div class="container">
-        <div class="section-head">
-          <span class="section-kicker">What Is Inside</span>
-          <h2 class="section-title">清晰的内容分区，配合更有记忆点的视觉动效。</h2>
+        <div class="section-head two-col">
+          <div>
+            <span class="section-kicker">Direction</span>
+            <h2 class="section-title">从工具合集，转成真正的个人数字名片。</h2>
+          </div>
+          <p class="section-copy">
+            首页只承载公开表达和关键入口，复杂管理能力收进后台，让访客看到的是作品和气质，而不是维护面板。
+          </p>
         </div>
-        <div class="capability-grid">
-          <article v-for="item in capabilities" :key="item.title" class="capability-card">
+        <div class="principle-grid">
+          <article v-for="item in principles" :key="item.title" class="principle-card">
             <span>{{ item.stat }}</span>
             <h3>{{ item.title }}</h3>
             <p>{{ item.desc }}</p>
@@ -110,21 +178,36 @@ onMounted(() => {
 
     <ProjectLinks />
 
+    <section class="story-section section reveal-block">
+      <div class="container story-grid">
+        <div class="story-copy">
+          <span class="section-kicker">Workflow</span>
+          <h2 class="section-title">页面的节奏应该像作品集，而不是后台目录。</h2>
+        </div>
+        <div class="story-list">
+          <article v-for="item in process" :key="item.label" class="story-step">
+            <span>{{ item.label }}</span>
+            <h3>{{ item.title }}</h3>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="gallery-section section reveal-block" id="gallery">
       <div class="container">
         <div class="section-head two-col">
           <div>
             <span class="section-kicker">Gallery</span>
-            <h2 class="section-title">影像展示区</h2>
+            <h2 class="section-title">影像区负责建立记忆点。</h2>
           </div>
           <p class="section-copy">
-            用来陈列照片、封面、灵感图和个人视觉素材。图片区会成为整个站点最直观的视觉记忆点。
+            当前先用主视觉撑起节奏，后续可以替换为真实项目截图、摄影、封面和动效帧，让网站从模板感里脱离出来。
           </p>
         </div>
 
         <div class="gallery-grid">
           <article v-for="item in gallery" :key="item.title" class="gallery-card">
-            <img :src="item.src" :alt="item.title" />
+            <img :src="item.src" :alt="item.title" loading="lazy" />
             <div>
               <strong>{{ item.title }}</strong>
               <span>{{ item.desc }}</span>
@@ -134,7 +217,7 @@ onMounted(() => {
       </div>
     </section>
 
-    <section class="stats-section section reveal-block">
+    <section class="stats-section section reveal-block" id="status">
       <div class="container">
         <WebsiteStatistics />
       </div>
@@ -144,110 +227,154 @@ onMounted(() => {
 
 <style scoped>
 .hero {
-  min-height: 100vh;
-  display: grid;
-  align-items: center;
-  padding: 118px 0 40px;
+  min-height: 100svh;
   position: relative;
-}
-
-.hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.72fr);
-  gap: 42px;
-  align-items: center;
-}
-
-.hero-copy h1 {
-  max-width: 880px;
-  margin-top: 18px;
-  color: var(--text);
-  font-size: clamp(3rem, 7vw, 6.9rem);
-  font-weight: 800;
-}
-
-.hero-copy p {
-  max-width: 680px;
-  margin-top: 22px;
-  color: var(--text-muted);
-  font-size: 1.08rem;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 32px;
-}
-
-.portrait-card {
-  position: relative;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
-  box-shadow: var(--shadow);
-  animation: floatCard 6s ease-in-out infinite;
-}
-
-.portrait-frame {
-  aspect-ratio: 4 / 5;
+  align-items: end;
   overflow: hidden;
-  border-radius: var(--radius-sm);
-  background: var(--bg-soft);
+  isolation: isolate;
+  padding: 118px 0 120px;
+  background: #05070b;
 }
 
-.portrait-frame img {
+.hero-visual,
+.hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.hero-visual img {
   width: 100%;
-  height: 100%;
+  height: 112%;
   object-fit: cover;
+  object-position: 56% center;
+  filter: saturate(1.05) contrast(1.06);
 }
 
-.portrait-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 4px 0;
+.hero-shade {
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(5, 7, 11, 0.92) 0%, rgba(5, 7, 11, 0.74) 35%, rgba(5, 7, 11, 0.18) 68%, rgba(5, 7, 11, 0.72) 100%),
+    linear-gradient(0deg, rgba(5, 7, 11, 0.94) 0%, rgba(5, 7, 11, 0.18) 45%, rgba(5, 7, 11, 0.42) 100%);
 }
 
-.portrait-meta span {
+.hero-overlay {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 330px);
+  gap: 36px;
+  align-items: end;
+}
+
+.hero-copy {
+  max-width: 980px;
+}
+
+.hero-kicker {
+  display: inline-flex;
   color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-
-.portrait-meta strong {
-  color: var(--text);
-  font-size: 0.9rem;
-}
-
-.ticker {
-  overflow: hidden;
-  margin-top: 56px;
-  border-block: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.ticker-track {
-  width: max-content;
-  display: flex;
-  gap: 42px;
-  padding: 14px 0;
-  animation: marquee 22s linear infinite;
-}
-
-.ticker span {
-  color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
+.hero-title {
+  margin-top: 18px;
+  color: var(--text);
+  font-size: clamp(3.4rem, 8.5vw, 8.6rem);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.hero-title span {
+  display: block;
+  overflow: hidden;
+}
+
+.hero-copy p {
+  max-width: 700px;
+  margin-top: 24px;
+  color: rgba(247, 242, 232, 0.78);
+  font-size: 1.08rem;
+}
+
+.hero-actions,
+.hero-proof {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+
+.hero-proof {
+  margin-top: 20px;
+}
+
+.hero-proof span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(8, 10, 15, 0.36);
+  color: rgba(247, 242, 232, 0.68);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.hero-index {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(240, 179, 91, 0.44);
+}
+
+.hero-index span {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.hero-index strong {
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.hero-index p {
+  color: rgba(247, 242, 232, 0.62);
+  font-size: 0.88rem;
+}
+
+.kinetic-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  overflow: hidden;
+  border-block: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 7, 11, 0.34);
+}
+
+.kinetic-track {
+  width: max-content;
+  display: flex;
+  gap: clamp(32px, 6vw, 88px);
+  padding: 13px 0;
+}
+
+.kinetic-word {
+  color: rgba(247, 242, 232, 0.48);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
 .section-head {
-  margin-bottom: 28px;
+  margin-bottom: 30px;
 }
 
 .two-col {
@@ -257,39 +384,80 @@ onMounted(() => {
   align-items: end;
 }
 
-.capability-grid {
+.principle-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
-.capability-card {
-  min-height: 220px;
+.principle-card {
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   justify-content: end;
-  padding: 22px;
+  padding: 24px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.055);
 }
 
-.capability-card span {
-  color: var(--accent-2);
-  font-weight: 800;
-  letter-spacing: 0.18em;
+.principle-card span {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 900;
 }
 
-.capability-card h3 {
-  margin-top: 34px;
+.principle-card h3 {
+  margin-top: 42px;
   color: var(--text);
-  font-size: 1.24rem;
-  font-weight: 800;
+  font-size: 1.45rem;
+  font-weight: 850;
 }
 
-.capability-card p {
-  margin-top: 10px;
+.principle-card p {
+  margin-top: 12px;
   color: var(--text-muted);
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1fr);
+  gap: 38px;
+  align-items: start;
+}
+
+.story-copy {
+  position: sticky;
+  top: 120px;
+}
+
+.story-list {
+  display: grid;
+  gap: 14px;
+}
+
+.story-step {
+  min-height: 190px;
+  display: grid;
+  align-content: end;
+  padding: 24px;
+  border-left: 2px solid var(--accent);
+  background: linear-gradient(90deg, rgba(240, 179, 91, 0.1), rgba(255, 255, 255, 0.035));
+}
+
+.story-step span {
+  color: var(--accent);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.story-step h3 {
+  max-width: 720px;
+  margin-top: 14px;
+  color: var(--text);
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
 }
 
 .gallery-grid {
@@ -308,19 +476,20 @@ onMounted(() => {
 }
 
 .gallery-card:first-child {
-  min-height: 480px;
+  min-height: 500px;
 }
 
 .gallery-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   filter: saturate(1.06) contrast(1.02);
-  transition: transform 600ms ease;
+  transition: transform 700ms ease;
 }
 
 .gallery-card:hover img {
-  transform: scale(1.04);
+  transform: scale(1.045);
 }
 
 .gallery-card div {
@@ -328,20 +497,18 @@ onMounted(() => {
   left: 16px;
   right: 16px;
   bottom: 16px;
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  gap: 4px;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-sm);
-  background: rgba(8, 10, 15, 0.68);
-  backdrop-filter: blur(14px);
+  background: rgba(8, 10, 15, 0.7);
+  backdrop-filter: blur(12px);
 }
 
 .gallery-card strong {
   color: var(--text);
-  font-weight: 800;
+  font-weight: 850;
 }
 
 .gallery-card span {
@@ -350,28 +517,40 @@ onMounted(() => {
 }
 
 @media (max-width: 980px) {
-  .hero-grid,
+  .hero-overlay,
   .two-col,
+  .story-grid,
   .gallery-grid {
     grid-template-columns: 1fr;
   }
 
-  .capability-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .story-copy {
+    position: static;
+  }
+
+  .principle-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 620px) {
   .hero {
-    padding-top: 102px;
+    min-height: 100svh;
+    padding-top: 100px;
   }
 
-  .hero-copy h1 {
-    font-size: clamp(2.5rem, 15vw, 4.6rem);
+  .hero-title {
+    font-size: clamp(2.7rem, 15vw, 5rem);
   }
 
-  .capability-grid {
-    grid-template-columns: 1fr;
+  .hero-shade {
+    background:
+      linear-gradient(90deg, rgba(5, 7, 11, 0.92), rgba(5, 7, 11, 0.48)),
+      linear-gradient(0deg, rgba(5, 7, 11, 0.96), rgba(5, 7, 11, 0.24));
+  }
+
+  .hero-index {
+    display: none;
   }
 
   .gallery-card,

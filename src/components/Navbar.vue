@@ -9,13 +9,20 @@ const router = useRouter();
 
 const links = [
   { label: "首页", to: "/", section: "home" },
-  { label: "图片", to: "/image" },
+  { label: "作品", to: "/", section: "projects" },
+  { label: "影像", to: "/", section: "gallery" },
+  { label: "状态", to: "/", section: "status" },
+  { label: "留言", to: "/messages" },
+];
+
+const toolLinks = [
+  { label: "图片管理", to: "/image" },
   { label: "收藏", to: "/bookmarks" },
   { label: "短链", to: "/links" },
-  { label: "留言", to: "/messages" },
   { label: "教程", to: "/tutorial" },
   { label: "密钥", to: "/apikeys" },
   { label: "访问", to: "/visits" },
+  { label: "后台", to: "/admin" },
 ];
 
 const closeMenu = () => {
@@ -72,6 +79,14 @@ watch(route, closeMenu);
             {{ link.label }}
           </RouterLink>
         </template>
+        <div class="tools-menu">
+          <button class="nav-link tools-trigger" type="button">工具</button>
+          <div class="tools-popover">
+            <RouterLink v-for="link in toolLinks" :key="link.label" class="tool-link" :to="link.to">
+              {{ link.label }}
+            </RouterLink>
+          </div>
+        </div>
       </nav>
 
       <button class="menu-btn" :class="{ open: isMenuOpen }" @click="toggleMenu" aria-label="打开菜单">
@@ -90,6 +105,12 @@ watch(route, closeMenu);
             {{ link.label }}
           </RouterLink>
         </template>
+        <div class="mobile-tools">
+          <span>管理工具</span>
+          <RouterLink v-for="link in toolLinks" :key="link.label" class="mobile-link tool" :to="link.to">
+            {{ link.label }}
+          </RouterLink>
+        </div>
       </div>
     </div>
   </header>
@@ -207,6 +228,52 @@ watch(route, closeMenu);
   box-shadow: 0 0 14px var(--accent-glow);
 }
 
+.tools-menu {
+  position: relative;
+}
+
+.tools-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 168px;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius);
+  background: rgba(8, 10, 15, 0.92);
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.tools-menu:hover .tools-popover,
+.tools-menu:focus-within .tools-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.tool-link {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.tool-link:hover,
+.tool-link.router-link-active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .menu-btn {
   display: none;
   width: 42px;
@@ -265,6 +332,26 @@ watch(route, closeMenu);
   color: var(--text-muted);
   font-weight: 800;
   transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.mobile-tools {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-tools > span {
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mobile-link.tool {
+  color: var(--text-soft);
 }
 
 .mobile-link.router-link-active,

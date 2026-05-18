@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from './adminAuthService'
+
 export interface AccessLogEntry {
   id: string
   time: string
@@ -34,7 +36,7 @@ export interface ApiResponse<T> {
 }
 
 class VisitAnalyticsService {
-  private baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
+  private baseUrl = getApiBaseUrl()
 
   async getAnalytics(): Promise<ApiResponse<AccessAnalytics>> {
     try {

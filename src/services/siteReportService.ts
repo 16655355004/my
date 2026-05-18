@@ -1,3 +1,5 @@
+import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
+
 export interface ReportItem {
   name: string
   value: number
@@ -46,7 +48,7 @@ export interface ApiResponse<T> {
 }
 
 class SiteReportService {
-  private baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
+  private baseUrl = getApiBaseUrl()
   private token: string | null = null
 
   setAdminToken(token: string) {
@@ -81,13 +83,15 @@ class SiteReportService {
 
   async verifyAdminPassword(password: string): Promise<ApiResponse<{ reports: DailySiteReportSummary[] }>> {
     const previous = this.getAdminToken()
-    this.setAdminToken(password)
-    const result = await this.getReportSummaries(7)
-    if (!result.success) {
-      if (previous) this.setAdminToken(previous)
+    const nextToken = password.trim()
+    this.setAdminToken(nextToken)
+    const authResult = await verifyAdminToken(nextToken)
+    if (!authResult.success) {
+      if (previous && previous !== nextToken) this.setAdminToken(previous)
       else this.clearAdminToken()
+      return { success: false, error: authResult.error || '验证失败' }
     }
-    return result
+    return this.getReportSummaries(7)
   }
 
   async getReportSummaries(days = 14): Promise<ApiResponse<{ reports: DailySiteReportSummary[] }>> {

@@ -107,7 +107,8 @@ export const optionsResponse = () => new Response(null, {
 export const verifyAuth = (request: Request, env: Env): boolean => {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return false;
-  return authHeader.slice(7) === (env.ADMIN_PASSWORD || "admin");
+  if (!env.ADMIN_PASSWORD) return false;
+  return authHeader.slice(7) === env.ADMIN_PASSWORD;
 };
 
 export const requireAuth = (request: Request, env: Env): Response | null => {

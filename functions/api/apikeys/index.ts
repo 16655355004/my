@@ -35,8 +35,8 @@ const verifyAuth = (request: Request, env: Env): boolean => {
     }
 
     const token = authHeader.split(' ')[1];
-    // Use configured password or fallback to "admin"
-    const expectedPassword = env.ADMIN_PASSWORD || "admin";
+    const expectedPassword = env.ADMIN_PASSWORD;
+    if (!expectedPassword) return false;
 
     return token === expectedPassword;
 };
@@ -54,7 +54,11 @@ export const onRequestOptions: PagesFunction = async () => {
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
-        const { env } = context;
+        const { request, env } = context;
+
+        if (!verifyAuth(request, env)) {
+            return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
+        }
 
         // 获取所有 key
         // 假设我们将所有 api key 存储在一个名为 "apikeys" 的 KV 键中，值为 JSON 数组
@@ -73,11 +77,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
         const { request, env } = context;
 
-        // 验证权限
-        // const isAuthenticated = await verifyAuth(request, env);
-        // if (!isAuthenticated) {
-        //   return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
-        // }
+        if (!verifyAuth(request, env)) {
+            return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
+        }
 
         const body = await request.json() as Omit<ApiKey, 'id' | 'createdAt'>;
 

@@ -11,17 +11,27 @@ if (!fs.existsSync(distDir)) {
 // Copy necessary files to dist directory
 const filesToCopy = [
   '_headers',
-  '_redirects',
   '_routes.json'
+];
+const staleFiles = [
+  '_redirects'
 ];
 
 // Copy files from public directory
 const publicFilesToCopy = [
   'favicon.ico',
-  'placeholder-profile.webp'
+  'placeholder-profile.jpg'
 ];
 
 // Copy root files
+staleFiles.forEach(file => {
+  const target = path.join(distDir, file);
+  if (fs.existsSync(target)) {
+    fs.unlinkSync(target);
+    console.log(`✓ Removed stale ${file} from dist directory`);
+  }
+});
+
 filesToCopy.forEach(file => {
   const src = path.join(__dirname, file);
   const dest = path.join(distDir, file);

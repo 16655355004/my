@@ -1,3 +1,5 @@
+import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
+
 /**
  * Tutorial Authentication Service
  * Handles password protection for the KV tutorial page
@@ -5,7 +7,7 @@
 
 class TutorialService {
   private tutorialToken: string | null = null
-  private readonly TUTORIAL_PASSWORD = 'jisoo521'
+  private baseUrl = getApiBaseUrl()
 
   // 设置教程令牌
   setTutorialToken(token: string) {
@@ -28,14 +30,25 @@ class TutorialService {
   }
 
   // 验证教程密码
-  verifyTutorialPassword(password: string): boolean {
-    return password === this.TUTORIAL_PASSWORD
+  async verifyTutorialPassword(password: string): Promise<boolean> {
+    const previousToken = this.getTutorialToken()
+    const nextToken = password.trim()
+    this.setTutorialToken(nextToken)
+
+    const result = await verifyAdminToken(nextToken)
+    if (!result.success) {
+      if (previousToken && previousToken !== nextToken) this.setTutorialToken(previousToken)
+      else this.clearTutorialToken()
+      return false
+    }
+    return true
   }
 
   // 检查是否已认证
-  isAuthenticated(): boolean {
+  async isAuthenticated(): Promise<boolean> {
     const token = this.getTutorialToken()
-    return token === this.TUTORIAL_PASSWORD
+    if (!token) return false
+    return this.verifyTutorialPassword(token)
   }
 }
 

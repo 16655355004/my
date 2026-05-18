@@ -7,24 +7,19 @@ import type { ServerOptions, PreviewOptions } from 'vite'
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
+  const apiTarget = process.env.VITE_API_BASE_URL || 'https://www.jisoolove.top'
   
   // Configure proxy
   const proxy: Record<string, string | ProxyOptions> = {
     '/api': {
-      target: 'https://www.jisoolove.top',
+      target: apiTarget,
       changeOrigin: true,
       secure: true,
       configure: (proxy) => {
         proxy.on('error', (err: Error) => {
-          console.log('Proxy error:', err);
-        });
-        proxy.on('proxyReq', (proxyReq: any, req: any) => {
-          console.log('Sending request to target:', req.method, req.url);
-        });
-        proxy.on('proxyRes', (proxyRes: any, req: any) => {
-          console.log('Received response from target:', proxyRes.statusCode, req.url);
-        });
-      }
+          console.warn('Proxy error:', err.message)
+        })
+      },
     }
   };
 
@@ -70,7 +65,11 @@ export default defineConfig(({ mode }) => {
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash][extname]'
+          assetFileNames: 'assets/[name]-[hash][extname]',
+          manualChunks: {
+            vue: ['vue', 'vue-router'],
+            gsap: ['gsap', 'gsap/ScrollTrigger', 'gsap/ScrollToPlugin'],
+          },
         }
       }
     },

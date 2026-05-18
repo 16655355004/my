@@ -1,3 +1,5 @@
+import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
+
 // API密钥管理服务 - 与 KV API 交互
 export interface ApiKey {
     id: number
@@ -30,7 +32,7 @@ class ApiKeyService {
 
     constructor() {
         // 在开发环境中使用完整URL，生产环境使用相对路径
-        this.baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
+        this.baseUrl = getApiBaseUrl()
     }
 
     // 设置管理员令牌
@@ -183,8 +185,24 @@ class ApiKeyService {
 
     // 验证管理员密码
     async verifyAdminPassword(password: string): Promise<boolean> {
-        // 直接验证密码
-        return password === 'jisoo521'
+        const previousToken = this.getAdminToken()
+        const nextToken = password.trim()
+        this.setAdminToken(nextToken)
+
+        try {
+            const result = await verifyAdminToken(nextToken)
+            if (!result.success) {
+                if (previousToken && previousToken !== nextToken) this.setAdminToken(previousToken)
+                else this.clearAdminToken()
+                return false
+            }
+            return true
+        } catch (error) {
+            console.error('Failed to verify admin password:', error)
+            if (previousToken && previousToken !== nextToken) this.setAdminToken(previousToken)
+            else this.clearAdminToken()
+            return false
+        }
     }
 
     // 检查密钥是否过期

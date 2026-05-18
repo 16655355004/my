@@ -19,6 +19,9 @@ export const onRequestOptions: PagesFunction = async () => optionsResponse();
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
+    const authError = requireAuth(request, env);
+    if (authError) return authError;
+
     const images = (await listImages(env)).map((image) => ({
       ...image,
       url: buildImageUrl(request, image.id),

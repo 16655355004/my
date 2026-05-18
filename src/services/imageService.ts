@@ -1,3 +1,5 @@
+import { getApiBaseUrl, verifyAdminToken } from './adminAuthService'
+
 export interface GalleryImage {
   id: string
   title: string
@@ -25,8 +27,12 @@ export interface ImageUpdateInput {
   order?: number
 }
 
+export interface AdminAuthData {
+  authenticated: boolean
+}
+
 class ImageService {
-  private baseUrl = import.meta.env.DEV ? 'https://www.jisoolove.top' : ''
+  private baseUrl = getApiBaseUrl()
   private token: string | null = null
 
   setAdminToken(token: string) {
@@ -66,14 +72,30 @@ class ImageService {
     }
   }
 
-  async verifyAdminPassword(password: string): Promise<ApiResponse<GalleryImage>> {
-    this.setAdminToken(password)
-    return { success: true }
+  async verifyAdminPassword(password: string): Promise<ApiResponse<AdminAuthData>> {
+    const previousToken = this.getAdminToken()
+    const nextToken = password.trim()
+    this.setAdminToken(nextToken)
+
+    try {
+      const result = await verifyAdminToken(nextToken)
+      if (!result.success) {
+        if (previousToken && previousToken !== nextToken) this.setAdminToken(previousToken)
+        else this.clearAdminToken()
+      }
+      return result
+    } catch {
+      if (previousToken && previousToken !== nextToken) this.setAdminToken(previousToken)
+      else this.clearAdminToken()
+      return { success: false, error: '缃戠粶閿欒' }
+    }
   }
 
   async getImages(): Promise<ApiResponse<{ images: GalleryImage[] }>> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/images`)
+      const response = await fetch(`${this.baseUrl}/api/images`, {
+        headers: this.authHeaders(),
+      })
       return await this.handle<{ images: GalleryImage[] }>(response)
     } catch {
       return { success: false, error: '网络错误' }
