@@ -149,9 +149,9 @@ onUnmounted(() => {
         <div class="hero-copy">
           <span class="hero-kicker">空空 / Personal Site</span>
           <h1 class="hero-title">
-            <span>空空。</span>
-            <span>一个更像作品的</span>
-            <span>个人网站。</span>
+            <span>不是工具箱。</span>
+            <span>是一个有镜头感的</span>
+            <span>个人数字现场。</span>
           </h1>
           <p>
             前台先给气质、作品和影像，后台能力收进工具菜单。页面的重点是让访问者停下来，而不是把一堆入口塞到最上面。
@@ -332,7 +332,7 @@ onUnmounted(() => {
 .hero-title {
   margin-top: 18px;
   color: var(--text);
-  font-size: clamp(3.4rem, 8vw, 8.2rem);
+  font-size: clamp(2.6rem, 6vw, 6.1rem);
   font-weight: 900;
   letter-spacing: 0;
 }
@@ -653,7 +653,7 @@ onUnmounted(() => {
   }
 
   .hero-title {
-    font-size: clamp(2.8rem, 16vw, 5rem);
+    font-size: clamp(2.2rem, 12vw, 4.1rem);
   }
 
   .hero-signal {
