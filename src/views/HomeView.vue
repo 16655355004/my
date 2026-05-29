@@ -10,8 +10,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const pageRef = ref<HTMLElement | null>(null);
 let gsapContext: gsap.Context | null = null;
-let startHeroEntrance: (() => void) | null = null;
-let heroEntranceFallback: number | null = null;
 
 const signals = [
   { label: "名字", value: "空空", note: "温柔、清醒、带一点闪光" },
@@ -60,7 +58,6 @@ onMounted(() => {
   if (!pageRef.value) return;
 
   gsapContext = gsap.context(() => {
-    let heroEntranceStarted = false;
     const heroTimeline = gsap.timeline({ defaults: { ease: "power3.out" }, paused: true });
     heroTimeline
       .from(".hero-visual img", { opacity: 0, scale: 1.08, duration: 1.05 })
@@ -71,17 +68,10 @@ onMounted(() => {
       .from(".signal-card", { opacity: 0, y: 22, duration: 0.55, stagger: 0.08 }, "-=0.2")
       .from(".hero-frame", { opacity: 0, y: 28, scale: 0.97, duration: 0.72 }, "-=0.44");
 
-    startHeroEntrance = () => {
-      if (heroEntranceStarted) return;
-      heroEntranceStarted = true;
-      heroTimeline.play(0);
-    };
-
-    if (document.querySelector(".loader-screen")) {
-      document.addEventListener("loader-complete", startHeroEntrance, { once: true });
-      heroEntranceFallback = window.setTimeout(() => startHeroEntrance?.(), 2600);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      heroTimeline.progress(1);
     } else {
-      requestAnimationFrame(() => startHeroEntrance?.());
+      requestAnimationFrame(() => heroTimeline.play(0));
     }
 
     gsap.to(".hero-visual img", {
@@ -185,11 +175,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (startHeroEntrance) document.removeEventListener("loader-complete", startHeroEntrance);
-  if (heroEntranceFallback) window.clearTimeout(heroEntranceFallback);
   gsapContext?.revert();
-  startHeroEntrance = null;
-  heroEntranceFallback = null;
 });
 </script>
 

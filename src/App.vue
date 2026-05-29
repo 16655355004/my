@@ -1,51 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
-import gsap from "gsap";
-import ScrollTrigger from "gsap/ScrollTrigger";
-import ScrollToPlugin from "gsap/ScrollToPlugin";
 import { emojiCursor, type CursorEffectResult } from "cursor-effects";
-import Loader from "./components/LoaderOptimized.vue";
 import Navbar from "./components/Navbar.vue";
 import { statisticsService } from "./services/statisticsService";
 
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
-
 const route = useRoute();
 let cursorEffect: CursorEffectResult | null = null;
-
-const handleLoaderComplete = () => {
-  gsap.to(".page-content", {
-    opacity: 1,
-    y: 0,
-    duration: 0.55,
-    ease: "power2.out",
-  });
-
-  gsap.fromTo(
-    ".navbar-inner",
-    { opacity: 0, y: 32, scale: 0.98 },
-    {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      duration: 0.72,
-      ease: "power3.out",
-      clearProps: "transform",
-    },
-  );
-
-  gsap.from(".nav-link, .menu-btn", {
-    opacity: 0,
-    duration: 0.42,
-    ease: "power2.out",
-    stagger: 0.045,
-    delay: 0.18,
-    clearProps: "transform",
-  });
-
-  ScrollTrigger.refresh();
-};
 
 onMounted(() => {
   statisticsService.recordVisit(route.fullPath).catch(() => {
@@ -60,19 +21,10 @@ onMounted(() => {
       delay: 26,
     });
   }
-
-  document.addEventListener("loader-complete", handleLoaderComplete);
 });
 
 onUnmounted(() => {
   cursorEffect?.destroy();
-  document.removeEventListener("loader-complete", handleLoaderComplete);
-});
-
-watch(() => route.fullPath, (path) => {
-  statisticsService.recordVisit(path).catch(() => {
-    // Route tracking should not block navigation.
-  });
 });
 </script>
 
@@ -85,7 +37,6 @@ watch(() => route.fullPath, (path) => {
       <div class="stage-noise"></div>
     </div>
 
-    <Loader />
     <Navbar />
 
     <main class="page-content">
@@ -167,8 +118,6 @@ watch(() => route.fullPath, (path) => {
   position: relative;
   z-index: 1;
   padding-bottom: 124px;
-  opacity: 0;
-  transform: translateY(12px);
 }
 
 @media (max-width: 760px) {
