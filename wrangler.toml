@@ -2,6 +2,12 @@ name = "my"
 compatibility_date = "2024-09-13"
 pages_build_output_dir = "dist"
 
+# Cloudflare 控制台 → 设置 → 变量和机密（Production 需重新部署后生效）
+# MEDIA_API_KEY          密钥  ProRiseHub 音视频分组 sk- 令牌
+# TURNSTILE_SECRET_KEY   密钥  Turnstile 私钥
+# TURNSTILE_SITE_KEY     变量  Turnstile 站点公钥（与私钥成对）
+# ADMIN_PASSWORD         密钥  后台管理密码
+
 [[kv_namespaces]]
 binding = "MY_KV"
 id = "b0f52d8d37e749a9a5725b04f26412da"

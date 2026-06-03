@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import TurnstileWidget from "../components/TurnstileWidget.vue";
 import {
   DEFAULT_ASPECT_RATIO,
@@ -9,6 +9,7 @@ import {
   IMAGE_MODELS,
   IMAGE_QUALITY_OPTIONS,
 } from "../constant/media";
+import { getApiBaseUrl } from "../services/adminAuthService";
 import imageGenerateService, { type GeneratedImage } from "../services/imageGenerateService";
 
 const prompt = ref("");
@@ -21,6 +22,8 @@ const error = ref<string | null>(null);
 const result = ref<GeneratedImage | null>(null);
 const turnstileToken = ref("");
 const turnstileRequired = ref(false);
+const serviceReady = ref<boolean | null>(null);
+const turnstileConfigured = ref<boolean | null>(null);
 
 const selectedModel = computed(() => IMAGE_MODELS.find((item) => item.value === model.value));
 const promptLength = computed(() => prompt.value.trim().length);
@@ -41,6 +44,22 @@ const onTurnstileExpired = () => {
 const onTurnstileConfigured = (required: boolean) => {
   turnstileRequired.value = required;
 };
+
+const loadServiceConfig = async () => {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/config/public`);
+    const payload = await response.json() as {
+      data?: { imageGenerateEnabled?: boolean; turnstileSiteKey?: string | null };
+    };
+    serviceReady.value = Boolean(payload.data?.imageGenerateEnabled);
+    turnstileConfigured.value = Boolean(payload.data?.turnstileSiteKey);
+  } catch {
+    serviceReady.value = null;
+    turnstileConfigured.value = null;
+  }
+};
+
+onMounted(loadServiceConfig);
 
 const generate = async () => {
   generating.value = true;
@@ -104,6 +123,13 @@ const downloadResult = () => {
           </div>
         </div>
       </header>
+
+      <p v-if="serviceReady === false" class="setup-alert">
+        服务端未检测到生图密钥。请在 Cloudflare「变量和机密」中确认 <code>MEDIA_API_KEY</code> 已填入 ProRiseHub 的 <code>sk-</code> 令牌，保存后点击「重新部署」。也可在「工具 → 密钥」添加网站名含 ProRiseHub 的密钥作为备用。
+      </p>
+      <p v-else-if="turnstileConfigured === false" class="setup-alert setup-alert--info">
+        防刷未完全配置：请在 Cloudflare 添加明文变量 <code>TURNSTILE_SITE_KEY</code>（与现有 <code>TURNSTILE_SECRET_KEY</code> 为同一对小部件），然后重新部署。
+      </p>
 
       <div class="workspace">
         <form class="control-panel panel" @submit.prevent="generate">
@@ -309,6 +335,28 @@ const downloadResult = () => {
 
 .page-hero {
   align-items: end;
+}
+
+.setup-alert {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(239, 111, 108, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(239, 111, 108, 0.08);
+  color: var(--text-soft);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.setup-alert--info {
+  border-color: rgba(240, 179, 91, 0.35);
+  background: rgba(240, 179, 91, 0.08);
+}
+
+.setup-alert code {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .hero-metrics {

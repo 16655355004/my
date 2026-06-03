@@ -3,6 +3,7 @@ import {
   optionsResponse,
   type Env,
 } from "../../_shared/shortlinks";
+import { isMediaGenerateEnabled, resolveMediaApiKey } from "../../_shared/media";
 import { verifyTurnstile } from "../../_shared/turnstile";
 
 const MEDIA_API_BASE = "https://newapi.prorisehub.com";
@@ -69,8 +70,12 @@ export const onRequestOptions: PagesFunction = async () => optionsResponse();
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
-    if (!env.MEDIA_API_KEY?.trim()) {
-      return jsonResponse({ success: false, error: "生图服务尚未配置 MEDIA_API_KEY" }, 503);
+    const mediaApiKey = await resolveMediaApiKey(env);
+    if (!mediaApiKey) {
+      return jsonResponse({
+        success: false,
+        error: "生图服务尚未配置 MEDIA_API_KEY，请在 Cloudflare 变量中添加密钥并重新部署",
+      }, 503);
     }
 
     const body = await request.json() as GenerateInput;
@@ -108,7 +113,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const upstream = await fetch(`${MEDIA_API_BASE}/v1/images/generations`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${env.MEDIA_API_KEY.trim()}`,
+        Authorization: `Bearer ${mediaApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

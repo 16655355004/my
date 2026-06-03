@@ -1,6 +1,7 @@
 export const MEDIA_API_BASE = "https://newapi.prorisehub.com";
 
 export const IMAGE_MODELS = [
+  { value: "gpt-image-2", label: "GPT Image 2", price: "¥0.08" },
   { value: "qwen-image-2", label: "Qwen Image 2", price: "¥0.03" },
   { value: "byte-plus-seedream-5-lite", label: "Seedream 5 Lite", price: "¥0.03" },
   { value: "nano-banana", label: "Nano Banana", price: "¥0.04" },
