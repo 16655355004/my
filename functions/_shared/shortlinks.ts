@@ -5,6 +5,7 @@ export interface Env {
   STATS_SALT?: string;
   SITE_STARTED_AT?: string;
   TURNSTILE_SECRET_KEY?: string;
+  TURNSTILE_SITE_KEY?: string;
   MEDIA_API_KEY?: string;
   IMAGE_MAX_BYTES?: string;
   SHORTLINK_RISK_ALLOWLIST?: string;

@@ -20,9 +20,15 @@ const generating = ref(false);
 const error = ref<string | null>(null);
 const result = ref<GeneratedImage | null>(null);
 const turnstileToken = ref("");
+const turnstileRequired = ref(false);
 
 const selectedModel = computed(() => IMAGE_MODELS.find((item) => item.value === model.value));
 const promptLength = computed(() => prompt.value.trim().length);
+const canSubmit = computed(() =>
+  prompt.value.trim().length > 0 &&
+  !generating.value &&
+  (!turnstileRequired.value || turnstileToken.value.length > 0),
+);
 
 const onTurnstileVerified = (token: string) => {
   turnstileToken.value = token;
@@ -30,6 +36,10 @@ const onTurnstileVerified = (token: string) => {
 
 const onTurnstileExpired = () => {
   turnstileToken.value = "";
+};
+
+const onTurnstileConfigured = (required: boolean) => {
+  turnstileRequired.value = required;
 };
 
 const generate = async () => {
@@ -188,12 +198,15 @@ const downloadResult = () => {
               @verified="onTurnstileVerified"
               @expired="onTurnstileExpired"
               @error="onTurnstileExpired"
+              @configured="onTurnstileConfigured"
             />
           </div>
 
+          <p v-if="turnstileRequired && !turnstileToken" class="verify-hint">请先完成人机验证，再点击生成。</p>
+
           <p v-if="error" class="form-error">{{ error }}</p>
 
-          <button class="btn generate-btn" type="submit" :disabled="generating || !prompt.trim()">
+          <button class="btn generate-btn" type="submit" :disabled="!canSubmit">
             <span v-if="generating" class="btn-shimmer" aria-hidden="true" />
             {{ generating ? "正在绘制画面…" : "开始生成" }}
           </button>
@@ -533,6 +546,13 @@ const downloadResult = () => {
 
 .verify-block {
   margin-top: 18px;
+}
+
+.verify-hint {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .form-error {
