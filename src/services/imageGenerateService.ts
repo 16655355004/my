@@ -7,7 +7,6 @@ export interface GenerateImageParams {
   aspectRatio?: string;
   quality?: string;
   style?: string;
-  turnstileToken?: string;
 }
 
 export interface GeneratedImage {

@@ -4,7 +4,6 @@ import {
   type Env,
 } from "../../_shared/shortlinks";
 import { isMediaGenerateEnabled, resolveMediaApiKey } from "../../_shared/media";
-import { verifyTurnstile } from "../../_shared/turnstile";
 
 const MEDIA_API_BASE = "https://newapi.prorisehub.com";
 const ALLOWED_MODELS = new Set([
@@ -41,7 +40,6 @@ interface GenerateInput {
   aspectRatio?: string;
   quality?: string;
   style?: string;
-  turnstileToken?: string;
 }
 
 interface UpstreamImageResponse {
@@ -81,13 +79,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const body = await request.json() as GenerateInput;
     const prompt = body.prompt?.trim();
     if (!prompt) return jsonResponse({ success: false, error: "请输入画面描述" }, 400);
-
-    if (env.TURNSTILE_SECRET_KEY) {
-      const turnstile = await verifyTurnstile(request, env, body.turnstileToken);
-      if (!turnstile.success) {
-        return jsonResponse({ success: false, error: turnstile.error || "人机验证失败" }, 403);
-      }
-    }
 
     const cooldownKey = `image-generate:cooldown:${await hashCooldown(request, env)}`;
     if (await env.MY_KV.get(cooldownKey)) {

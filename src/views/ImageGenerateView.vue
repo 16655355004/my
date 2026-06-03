@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import TurnstileWidget from "../components/TurnstileWidget.vue";
 import {
   DEFAULT_ASPECT_RATIO,
   DEFAULT_IMAGE_MODEL,
@@ -20,42 +19,21 @@ const quality = ref(DEFAULT_IMAGE_QUALITY);
 const generating = ref(false);
 const error = ref<string | null>(null);
 const result = ref<GeneratedImage | null>(null);
-const turnstileToken = ref("");
-const turnstileRequired = ref(false);
 const serviceReady = ref<boolean | null>(null);
-const turnstileConfigured = ref<boolean | null>(null);
 
 const selectedModel = computed(() => IMAGE_MODELS.find((item) => item.value === model.value));
 const promptLength = computed(() => prompt.value.trim().length);
-const canSubmit = computed(() =>
-  prompt.value.trim().length > 0 &&
-  !generating.value &&
-  (!turnstileRequired.value || turnstileToken.value.length > 0),
-);
-
-const onTurnstileVerified = (token: string) => {
-  turnstileToken.value = token;
-};
-
-const onTurnstileExpired = () => {
-  turnstileToken.value = "";
-};
-
-const onTurnstileConfigured = (required: boolean) => {
-  turnstileRequired.value = required;
-};
+const canSubmit = computed(() => prompt.value.trim().length > 0 && !generating.value);
 
 const loadServiceConfig = async () => {
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/config/public`);
     const payload = await response.json() as {
-      data?: { imageGenerateEnabled?: boolean; turnstileSiteKey?: string | null };
+      data?: { imageGenerateEnabled?: boolean };
     };
     serviceReady.value = Boolean(payload.data?.imageGenerateEnabled);
-    turnstileConfigured.value = Boolean(payload.data?.turnstileSiteKey);
   } catch {
     serviceReady.value = null;
-    turnstileConfigured.value = null;
   }
 };
 
@@ -72,7 +50,6 @@ const generate = async () => {
     model: model.value,
     aspectRatio: aspectRatio.value,
     quality: quality.value,
-    turnstileToken: turnstileToken.value || undefined,
   });
 
   if (response.success && response.data) {
@@ -126,9 +103,6 @@ const downloadResult = () => {
 
       <p v-if="serviceReady === false" class="setup-alert">
         服务端未检测到生图密钥。请在 Cloudflare「变量和机密」中确认 <code>MEDIA_API_KEY</code> 已填入 ProRiseHub 的 <code>sk-</code> 令牌，保存后点击「重新部署」。也可在「工具 → 密钥」添加网站名含 ProRiseHub 的密钥作为备用。
-      </p>
-      <p v-else-if="turnstileConfigured === false" class="setup-alert setup-alert--info">
-        防刷未完全配置：请在 Cloudflare 添加明文变量 <code>TURNSTILE_SITE_KEY</code>（与现有 <code>TURNSTILE_SECRET_KEY</code> 为同一对小部件），然后重新部署。
       </p>
 
       <div class="workspace">
@@ -218,17 +192,6 @@ const downloadResult = () => {
               {{ option.label }}
             </button>
           </div>
-
-          <div class="verify-block">
-            <TurnstileWidget
-              @verified="onTurnstileVerified"
-              @expired="onTurnstileExpired"
-              @error="onTurnstileExpired"
-              @configured="onTurnstileConfigured"
-            />
-          </div>
-
-          <p v-if="turnstileRequired && !turnstileToken" class="verify-hint">请先完成人机验证，再点击生成。</p>
 
           <p v-if="error" class="form-error">{{ error }}</p>
 
