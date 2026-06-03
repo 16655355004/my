@@ -1,5 +1,8 @@
 export const MEDIA_API_BASE = "https://newapi.prorisehub.com";
 
+/** 生图接口最长等待时间（毫秒） */
+export const IMAGE_GENERATE_TIMEOUT_MS = 300_000;
+
 export const IMAGE_MODELS = [
   { value: "gpt-image-2", label: "GPT Image 2", price: "¥0.08" },
   { value: "qwen-image-2", label: "Qwen Image 2", price: "¥0.03" },

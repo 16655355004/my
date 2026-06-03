@@ -6,6 +6,10 @@ import {
 import { isMediaGenerateEnabled, resolveMediaApiKey } from "../../_shared/media";
 
 const MEDIA_API_BASE = "https://newapi.prorisehub.com";
+const UPSTREAM_TIMEOUT_MS = 300_000;
+
+/** Cloudflare Pages Function 最长执行时间（秒） */
+export const max_duration = 300;
 const ALLOWED_MODELS = new Set([
   "nano-banana",
   "nano-banana-2",
@@ -114,6 +118,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         aspect_ratio: aspectRatio,
         quality,
       }),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
 
     const payload = await upstream.json().catch(() => null) as UpstreamImageResponse | null;
@@ -140,6 +145,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return jsonResponse({ success: false, error: "生图超时（超过 300 秒），请稍后重试" }, 504);
+    }
     return jsonResponse({ success: false, error: (error as Error).message }, 500);
   }
 };

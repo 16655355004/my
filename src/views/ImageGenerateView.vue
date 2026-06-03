@@ -85,7 +85,7 @@ const downloadResult = () => {
           <span class="page-tag">Generate</span>
           <h1 class="page-title">AI 生图工作室</h1>
           <p class="page-sub">
-            用一句话描述画面，选择模型与比例，生成带二次元气质的插画。通常需要 10–60 秒，请耐心等待。
+            用一句话描述画面，选择模型与比例，生成带二次元气质的插画。复杂画面最长可能需要 5 分钟，请耐心等待。
           </p>
         </div>
 
