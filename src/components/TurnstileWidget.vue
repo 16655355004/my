@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { getApiBaseUrl } from "../services/adminAuthService";
 
 declare global {
@@ -23,6 +23,7 @@ const container = ref<HTMLElement | null>(null);
 const widgetId = ref<string | null>(null);
 const siteKey = ref<string | null>(null);
 const loading = ref(true);
+const loadError = ref<string | null>(null);
 
 let scriptPromise: Promise<void> | null = null;
 
@@ -33,6 +34,10 @@ const loadScript = () => {
   scriptPromise = new Promise((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>("script[data-turnstile]");
     if (existing) {
+      if (window.turnstile) {
+        resolve();
+        return;
+      }
       existing.addEventListener("load", () => resolve(), { once: true });
       existing.addEventListener("error", () => reject(new Error("验证组件加载失败")), { once: true });
       return;
@@ -65,18 +70,40 @@ const resolveSiteKey = async () => {
   }
 };
 
-const renderWidget = async () => {
-  if (!container.value || !siteKey.value) return;
-  await loadScript();
-  if (!window.turnstile || !container.value || widgetId.value) return;
+const mountWidget = async () => {
+  if (!siteKey.value || widgetId.value) return;
 
-  widgetId.value = window.turnstile.render(container.value, {
-    sitekey: siteKey.value,
-    theme: "dark",
-    callback: (token: string) => emit("verified", token),
-    "expired-callback": () => emit("expired"),
-    "error-callback": () => emit("error"),
-  });
+  loadError.value = null;
+  await nextTick();
+
+  if (!container.value) {
+    loadError.value = "验证区域未就绪，请刷新页面重试";
+    emit("error");
+    return;
+  }
+
+  try {
+    await loadScript();
+    if (!window.turnstile || !container.value) {
+      loadError.value = "验证脚本加载失败，请检查网络或广告拦截插件";
+      emit("error");
+      return;
+    }
+
+    widgetId.value = window.turnstile.render(container.value, {
+      sitekey: siteKey.value,
+      theme: "dark",
+      callback: (token: string) => emit("verified", token),
+      "expired-callback": () => emit("expired"),
+      "error-callback": () => {
+        loadError.value = "人机验证加载失败，请刷新重试";
+        emit("error");
+      },
+    });
+  } catch {
+    loadError.value = "验证组件初始化失败，请刷新页面";
+    emit("error");
+  }
 };
 
 const reset = () => {
@@ -90,11 +117,12 @@ onMounted(async () => {
   loading.value = false;
   emit("configured", Boolean(siteKey.value));
 
-  if (!siteKey.value) return;
-  try {
-    await renderWidget();
-  } catch {
-    emit("error");
+  if (siteKey.value) await mountWidget();
+});
+
+watch(container, (element) => {
+  if (element && siteKey.value && !widgetId.value && !loading.value) {
+    mountWidget();
   }
 });
 
@@ -106,26 +134,39 @@ onBeforeUnmount(() => {
 <template>
   <div class="turnstile-shell">
     <p v-if="loading" class="turnstile-hint">正在加载人机验证…</p>
-    <div v-else-if="siteKey" ref="container" />
-    <p v-else class="turnstile-hint">未配置 Turnstile 站点密钥，请联系管理员。</p>
+    <template v-else-if="siteKey">
+      <div ref="container" class="turnstile-slot" />
+      <p v-if="loadError" class="turnstile-hint turnstile-hint--error">{{ loadError }}</p>
+    </template>
+    <p v-else class="turnstile-hint">未配置 Turnstile 站点密钥，请在 Cloudflare 添加 TURNSTILE_SITE_KEY 后重新部署。</p>
   </div>
 </template>
 
 <style scoped>
 .turnstile-shell {
-  min-height: 66px;
+  min-height: 78px;
   display: grid;
   align-items: center;
   justify-items: start;
+  gap: 8px;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.2);
 }
 
+.turnstile-slot {
+  min-height: 65px;
+  min-width: 300px;
+}
+
 .turnstile-hint {
   color: var(--text-soft);
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+.turnstile-hint--error {
+  color: var(--accent-3);
 }
 </style>
