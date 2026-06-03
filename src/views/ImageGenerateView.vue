@@ -311,11 +311,6 @@ const downloadResult = () => {
   line-height: 1.6;
 }
 
-.setup-alert--info {
-  border-color: rgba(240, 179, 91, 0.35);
-  background: rgba(240, 179, 91, 0.08);
-}
-
 .setup-alert code {
   color: var(--accent);
   font-size: 0.82rem;
@@ -553,17 +548,6 @@ const downloadResult = () => {
   border-color: rgba(240, 179, 91, 0.45);
   background: rgba(240, 179, 91, 0.12);
   color: var(--text);
-}
-
-.verify-block {
-  margin-top: 18px;
-}
-
-.verify-hint {
-  margin-top: 10px;
-  color: var(--text-soft);
-  font-size: 0.82rem;
-  font-weight: 800;
 }
 
 .form-error {
