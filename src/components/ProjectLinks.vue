@@ -10,15 +10,6 @@ const projects = [
     action: "打开空间",
   },
   {
-    id: "image-hosting",
-    title: "图像空间",
-    desc: "承载封面、截图和灵感素材，让影像内容拥有独立入口。",
-    url: "https://img.jisoolove.top",
-    tag: "IMAGE",
-    tone: "mint",
-    action: "查看影像",
-  },
-  {
     id: "subscription-manager",
     title: "提醒中心",
     desc: "把订阅、提醒和重要事项放进可追踪的时间线。",
@@ -40,10 +31,10 @@ const openProject = (url: string) => {
       <div class="section-head">
         <div>
           <span class="section-kicker">Works</span>
-          <h2 class="section-title">空空正在维护的三个公开入口。</h2>
+          <h2 class="section-title">空空正在维护的两个公开入口。</h2>
         </div>
         <p class="section-copy">
-          视频、图像和提醒各自独立，想看什么就直接进入，不让多余信息打断浏览。
+          视频和提醒各自独立，想看什么就直接进入，不让多余信息打断浏览。
         </p>
       </div>
 
@@ -84,7 +75,7 @@ const openProject = (url: string) => {
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 

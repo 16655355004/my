@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 
-const routeOrder = ["home", "image", "bookmarks", "shortlinks", "messages", "tutorial", "apikeys", "visits", "admin"];
+const routeOrder = ["home", "image", "generate-image", "bookmarks", "shortlinks", "messages", "tutorial", "apikeys", "visits", "admin"];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +20,11 @@ const router = createRouter({
       path: "/image",
       name: "image",
       component: () => import("../views/ImageView.vue"),
+    },
+    {
+      path: "/generate-image",
+      name: "generate-image",
+      component: () => import("../views/ImageGenerateView.vue"),
     },
     {
       path: "/admin",

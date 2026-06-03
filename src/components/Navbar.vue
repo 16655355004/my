@@ -10,13 +10,13 @@ const router = useRouter();
 const links = [
   { label: "首页", meta: "Home", to: "/", section: "home" },
   { label: "作品", meta: "Works", to: "/", section: "projects" },
-  { label: "影像", meta: "Gallery", to: "/", section: "gallery" },
   { label: "状态", meta: "Signal", to: "/", section: "status" },
   { label: "留言", meta: "Message", to: "/messages" },
 ];
 
 const toolLinks = [
   { label: "图片", to: "/image" },
+  { label: "生图", to: "/generate-image" },
   { label: "书签", to: "/bookmarks" },
   { label: "短链", to: "/links" },
   { label: "教程", to: "/tutorial" },
@@ -162,7 +162,7 @@ watch(() => route.fullPath, closeMenu);
 .nav-desktop {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   gap: 6px;
 }
