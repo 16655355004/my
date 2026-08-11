@@ -139,10 +139,10 @@ onUnmounted(() => {
 
 <style scoped>
 .journal {
-  min-height: 92svh;
+  min-height: 100svh;
   display: grid;
-  align-items: center;
-  padding: 128px 0 72px;
+  align-items: start;
+  padding: clamp(36px, 5vh, 64px) 0 calc(128px + env(safe-area-inset-bottom));
 }
 
 .journal-grid {
@@ -241,7 +241,7 @@ onUnmounted(() => {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 .now-head {
@@ -252,7 +252,7 @@ onUnmounted(() => {
 @media (max-width: 820px) {
   .journal {
     min-height: auto;
-    padding: 112px 0 48px;
+    padding: 80px 0 calc(112px + env(safe-area-inset-bottom));
   }
 
   .journal-grid {
