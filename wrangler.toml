@@ -15,6 +15,12 @@ pages_build_output_dir = "dist"
 binding = "MY_KV"
 id = "b0f52d8d37e749a9a5725b04f26412da"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "jisoolove"
+database_id = "25fe29f0-080a-4b18-910a-842342b58c5a"
+migrations_dir = "migrations"
+
 [[r2_buckets]]
 binding = "IMAGES_BUCKET"
 bucket_name = "jisoolove-images"

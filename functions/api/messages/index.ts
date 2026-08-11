@@ -4,49 +4,13 @@ import {
   type Env,
 } from "../../_shared/shortlinks";
 import { verifyTurnstile } from "../../_shared/turnstile";
-
-interface Message {
-  id: string;
-  name: string;
-  content: string;
-  createdAt: string;
-}
+import { insertMessage, listMessages, type Message } from "../../_shared/messages";
 
 interface MessageInput {
   name?: string;
   content?: string;
   turnstileToken?: string;
 }
-
-const messagesKey = "messages:list";
-const legacyMessagesKey = "messages";
-const maxMessages = 100;
-
-const parseMessages = (json: string | null): Message[] => {
-  if (!json) return [];
-  try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const getMessages = async (env: Env): Promise<Message[]> => {
-  const [currentJson, legacyJson] = await Promise.all([
-    env.MY_KV.get(messagesKey),
-    env.MY_KV.get(legacyMessagesKey),
-  ]);
-  const seen = new Set<string>();
-  return [...parseMessages(currentJson), ...parseMessages(legacyJson)]
-    .filter((message) => {
-      if (seen.has(message.id)) return false;
-      seen.add(message.id);
-      return true;
-    })
-    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
-    .slice(0, maxMessages);
-};
 
 const hashCooldown = async (request: Request, env: Env) => {
   const source = [
@@ -63,7 +27,7 @@ export const onRequestOptions: PagesFunction = async () => optionsResponse();
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   try {
-    return jsonResponse({ success: true, data: { messages: await getMessages(env) } });
+    return jsonResponse({ success: true, data: { messages: await listMessages(env) } });
   } catch (error) {
     return jsonResponse({ success: false, error: (error as Error).message }, 500);
   }
@@ -91,11 +55,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       content,
       createdAt: new Date().toISOString(),
     };
-    const messages = [message, ...await getMessages(env)].slice(0, maxMessages);
 
     await Promise.all([
-      env.MY_KV.put(messagesKey, JSON.stringify(messages)),
-      env.MY_KV.put(legacyMessagesKey, JSON.stringify(messages)),
+      insertMessage(env, message),
       env.MY_KV.put(cooldownKey, "1", { expirationTtl: 90 }),
     ]);
 

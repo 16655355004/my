@@ -1,5 +1,8 @@
+import { ensureSchema, parseJsonRecord } from "./db";
+
 export interface Env {
   MY_KV: KVNamespace;
+  DB: D1Database;
   IMAGES_BUCKET?: R2Bucket;
   ADMIN_PASSWORD?: string;
   STATS_SALT?: string;
@@ -122,41 +125,110 @@ export const isValidCode = (code: string) => codePattern.test(code);
 
 export const todayKey = () => new Date().toISOString().split("T")[0];
 
-export const getIndex = async (env: Env): Promise<ShortLinkIndex> => {
-  const json = await env.MY_KV.get("shortlinks:index");
-  if (!json) return { codes: [], updatedAt: new Date().toISOString() };
-  try {
-    const parsed = JSON.parse(json) as ShortLinkIndex;
-    return {
-      codes: Array.isArray(parsed.codes) ? parsed.codes : [],
-      updatedAt: parsed.updatedAt || new Date().toISOString(),
-    };
-  } catch {
-    return { codes: [], updatedAt: new Date().toISOString() };
-  }
+type ShortLinkRow = {
+  code: string;
+  title: string;
+  target_url: string;
+  description: string | null;
+  enabled: number;
+  created_at: string;
+  updated_at: string | null;
+  expires_at: string | null;
+  last_accessed_at: string | null;
+  deleted_at: string | null;
+  risk_json: string | null;
 };
 
-export const putIndex = async (env: Env, codes: string[]) => {
-  const uniqueCodes = Array.from(new Set(codes));
-  await env.MY_KV.put("shortlinks:index", JSON.stringify({
-    codes: uniqueCodes,
-    updatedAt: new Date().toISOString(),
-  }));
+type TotalStatsRow = {
+  code: string;
+  total_clicks: number;
+  unique_visitors: number;
+  today_clicks: number | null;
+  today_key: string | null;
+  last_accessed_at: string | null;
+  updated_at: string;
 };
+
+type DailyStatsRow = {
+  code: string;
+  date: string;
+  clicks: number;
+  unique_visitors: number;
+  referrers_json: string;
+  countries_json: string;
+  updated_at: string;
+};
+
+const rowToShortLink = (row: ShortLinkRow): ShortLink => ({
+  code: row.code,
+  title: row.title,
+  targetUrl: row.target_url,
+  description: row.description || undefined,
+  enabled: Boolean(row.enabled),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at || undefined,
+  expiresAt: row.expires_at,
+  lastAccessedAt: row.last_accessed_at || undefined,
+  deletedAt: row.deleted_at || undefined,
+  risk: row.risk_json ? JSON.parse(row.risk_json) as LinkRiskAssessment : undefined,
+});
+
+export const getIndex = async (env: Env): Promise<ShortLinkIndex> => {
+  await ensureSchema(env);
+  const { results } = await env.DB.prepare(
+    "SELECT code FROM short_links WHERE deleted_at IS NULL ORDER BY created_at DESC",
+  ).all<{ code: string }>();
+  return {
+    codes: (results || []).map((row) => row.code),
+    updatedAt: new Date().toISOString(),
+  };
+};
+
+/** Index is derived from short_links; kept for call-site compatibility. */
+export const putIndex = async (_env: Env, _codes: string[]) => undefined;
 
 export const getShortLink = async (env: Env, code: string): Promise<ShortLink | null> => {
-  const json = await env.MY_KV.get(`shortlink:meta:${code}`);
-  if (!json) return null;
-  return JSON.parse(json) as ShortLink;
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM short_links WHERE code = ?").bind(code).first<ShortLinkRow>();
+  return row ? rowToShortLink(row) : null;
 };
 
 export const putShortLink = async (env: Env, link: ShortLink) => {
-  await env.MY_KV.put(`shortlink:meta:${link.code}`, JSON.stringify(link));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO short_links (
+      code, title, target_url, description, enabled, created_at, updated_at,
+      expires_at, last_accessed_at, deleted_at, risk_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(code) DO UPDATE SET
+      title = excluded.title,
+      target_url = excluded.target_url,
+      description = excluded.description,
+      enabled = excluded.enabled,
+      updated_at = excluded.updated_at,
+      expires_at = excluded.expires_at,
+      last_accessed_at = excluded.last_accessed_at,
+      deleted_at = excluded.deleted_at,
+      risk_json = excluded.risk_json
+  `).bind(
+    link.code,
+    link.title,
+    link.targetUrl,
+    link.description || null,
+    link.enabled ? 1 : 0,
+    link.createdAt,
+    link.updatedAt || null,
+    link.expiresAt || null,
+    link.lastAccessedAt || null,
+    link.deletedAt || null,
+    link.risk ? JSON.stringify(link.risk) : null,
+  ).run();
 };
 
 export const getTotalStats = async (env: Env, code: string): Promise<ShortLinkTotalStats> => {
-  const json = await env.MY_KV.get(`shortlink:stats:${code}:total`);
-  if (!json) {
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM shortlink_stats_total WHERE code = ?").bind(code).first<TotalStatsRow>();
+  if (!row) {
     return {
       code,
       totalClicks: 0,
@@ -164,16 +236,47 @@ export const getTotalStats = async (env: Env, code: string): Promise<ShortLinkTo
       updatedAt: new Date().toISOString(),
     };
   }
-  return JSON.parse(json) as ShortLinkTotalStats;
+  return {
+    code: row.code,
+    totalClicks: row.total_clicks,
+    uniqueVisitors: row.unique_visitors,
+    todayClicks: row.today_clicks || 0,
+    todayKey: row.today_key || undefined,
+    lastAccessedAt: row.last_accessed_at || undefined,
+    updatedAt: row.updated_at,
+  };
 };
 
 export const putTotalStats = async (env: Env, stats: ShortLinkTotalStats) => {
-  await env.MY_KV.put(`shortlink:stats:${stats.code}:total`, JSON.stringify(stats));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO shortlink_stats_total (
+      code, total_clicks, unique_visitors, today_clicks, today_key, last_accessed_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(code) DO UPDATE SET
+      total_clicks = excluded.total_clicks,
+      unique_visitors = excluded.unique_visitors,
+      today_clicks = excluded.today_clicks,
+      today_key = excluded.today_key,
+      last_accessed_at = excluded.last_accessed_at,
+      updated_at = excluded.updated_at
+  `).bind(
+    stats.code,
+    stats.totalClicks,
+    stats.uniqueVisitors,
+    stats.todayClicks || 0,
+    stats.todayKey || null,
+    stats.lastAccessedAt || null,
+    stats.updatedAt,
+  ).run();
 };
 
 export const getDailyStats = async (env: Env, code: string, date: string): Promise<ShortLinkDailyStats> => {
-  const json = await env.MY_KV.get(`shortlink:stats:${code}:day:${date}`);
-  if (!json) {
+  await ensureSchema(env);
+  const row = await env.DB.prepare(
+    "SELECT * FROM shortlink_stats_daily WHERE code = ? AND date = ?",
+  ).bind(code, date).first<DailyStatsRow>();
+  if (!row) {
     return {
       code,
       date,
@@ -184,11 +287,38 @@ export const getDailyStats = async (env: Env, code: string, date: string): Promi
       updatedAt: new Date().toISOString(),
     };
   }
-  return JSON.parse(json) as ShortLinkDailyStats;
+  return {
+    code: row.code,
+    date: row.date,
+    clicks: row.clicks,
+    uniqueVisitors: row.unique_visitors,
+    referrers: parseJsonRecord(row.referrers_json),
+    countries: parseJsonRecord(row.countries_json),
+    updatedAt: row.updated_at,
+  };
 };
 
 export const putDailyStats = async (env: Env, stats: ShortLinkDailyStats) => {
-  await env.MY_KV.put(`shortlink:stats:${stats.code}:day:${stats.date}`, JSON.stringify(stats));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO shortlink_stats_daily (
+      code, date, clicks, unique_visitors, referrers_json, countries_json, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(code, date) DO UPDATE SET
+      clicks = excluded.clicks,
+      unique_visitors = excluded.unique_visitors,
+      referrers_json = excluded.referrers_json,
+      countries_json = excluded.countries_json,
+      updated_at = excluded.updated_at
+  `).bind(
+    stats.code,
+    stats.date,
+    stats.clicks,
+    stats.uniqueVisitors,
+    JSON.stringify(stats.referrers || {}),
+    JSON.stringify(stats.countries || {}),
+    stats.updatedAt,
+  ).run();
 };
 
 const parseList = (value?: string) => new Set((value || "")

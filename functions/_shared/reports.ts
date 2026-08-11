@@ -12,6 +12,8 @@ import {
   getResponseTimeStats,
 } from "./statistics";
 import { listImages } from "./images";
+import { listMessages } from "./messages";
+import { ensureSchema } from "./db";
 
 export interface ReportItem {
   name: string;
@@ -54,26 +56,20 @@ export interface DailySiteReportSummary {
   topCountry?: string;
 }
 
-interface MessageRecord {
-  createdAt?: string;
-}
-
-const reportKey = (date: string) => `reports:daily:${date}`;
-
 const topItems = (record: Record<string, number>, limit = 6): ReportItem[] => Object.entries(record)
   .map(([name, value]) => ({ name, value }))
   .sort((left, right) => right.value - left.value)
   .slice(0, limit);
 
-const getMessages = async (env: Env): Promise<MessageRecord[]> => {
-  const json = await env.MY_KV.get("messages:list");
-  if (!json) return [];
-  try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+const putDailyReport = async (env: Env, report: DailySiteReport) => {
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO daily_reports (date, report_json, generated_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(date) DO UPDATE SET
+      report_json = excluded.report_json,
+      generated_at = excluded.generated_at
+  `).bind(report.date, JSON.stringify(report), report.generatedAt).run();
 };
 
 export const generateDailyReport = async (env: Env, date: string): Promise<DailySiteReport> => {
@@ -83,7 +79,7 @@ export const generateDailyReport = async (env: Env, date: string): Promise<Daily
     getResponseTimeStats(env),
     getIndex(env),
     listImages(env).catch(() => []),
-    getMessages(env),
+    listMessages(env).catch(() => []),
   ]);
 
   const links = (await Promise.all(shortlinkIndex.codes.map((code) => getShortLink(env, code)))).filter(Boolean);
@@ -134,13 +130,16 @@ export const generateDailyReport = async (env: Env, date: string): Promise<Daily
     },
   };
 
-  await env.MY_KV.put(reportKey(date), JSON.stringify(report));
+  await putDailyReport(env, report);
   return report;
 };
 
 export const getDailyReport = async (env: Env, date: string): Promise<DailySiteReport> => {
-  const json = await env.MY_KV.get(reportKey(date));
-  if (json) return JSON.parse(json) as DailySiteReport;
+  await ensureSchema(env);
+  const row = await env.DB.prepare(
+    "SELECT report_json FROM daily_reports WHERE date = ?",
+  ).bind(date).first<{ report_json: string }>();
+  if (row?.report_json) return JSON.parse(row.report_json) as DailySiteReport;
   return generateDailyReport(env, date);
 };
 

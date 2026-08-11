@@ -1,4 +1,5 @@
 import { corsHeaders, jsonResponse, optionsResponse, requireAuth, todayKey, type Env } from "./shortlinks";
+import { ensureSchema, parseJsonRecord } from "./db";
 
 interface GlobalStats {
   totalVisitors: number;
@@ -61,12 +62,68 @@ export interface AccessAnalytics {
 
 export { corsHeaders, jsonResponse, optionsResponse, requireAuth, type Env };
 
-const accessLogKey = "stats:access-logs";
 const maxAccessLogs = 200;
 
+type AccessLogRow = {
+  id: string;
+  time: string;
+  method: string;
+  path: string;
+  status: number;
+  ip: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  colo: string | null;
+  user_agent: string | null;
+  referer: string | null;
+};
+
+type DayDetailRow = {
+  date: string;
+  visits: number;
+  paths_json: string;
+  countries_json: string;
+  cities_json: string;
+  referrers_json: string;
+  statuses_json: string;
+  hours_json: string;
+  updated_at: string;
+};
+
+const rowToAccessLog = (row: AccessLogRow): AccessLogEntry => ({
+  id: row.id,
+  time: row.time,
+  method: row.method,
+  path: row.path,
+  status: row.status,
+  ip: row.ip || "",
+  country: row.country || "unknown",
+  region: row.region || "",
+  city: row.city || "",
+  latitude: row.latitude,
+  longitude: row.longitude,
+  colo: row.colo || "",
+  userAgent: row.user_agent || "",
+  referer: row.referer || "",
+});
+
 export const getGlobalStats = async (env: Env): Promise<GlobalStats> => {
-  const json = await env.MY_KV.get("stats:global");
-  if (json) return JSON.parse(json) as GlobalStats;
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM stats_global WHERE id = 1").first<{
+    total_visitors: number;
+    started_at: string;
+    updated_at: string;
+  }>();
+  if (row) {
+    return {
+      totalVisitors: row.total_visitors,
+      startedAt: row.started_at,
+      updatedAt: row.updated_at,
+    };
+  }
 
   const now = new Date().toISOString();
   return {
@@ -77,28 +134,55 @@ export const getGlobalStats = async (env: Env): Promise<GlobalStats> => {
 };
 
 export const putGlobalStats = async (env: Env, stats: GlobalStats) => {
-  await env.MY_KV.put("stats:global", JSON.stringify(stats));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO stats_global (id, total_visitors, started_at, updated_at)
+    VALUES (1, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      total_visitors = excluded.total_visitors,
+      started_at = excluded.started_at,
+      updated_at = excluded.updated_at
+  `).bind(stats.totalVisitors, stats.startedAt, stats.updatedAt).run();
 };
 
 export const getDayStats = async (env: Env, date = todayKey()): Promise<DayStats> => {
-  const json = await env.MY_KV.get(`stats:day:${date}`);
-  if (json) return JSON.parse(json) as DayStats;
-
-  return {
-    date,
-    visitors: 0,
-    updatedAt: new Date().toISOString(),
-  };
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM stats_day WHERE date = ?").bind(date).first<{
+    date: string;
+    visitors: number;
+    updated_at: string;
+  }>();
+  if (row) {
+    return { date: row.date, visitors: row.visitors, updatedAt: row.updated_at };
+  }
+  return { date, visitors: 0, updatedAt: new Date().toISOString() };
 };
 
 export const putDayStats = async (env: Env, stats: DayStats) => {
-  await env.MY_KV.put(`stats:day:${stats.date}`, JSON.stringify(stats));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO stats_day (date, visitors, updated_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(date) DO UPDATE SET
+      visitors = excluded.visitors,
+      updated_at = excluded.updated_at
+  `).bind(stats.date, stats.visitors, stats.updatedAt).run();
 };
 
 export const getResponseTimeStats = async (env: Env): Promise<ResponseTimeStats> => {
-  const json = await env.MY_KV.get("stats:response-time");
-  if (json) return JSON.parse(json) as ResponseTimeStats;
-
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM stats_response_time WHERE id = 1").first<{
+    average_response_time: number;
+    total_samples: number;
+    updated_at: string;
+  }>();
+  if (row) {
+    return {
+      averageResponseTime: row.average_response_time,
+      totalSamples: row.total_samples,
+      updatedAt: row.updated_at,
+    };
+  }
   return {
     averageResponseTime: 120,
     totalSamples: 0,
@@ -107,7 +191,15 @@ export const getResponseTimeStats = async (env: Env): Promise<ResponseTimeStats>
 };
 
 export const putResponseTimeStats = async (env: Env, stats: ResponseTimeStats) => {
-  await env.MY_KV.put("stats:response-time", JSON.stringify(stats));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO stats_response_time (id, average_response_time, total_samples, updated_at)
+    VALUES (1, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      average_response_time = excluded.average_response_time,
+      total_samples = excluded.total_samples,
+      updated_at = excluded.updated_at
+  `).bind(stats.averageResponseTime, stats.totalSamples, stats.updatedAt).run();
 };
 
 export const formatUptime = (startedAt: string) => {
@@ -140,39 +232,99 @@ const getGeo = (request: Request) => {
 };
 
 export const getAccessLogs = async (env: Env): Promise<AccessLogEntry[]> => {
-  const json = await env.MY_KV.get(accessLogKey);
-  if (!json) return [];
-  try {
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  await ensureSchema(env);
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM access_logs ORDER BY time DESC LIMIT ?",
+  ).bind(maxAccessLogs).all<AccessLogRow>();
+  return (results || []).map(rowToAccessLog);
 };
 
 export const putAccessLogs = async (env: Env, logs: AccessLogEntry[]) => {
-  await env.MY_KV.put(accessLogKey, JSON.stringify(logs.slice(0, maxAccessLogs)));
+  await ensureSchema(env);
+  const trimmed = logs.slice(0, maxAccessLogs);
+  const statements = [
+    env.DB.prepare("DELETE FROM access_logs"),
+    ...trimmed.map((entry) => env.DB.prepare(`
+      INSERT INTO access_logs (
+        id, time, method, path, status, ip, country, region, city,
+        latitude, longitude, colo, user_agent, referer
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      entry.id,
+      entry.time,
+      entry.method,
+      entry.path,
+      entry.status,
+      entry.ip,
+      entry.country,
+      entry.region,
+      entry.city,
+      entry.latitude,
+      entry.longitude,
+      entry.colo,
+      entry.userAgent,
+      entry.referer,
+    )),
+  ];
+  await env.DB.batch(statements);
 };
 
 export const getDayDetailStats = async (env: Env, date = todayKey()): Promise<DayDetailStats> => {
-  const json = await env.MY_KV.get(`stats:day-detail:${date}`);
-  if (json) return JSON.parse(json) as DayDetailStats;
-
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM stats_day_detail WHERE date = ?").bind(date).first<DayDetailRow>();
+  if (!row) {
+    return {
+      date,
+      visits: 0,
+      paths: {},
+      countries: {},
+      cities: {},
+      referrers: {},
+      statuses: {},
+      hours: {},
+      updatedAt: new Date().toISOString(),
+    };
+  }
   return {
-    date,
-    visits: 0,
-    paths: {},
-    countries: {},
-    cities: {},
-    referrers: {},
-    statuses: {},
-    hours: {},
-    updatedAt: new Date().toISOString(),
+    date: row.date,
+    visits: row.visits,
+    paths: parseJsonRecord(row.paths_json),
+    countries: parseJsonRecord(row.countries_json),
+    cities: parseJsonRecord(row.cities_json),
+    referrers: parseJsonRecord(row.referrers_json),
+    statuses: parseJsonRecord(row.statuses_json),
+    hours: parseJsonRecord(row.hours_json),
+    updatedAt: row.updated_at,
   };
 };
 
 export const putDayDetailStats = async (env: Env, stats: DayDetailStats) => {
-  await env.MY_KV.put(`stats:day-detail:${stats.date}`, JSON.stringify(stats));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO stats_day_detail (
+      date, visits, paths_json, countries_json, cities_json,
+      referrers_json, statuses_json, hours_json, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(date) DO UPDATE SET
+      visits = excluded.visits,
+      paths_json = excluded.paths_json,
+      countries_json = excluded.countries_json,
+      cities_json = excluded.cities_json,
+      referrers_json = excluded.referrers_json,
+      statuses_json = excluded.statuses_json,
+      hours_json = excluded.hours_json,
+      updated_at = excluded.updated_at
+  `).bind(
+    stats.date,
+    stats.visits,
+    JSON.stringify(stats.paths || {}),
+    JSON.stringify(stats.countries || {}),
+    JSON.stringify(stats.cities || {}),
+    JSON.stringify(stats.referrers || {}),
+    JSON.stringify(stats.statuses || {}),
+    JSON.stringify(stats.hours || {}),
+    stats.updatedAt,
+  ).run();
 };
 
 const increment = (target: Record<string, number>, key: string) => {
@@ -208,8 +360,8 @@ export const recordAccessLog = async (
   status = 200,
   pathOverride?: string,
 ) => {
+  await ensureSchema(env);
   const url = new URL(request.url);
-  const logs = await getAccessLogs(env);
   const entry: AccessLogEntry = {
     id: crypto.randomUUID(),
     time: new Date().toISOString(),
@@ -221,11 +373,37 @@ export const recordAccessLog = async (
     ...getGeo(request),
   };
 
-  logs.unshift(entry);
-  await Promise.all([
-    putAccessLogs(env, logs),
-    recordDayDetail(env, entry),
-  ]);
+  await env.DB.prepare(`
+    INSERT INTO access_logs (
+      id, time, method, path, status, ip, country, region, city,
+      latitude, longitude, colo, user_agent, referer
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    entry.id,
+    entry.time,
+    entry.method,
+    entry.path,
+    entry.status,
+    entry.ip,
+    entry.country,
+    entry.region,
+    entry.city,
+    entry.latitude,
+    entry.longitude,
+    entry.colo,
+    entry.userAgent,
+    entry.referer,
+  ).run();
+
+  // Keep only the newest N rows.
+  await env.DB.prepare(`
+    DELETE FROM access_logs
+    WHERE id NOT IN (
+      SELECT id FROM access_logs ORDER BY time DESC LIMIT ?
+    )
+  `).bind(maxAccessLogs).run();
+
+  await recordDayDetail(env, entry);
   return entry;
 };
 

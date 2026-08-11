@@ -4,6 +4,7 @@ import {
   requireAuth,
   type Env,
 } from "./shortlinks";
+import { ensureSchema } from "./db";
 
 export interface ImageMeta {
   id: string;
@@ -25,48 +26,100 @@ interface ImageIndex {
   updatedAt: string;
 }
 
+type ImageRow = {
+  id: string;
+  title: string;
+  alt: string;
+  tone: string;
+  r2_key: string;
+  content_type: string;
+  size: number;
+  url: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  sort_order: number;
+};
+
 export { jsonResponse, optionsResponse, requireAuth, type Env };
 
-const indexKey = "images:index";
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 
+const rowToImage = (row: ImageRow): ImageMeta => ({
+  id: row.id,
+  title: row.title,
+  alt: row.alt,
+  tone: row.tone,
+  r2Key: row.r2_key,
+  contentType: row.content_type,
+  size: row.size,
+  url: row.url,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  deletedAt: row.deleted_at || undefined,
+  order: row.sort_order,
+});
+
 export const getImageIndex = async (env: Env): Promise<ImageIndex> => {
-  const json = await env.MY_KV.get(indexKey);
-  if (!json) return { ids: [], updatedAt: new Date().toISOString() };
-  try {
-    const parsed = JSON.parse(json) as ImageIndex;
-    return {
-      ids: Array.isArray(parsed.ids) ? parsed.ids : [],
-      updatedAt: parsed.updatedAt || new Date().toISOString(),
-    };
-  } catch {
-    return { ids: [], updatedAt: new Date().toISOString() };
-  }
+  await ensureSchema(env);
+  const { results } = await env.DB.prepare(
+    "SELECT id FROM images WHERE deleted_at IS NULL ORDER BY sort_order ASC, created_at DESC",
+  ).all<{ id: string }>();
+  return {
+    ids: (results || []).map((row) => row.id),
+    updatedAt: new Date().toISOString(),
+  };
 };
 
-export const putImageIndex = async (env: Env, ids: string[]) => {
-  await env.MY_KV.put(indexKey, JSON.stringify({
-    ids: Array.from(new Set(ids)),
-    updatedAt: new Date().toISOString(),
-  }));
-};
+/** Index is derived from images table; kept for call-site compatibility. */
+export const putImageIndex = async (_env: Env, _ids: string[]) => undefined;
 
 export const getImageMeta = async (env: Env, id: string): Promise<ImageMeta | null> => {
-  const json = await env.MY_KV.get(`image:meta:${id}`);
-  if (!json) return null;
-  return JSON.parse(json) as ImageMeta;
+  await ensureSchema(env);
+  const row = await env.DB.prepare("SELECT * FROM images WHERE id = ?").bind(id).first<ImageRow>();
+  return row ? rowToImage(row) : null;
 };
 
 export const putImageMeta = async (env: Env, image: ImageMeta) => {
-  await env.MY_KV.put(`image:meta:${image.id}`, JSON.stringify(image));
+  await ensureSchema(env);
+  await env.DB.prepare(`
+    INSERT INTO images (
+      id, title, alt, tone, r2_key, content_type, size, url,
+      created_at, updated_at, deleted_at, sort_order
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      alt = excluded.alt,
+      tone = excluded.tone,
+      r2_key = excluded.r2_key,
+      content_type = excluded.content_type,
+      size = excluded.size,
+      url = excluded.url,
+      updated_at = excluded.updated_at,
+      deleted_at = excluded.deleted_at,
+      sort_order = excluded.sort_order
+  `).bind(
+    image.id,
+    image.title,
+    image.alt,
+    image.tone,
+    image.r2Key,
+    image.contentType,
+    image.size,
+    image.url,
+    image.createdAt,
+    image.updatedAt,
+    image.deletedAt || null,
+    image.order ?? 0,
+  ).run();
 };
 
 export const listImages = async (env: Env): Promise<ImageMeta[]> => {
-  const index = await getImageIndex(env);
-  const images = (await Promise.all(index.ids.map((id) => getImageMeta(env, id)))).filter(Boolean) as ImageMeta[];
-  return images
-    .filter((image) => !image.deletedAt)
-    .sort((left, right) => (left.order ?? 0) - (right.order ?? 0) || right.createdAt.localeCompare(left.createdAt));
+  await ensureSchema(env);
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM images WHERE deleted_at IS NULL ORDER BY sort_order ASC, created_at DESC",
+  ).all<ImageRow>();
+  return (results || []).map(rowToImage);
 };
 
 export const assertImagesBucket = (env: Env): R2Bucket => {
