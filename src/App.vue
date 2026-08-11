@@ -8,6 +8,20 @@ import { statisticsService } from "./services/statisticsService";
 const route = useRoute();
 let cursorEffect: CursorEffectResult | null = null;
 
+// 固定种子的伪随机，保证每次渲染星星位置一致
+const stars = Array.from({ length: 46 }, (_, i) => {
+  const seed = (i * 9301 + 49297) % 233280;
+  const rand = (offset: number) => (((seed + offset * 131) * 9301 + 49297) % 233280) / 233280;
+  return {
+    left: `${(rand(1) * 100).toFixed(2)}%`,
+    top: `${(rand(2) * 100).toFixed(2)}%`,
+    size: rand(3) > 0.82 ? 2.4 : 1.4,
+    delay: `${(rand(4) * 6).toFixed(2)}s`,
+    duration: `${(3.2 + rand(5) * 4).toFixed(2)}s`,
+    tint: rand(6) > 0.75 ? "var(--accent-2)" : rand(6) > 0.5 ? "var(--accent)" : "#f2ecdf",
+  };
+});
+
 onMounted(() => {
   statisticsService.recordVisit(route.fullPath).catch(() => {
     // Visit tracking should not block the app shell.
@@ -30,11 +44,24 @@ onUnmounted(() => {
 
 <template>
   <div class="app-shell">
-    <div class="stage-bg" aria-hidden="true">
-      <div class="stage-gradient stage-a"></div>
-      <div class="stage-gradient stage-b"></div>
-      <div class="stage-rails"></div>
-      <div class="stage-noise"></div>
+    <div class="night-sky" aria-hidden="true">
+      <div class="sky-wash"></div>
+      <span
+        v-for="(star, index) in stars"
+        :key="index"
+        class="star"
+        :style="{
+          left: star.left,
+          top: star.top,
+          width: `${star.size}px`,
+          height: `${star.size}px`,
+          background: star.tint,
+          animationDelay: star.delay,
+          animationDuration: star.duration,
+        }"
+      ></span>
+      <div class="moon"></div>
+      <div class="grain"></div>
     </div>
 
     <Navbar />
@@ -58,11 +85,12 @@ onUnmounted(() => {
   min-height: 100vh;
   overflow-x: clip;
   background:
-    radial-gradient(circle at 20% 8%, rgba(83, 198, 176, 0.16), transparent 28rem),
-    linear-gradient(135deg, #080a0f 0%, #11141b 48%, #17100d 100%);
+    radial-gradient(ellipse 90% 55% at 78% -6%, rgba(160, 140, 255, 0.14), transparent 60%),
+    radial-gradient(ellipse 70% 46% at 12% 110%, rgba(242, 160, 181, 0.1), transparent 55%),
+    linear-gradient(178deg, #0c0e20 0%, #0a0c18 42%, #090a14 100%);
 }
 
-.stage-bg {
+.night-sky {
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -70,47 +98,36 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.stage-gradient {
-  position: absolute;
-  width: 34vw;
-  min-width: 320px;
-  aspect-ratio: 1;
-  border-radius: 999px;
-  filter: blur(46px);
-  opacity: 0.32;
-  animation: drift 12s ease-in-out infinite;
-}
-
-.stage-a {
-  top: -16%;
-  right: -8%;
-  background: #f0b35b;
-}
-
-.stage-b {
-  left: -14%;
-  bottom: 8%;
-  background: #53c6b0;
-  animation-duration: 15s;
-  animation-delay: -4s;
-}
-
-.stage-rails {
+.sky-wash {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 72%, transparent 100%);
+  background: radial-gradient(ellipse 44% 36% at 80% 12%, rgba(255, 217, 142, 0.07), transparent 65%);
 }
 
-.stage-noise {
+.star {
+  position: absolute;
+  border-radius: 50%;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.moon {
+  position: absolute;
+  top: 9vh;
+  right: 8vw;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #fff8e6 0%, #ffe9b8 58%, #f5d68f 100%);
+  opacity: 0.9;
+  animation: moon-glow 7s ease-in-out infinite;
+}
+
+.grain {
   position: absolute;
   inset: 0;
-  opacity: 0.11;
+  opacity: 0.08;
   background-image:
-    repeating-radial-gradient(circle at 20% 30%, rgba(255,255,255,0.45) 0 1px, transparent 1px 4px);
+    repeating-radial-gradient(circle at 20% 30%, rgba(242, 236, 223, 0.5) 0 1px, transparent 1px 4px);
   mix-blend-mode: overlay;
 }
 
@@ -121,6 +138,13 @@ onUnmounted(() => {
 }
 
 @media (max-width: 760px) {
+  .moon {
+    top: 7vh;
+    right: 6vw;
+    width: 40px;
+    height: 40px;
+  }
+
   .page-content {
     padding-bottom: 128px;
   }

@@ -366,17 +366,17 @@ onMounted(() => {
 }
 
 .status-pill.active {
-  border-color: rgba(83, 198, 176, 0.5);
+  border-color: rgba(160, 140, 255, 0.5);
   color: var(--accent-2);
 }
 
 .status-pill.expiring {
-  border-color: rgba(240, 179, 91, 0.6);
+  border-color: rgba(242, 160, 181, 0.6);
   color: var(--accent);
 }
 
 .status-pill.expired {
-  border-color: rgba(239, 111, 108, 0.6);
+  border-color: rgba(255, 107, 107, 0.6);
   color: var(--accent-3);
 }
 

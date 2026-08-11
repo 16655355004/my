@@ -16,7 +16,7 @@ const formData = ref({
   url: "",
   icon: "LK",
   category: "",
-  color: "#f0b35b",
+  color: "#f2a0b5",
 });
 
 const categories = ["开发工具", "系统工具", "效率工具", "设计工具", "学习资源", "娱乐", "其他"];
@@ -59,7 +59,7 @@ const loadWebsites = async () => {
 };
 
 const resetForm = () => {
-  formData.value = { name: "", description: "", url: "", icon: "LK", category: "", color: "#f0b35b" };
+  formData.value = { name: "", description: "", url: "", icon: "LK", category: "", color: "#f2a0b5" };
   editingWebsite.value = null;
   showAddForm.value = false;
 };

@@ -335,8 +335,8 @@ onMounted(() => {
 <style scoped>
 .visits-view {
   background:
-    radial-gradient(circle at 18% 14%, rgba(240, 179, 91, 0.16), transparent 34%),
-    radial-gradient(circle at 85% 4%, rgba(83, 198, 176, 0.12), transparent 32%);
+    radial-gradient(circle at 18% 14%, rgba(242, 160, 181, 0.16), transparent 34%),
+    radial-gradient(circle at 85% 4%, rgba(160, 140, 255, 0.12), transparent 32%);
 }
 
 .analytics-stack {
@@ -432,8 +432,8 @@ onMounted(() => {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background:
-    radial-gradient(circle at 68% 45%, rgba(83, 198, 176, 0.12), transparent 26%),
-    radial-gradient(circle at 48% 54%, rgba(240, 179, 91, 0.12), transparent 24%),
+    radial-gradient(circle at 68% 45%, rgba(160, 140, 255, 0.12), transparent 26%),
+    radial-gradient(circle at 48% 54%, rgba(242, 160, 181, 0.12), transparent 24%),
     rgba(8, 10, 15, 0.44);
 }
 
@@ -497,12 +497,12 @@ onMounted(() => {
   position: absolute;
   border-radius: 999px;
   background: var(--accent);
-  box-shadow: 0 0 28px rgba(240, 179, 91, 0.42);
+  box-shadow: 0 0 28px rgba(242, 160, 181, 0.42);
   transform: translate(-50%, -50%);
 }
 
 .map-box.heatmap .map-point {
-  background: radial-gradient(circle, rgba(239, 111, 108, 0.92), rgba(240, 179, 91, 0.36) 42%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 107, 107, 0.92), rgba(242, 160, 181, 0.36) 42%, transparent 70%);
   filter: blur(1px);
   box-shadow: none;
 }
@@ -581,7 +581,7 @@ onMounted(() => {
 .hour-bars span {
   min-height: 8px;
   border-radius: 999px 999px 0 0;
-  background: linear-gradient(180deg, var(--accent), rgba(83, 198, 176, 0.42));
+  background: linear-gradient(180deg, var(--accent), rgba(160, 140, 255, 0.42));
 }
 
 .report-login {

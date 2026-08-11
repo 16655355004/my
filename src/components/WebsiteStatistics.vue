@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
 import { statisticsService, type Statistics } from "../services/statisticsService";
 
@@ -28,12 +28,12 @@ const animatePanel = async () => {
 
   gsapContext?.revert();
   gsapContext = gsap.context(() => {
-    gsap.from(".stats-head, .stat-item, .stat-note", {
+    gsap.from(".note-row, .note-foot", {
       opacity: 0,
-      y: 18,
-      duration: 0.56,
+      y: 14,
+      duration: 0.5,
       ease: "power2.out",
-      stagger: 0.06,
+      stagger: 0.08,
     });
   }, panelRef.value);
 };
@@ -52,11 +52,11 @@ const fetchStatistics = async () => {
       statistics.value = result.data;
     } else {
       statistics.value = fallback;
-      error.value = "站点状态暂时未同步。";
+      error.value = "数字暂时没同步上，先记个大概。";
     }
   } catch {
     statistics.value = fallback;
-    error.value = "站点状态暂时未同步。";
+    error.value = "数字暂时没同步上，先记个大概。";
   } finally {
     loading.value = false;
     await animatePanel();
@@ -68,6 +68,16 @@ const formatNumber = (value: number) =>
   : value >= 1000 ? `${(value / 1000).toFixed(1)}K`
   : value.toString();
 
+const rows = computed(() => {
+  if (!statistics.value) return [];
+  return [
+    { label: "累计到访", value: `${formatNumber(statistics.value.totalVisitors)} 次` },
+    { label: "今日到访", value: `${formatNumber(statistics.value.todayVisitors)} 次` },
+    { label: "应答用时", value: `${statistics.value.responseTime} ms` },
+    { label: "亮灯天数", value: `${statistics.value.uptime.days} 天` },
+  ];
+});
+
 onMounted(fetchStatistics);
 
 onUnmounted(() => {
@@ -76,124 +86,107 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="panelRef" class="stats-panel panel">
-    <div class="stats-head">
-      <div>
-        <span class="section-kicker">Signal</span>
-        <h2>站点实时状态</h2>
-      </div>
+  <div ref="panelRef" class="stats-note panel">
+    <div class="note-head">
+      <h3>随手记</h3>
       <button class="btn btn-ghost" @click="fetchStatistics" :disabled="loading">
-        {{ loading ? "更新中" : "刷新" }}
+        {{ loading ? "翻页中" : "再记一笔" }}
       </button>
     </div>
 
     <div v-if="loading" class="state-box">
       <div class="spinner"></div>
-      <p>正在读取站点状态</p>
+      <p>正在翻开这一页</p>
     </div>
 
-    <div v-else-if="statistics" class="stat-grid">
-      <div class="stat-item">
-        <strong>{{ formatNumber(statistics.totalVisitors) }}</strong>
-        <span>累计访问</span>
+    <dl v-else class="note-list">
+      <div v-for="row in rows" :key="row.label" class="note-row">
+        <dt>{{ row.label }}</dt>
+        <dd>{{ row.value }}</dd>
       </div>
-      <div class="stat-item">
-        <strong>{{ formatNumber(statistics.todayVisitors) }}</strong>
-        <span>今日访问</span>
-      </div>
-      <div class="stat-item">
-        <strong>{{ statistics.responseTime }}ms</strong>
-        <span>响应</span>
-      </div>
-      <div class="stat-item">
-        <strong>{{ statistics.uptime.days }}天</strong>
-        <span>运行</span>
-      </div>
-    </div>
+    </dl>
 
-    <p v-if="error" class="stat-note warning">{{ error }}</p>
-    <p v-else class="stat-note">访问、响应和运行时长会在这里汇总。</p>
+    <p v-if="error" class="note-foot warning">{{ error }}</p>
+    <p v-else class="note-foot">—— 记于 {{ new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }) }}</p>
   </div>
 </template>
 
 <style scoped>
-.stats-panel {
-  padding: 24px;
+.stats-note {
+  max-width: 640px;
+  padding: 28px 30px;
 }
 
-.stats-head {
+.note-head {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
-.stats-head h2 {
-  margin-top: 8px;
+.note-head h3 {
   color: var(--text);
-  font-size: clamp(1.5rem, 3vw, 2.4rem);
-  font-weight: 850;
+  font-size: 1.3rem;
+  font-weight: 900;
 }
 
-.stats-head .btn {
+.note-head .btn {
   min-height: 36px;
   padding-inline: 14px;
+  font-size: 0.86rem;
 }
 
-.stat-grid {
+.note-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--line);
 }
 
-.stat-item {
-  min-height: 132px;
+.note-row {
   display: flex;
-  flex-direction: column;
-  justify-content: end;
-  padding: 18px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)),
-    rgba(8, 10, 15, 0.58);
+  align-items: baseline;
+  gap: 10px;
+  padding: 13px 0;
 }
 
-strong {
-  color: var(--text);
-  font-size: clamp(1.6rem, 3vw, 2.3rem);
-  line-height: 1;
-  font-weight: 850;
+.note-row + .note-row {
+  border-top: 1px dashed var(--line);
 }
 
-.stat-item span {
-  margin-top: 8px;
+.note-row dt {
+  flex: none;
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.95rem;
 }
 
-.stat-note {
-  margin-top: 12px;
+/* 手帐引导点线 */
+.note-row::before {
+  content: "";
+  order: 2;
+  flex: 1;
+  border-bottom: 2px dotted rgba(242, 236, 223, 0.22);
+  transform: translateY(-4px);
+}
+
+.note-row dt {
+  order: 1;
+}
+
+.note-row dd {
+  order: 3;
+  color: var(--text);
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  font-weight: 900;
+}
+
+.note-foot {
+  margin-top: 16px;
   color: var(--text-soft);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
+  text-align: right;
 }
 
-.stat-note.warning {
+.note-foot.warning {
   color: var(--accent);
-}
-
-@media (max-width: 740px) {
-  .stats-head {
-    align-items: start;
-    flex-direction: column;
-  }
-
-  .stat-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  text-align: left;
 }
 </style>

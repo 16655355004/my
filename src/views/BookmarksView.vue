@@ -9,12 +9,12 @@ const searchQuery = ref("");
 const selectedCategory = ref("全部");
 
 const fallbackBookmarks = (): Website[] => [
-  { id: 1, name: "Reqable", description: "接口调试、抓包分析和 API 测试工具。", url: "https://reqable.com/", icon: "RQ", category: "开发工具", color: "#f0b35b" },
-  { id: 2, name: "PowerToys", description: "Windows 系统增强工具集合。", url: "https://learn.microsoft.com/zh-cn/windows/powertoys/install", icon: "PT", category: "系统工具", color: "#53c6b0" },
-  { id: 3, name: "Flow Launcher", description: "快速启动应用、搜索文件和执行命令。", url: "https://www.flowlauncher.com/", icon: "FL", category: "效率工具", color: "#ef6f6c" },
-  { id: 4, name: "GitHub", description: "代码托管、协作开发和自动化工作流平台。", url: "https://github.com/", icon: "GH", category: "开发工具", color: "#f0b35b" },
-  { id: 5, name: "VS Code", description: "轻量、灵活、插件丰富的代码编辑器。", url: "https://code.visualstudio.com/", icon: "VS", category: "开发工具", color: "#53c6b0" },
-  { id: 6, name: "Figma", description: "用于界面设计、原型和团队协作的设计工具。", url: "https://www.figma.com/", icon: "FG", category: "设计工具", color: "#ef6f6c" },
+  { id: 1, name: "Reqable", description: "接口调试、抓包分析和 API 测试工具。", url: "https://reqable.com/", icon: "RQ", category: "开发工具", color: "#f2a0b5" },
+  { id: 2, name: "PowerToys", description: "Windows 系统增强工具集合。", url: "https://learn.microsoft.com/zh-cn/windows/powertoys/install", icon: "PT", category: "系统工具", color: "#a08cff" },
+  { id: 3, name: "Flow Launcher", description: "快速启动应用、搜索文件和执行命令。", url: "https://www.flowlauncher.com/", icon: "FL", category: "效率工具", color: "#ff6b6b" },
+  { id: 4, name: "GitHub", description: "代码托管、协作开发和自动化工作流平台。", url: "https://github.com/", icon: "GH", category: "开发工具", color: "#f2a0b5" },
+  { id: 5, name: "VS Code", description: "轻量、灵活、插件丰富的代码编辑器。", url: "https://code.visualstudio.com/", icon: "VS", category: "开发工具", color: "#a08cff" },
+  { id: 6, name: "Figma", description: "用于界面设计、原型和团队协作的设计工具。", url: "https://www.figma.com/", icon: "FG", category: "设计工具", color: "#ff6b6b" },
 ];
 
 const categories = computed(() => {

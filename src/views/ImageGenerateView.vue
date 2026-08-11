@@ -293,7 +293,7 @@ const downloadResult = () => {
   left: -6%;
   width: min(420px, 50vw);
   height: min(420px, 50vw);
-  background: radial-gradient(circle, rgba(240, 179, 91, 0.35), transparent 70%);
+  background: radial-gradient(circle, rgba(242, 160, 181, 0.35), transparent 70%);
 }
 
 .page-hero {
@@ -303,9 +303,9 @@ const downloadResult = () => {
 .setup-alert {
   margin-bottom: 18px;
   padding: 14px 16px;
-  border: 1px solid rgba(239, 111, 108, 0.35);
+  border: 1px solid rgba(255, 107, 107, 0.35);
   border-radius: var(--radius-sm);
-  background: rgba(239, 111, 108, 0.08);
+  background: rgba(255, 107, 107, 0.08);
   color: var(--text-soft);
   font-size: 0.86rem;
   line-height: 1.6;
@@ -435,8 +435,8 @@ const downloadResult = () => {
 
 .field textarea:focus {
   outline: none;
-  border-color: rgba(240, 179, 91, 0.42);
-  box-shadow: 0 0 0 3px rgba(240, 179, 91, 0.12);
+  border-color: rgba(242, 160, 181, 0.42);
+  box-shadow: 0 0 0 3px rgba(242, 160, 181, 0.12);
 }
 
 .field textarea::placeholder {
@@ -462,8 +462,8 @@ const downloadResult = () => {
 
 .field-select:focus {
   outline: none;
-  border-color: rgba(240, 179, 91, 0.42);
-  box-shadow: 0 0 0 3px rgba(240, 179, 91, 0.12);
+  border-color: rgba(242, 160, 181, 0.42);
+  box-shadow: 0 0 0 3px rgba(242, 160, 181, 0.12);
 }
 
 .field-select:disabled {
@@ -504,8 +504,8 @@ const downloadResult = () => {
 
 .ratio-chip:hover:not(:disabled),
 .ratio-chip.active {
-  border-color: rgba(83, 198, 176, 0.45);
-  background: rgba(83, 198, 176, 0.1);
+  border-color: rgba(160, 140, 255, 0.45);
+  background: rgba(160, 140, 255, 0.1);
   color: var(--text);
 }
 
@@ -545,17 +545,17 @@ const downloadResult = () => {
 }
 
 .quality-chip.active {
-  border-color: rgba(240, 179, 91, 0.45);
-  background: rgba(240, 179, 91, 0.12);
+  border-color: rgba(242, 160, 181, 0.45);
+  background: rgba(242, 160, 181, 0.12);
   color: var(--text);
 }
 
 .form-error {
   margin-top: 12px;
   padding: 12px 14px;
-  border: 1px solid rgba(239, 111, 108, 0.35);
+  border: 1px solid rgba(255, 107, 107, 0.35);
   border-radius: var(--radius-sm);
-  background: rgba(239, 111, 108, 0.08);
+  background: rgba(255, 107, 107, 0.08);
   color: var(--text-soft);
   font-size: 0.86rem;
 }
@@ -586,7 +586,7 @@ const downloadResult = () => {
 }
 
 .stage-panel.ready .stage-frame {
-  border-color: rgba(240, 179, 91, 0.35);
+  border-color: rgba(242, 160, 181, 0.35);
 }
 
 .stage-frame {
@@ -648,7 +648,7 @@ const downloadResult = () => {
 
 .paint-ring span:nth-child(2) {
   inset: 10px;
-  border-top-color: rgba(83, 198, 176, 0.9);
+  border-top-color: rgba(160, 140, 255, 0.9);
   border-right-color: transparent;
   animation-duration: 0.85s;
   animation-direction: reverse;
@@ -656,7 +656,7 @@ const downloadResult = () => {
 
 .paint-ring span:nth-child(3) {
   inset: 20px;
-  border-top-color: rgba(239, 111, 108, 0.85);
+  border-top-color: rgba(255, 107, 107, 0.85);
   animation-duration: 1.35s;
 }
 

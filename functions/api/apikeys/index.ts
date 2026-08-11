@@ -90,7 +90,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
         // 获取现有列表
         const keysJson = await env.MY_KV.get("apikeys_list");
-        let keys: ApiKey[] = keysJson ? JSON.parse(keysJson) : [];
+        const keys: ApiKey[] = keysJson ? JSON.parse(keysJson) : [];
 
         // 生成新 ID
         const newId = keys.length > 0 ? Math.max(...keys.map(k => k.id)) + 1 : 1;

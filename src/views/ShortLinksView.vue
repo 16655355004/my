@@ -510,14 +510,14 @@ onMounted(() => {
 .soft-alert {
   margin-bottom: 14px;
   padding: 12px 14px;
-  border: 1px solid rgba(239, 111, 108, 0.35);
+  border: 1px solid rgba(255, 107, 107, 0.35);
   border-radius: var(--radius-sm);
-  background: rgba(239, 111, 108, 0.08);
+  background: rgba(255, 107, 107, 0.08);
 }
 
 .soft-alert.success {
-  border-color: rgba(83, 198, 176, 0.35);
-  background: rgba(83, 198, 176, 0.08);
+  border-color: rgba(160, 140, 255, 0.35);
+  background: rgba(160, 140, 255, 0.08);
 }
 
 .soft-alert button {
@@ -565,19 +565,19 @@ onMounted(() => {
 
 .status-pill.active,
 .status-pill.risk.safe {
-  border-color: rgba(83, 198, 176, 0.5);
+  border-color: rgba(160, 140, 255, 0.5);
   color: var(--accent-2);
 }
 
 .status-pill.risk.warning {
-  border-color: rgba(240, 179, 91, 0.6);
+  border-color: rgba(242, 160, 181, 0.6);
   color: var(--accent);
 }
 
 .status-pill.paused,
 .status-pill.expired,
 .status-pill.risk.blocked {
-  border-color: rgba(239, 111, 108, 0.6);
+  border-color: rgba(255, 107, 107, 0.6);
   color: var(--accent-3);
 }
 
@@ -756,17 +756,17 @@ onMounted(() => {
 }
 
 .chip.safe {
-  border-color: rgba(83, 198, 176, 0.42);
+  border-color: rgba(160, 140, 255, 0.42);
   color: var(--accent-2);
 }
 
 .chip.warning {
-  border-color: rgba(240, 179, 91, 0.5);
+  border-color: rgba(242, 160, 181, 0.5);
   color: var(--accent);
 }
 
 .chip.blocked {
-  border-color: rgba(239, 111, 108, 0.5);
+  border-color: rgba(255, 107, 107, 0.5);
   color: var(--accent-3);
 }
 

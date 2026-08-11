@@ -368,15 +368,15 @@ onUnmounted(() => {
 .soft-alert {
   margin-bottom: 14px;
   padding: 12px 14px;
-  border: 1px solid rgba(239, 111, 108, 0.35);
+  border: 1px solid rgba(255, 107, 107, 0.35);
   border-radius: var(--radius-sm);
-  background: rgba(239, 111, 108, 0.08);
+  background: rgba(255, 107, 107, 0.08);
   color: var(--text-soft);
 }
 
 .soft-alert.success {
-  border-color: rgba(83, 198, 176, 0.35);
-  background: rgba(83, 198, 176, 0.08);
+  border-color: rgba(160, 140, 255, 0.35);
+  background: rgba(160, 140, 255, 0.08);
 }
 
 .soft-alert button {
@@ -475,7 +475,7 @@ onUnmounted(() => {
   right: 10px;
   padding: 7px 10px;
   border-radius: 999px;
-  background: rgba(239, 111, 108, 0.82);
+  background: rgba(255, 107, 107, 0.82);
   color: var(--ink);
   font-size: 0.76rem;
   font-weight: 800;
@@ -545,9 +545,9 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px dashed rgba(240, 179, 91, 0.45);
+  border: 1px dashed rgba(242, 160, 181, 0.45);
   border-radius: var(--radius-sm);
-  background: rgba(240, 179, 91, 0.08);
+  background: rgba(242, 160, 181, 0.08);
   cursor: pointer;
 }
 

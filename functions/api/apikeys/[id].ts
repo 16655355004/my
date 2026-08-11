@@ -76,7 +76,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
         // 获取现有列表
         const keysJson = await env.MY_KV.get("apikeys_list");
-        let keys: ApiKey[] = keysJson ? JSON.parse(keysJson) : [];
+        const keys: ApiKey[] = keysJson ? JSON.parse(keysJson) : [];
 
         const index = keys.findIndex(k => k.id === id);
         if (index === -1) {
@@ -120,7 +120,7 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
 
         // 获取现有列表
         const keysJson = await env.MY_KV.get("apikeys_list");
-        let keys: ApiKey[] = keysJson ? JSON.parse(keysJson) : [];
+        const keys: ApiKey[] = keysJson ? JSON.parse(keysJson) : [];
 
         const index = keys.findIndex(k => k.id === id);
         if (index === -1) {

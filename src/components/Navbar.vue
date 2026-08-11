@@ -10,8 +10,8 @@ const router = useRouter();
 const links = [
   { label: "首页", meta: "Home", to: "/", section: "home" },
   { label: "作品", meta: "Works", to: "/", section: "projects" },
-  { label: "状态", meta: "Signal", to: "/", section: "status" },
-  { label: "留言", meta: "Message", to: "/messages" },
+  { label: "状态", meta: "Now", to: "/", section: "status" },
+  { label: "留言", meta: "Letters", to: "/messages" },
 ];
 
 const toolLinks = [
@@ -65,6 +65,8 @@ watch(() => route.fullPath, closeMenu);
 <template>
   <header :class="['navbar', { scrolled: isScrolled }]">
     <div class="container navbar-inner">
+      <button class="brand-seal" type="button" aria-label="回到首页" @click="navigateHome('home')">空</button>
+
       <nav class="nav-desktop" aria-label="主导航">
         <template v-for="link in links" :key="link.label">
           <button v-if="link.section" class="nav-link" type="button" @click="navigateHome(link.section)">
@@ -79,7 +81,7 @@ watch(() => route.fullPath, closeMenu);
 
         <div class="tools-menu">
           <button class="nav-link tools-trigger" type="button">
-            <span>工具</span>
+            <span>抽屉</span>
             <small>Tools</small>
           </button>
           <div class="tools-popover">
@@ -116,7 +118,7 @@ watch(() => route.fullPath, closeMenu);
         </template>
 
         <div class="mobile-tools">
-          <span>工具入口</span>
+          <span>抽屉 · Tools</span>
           <RouterLink v-for="link in toolLinks" :key="link.label" class="mobile-link tool" :to="link.to">
             {{ link.label }}
           </RouterLink>
@@ -138,29 +140,48 @@ watch(() => route.fullPath, closeMenu);
   height: 70px;
   display: flex;
   align-items: center;
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 10px;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)),
-    rgba(8, 10, 15, 0.42);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  background: rgba(10, 12, 24, 0.68);
+  box-shadow: var(--shadow-soft);
   backdrop-filter: blur(14px);
-  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
   pointer-events: auto;
 }
 
 .navbar.scrolled .navbar-inner {
-  border-color: rgba(255, 255, 255, 0.16);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
-    rgba(8, 10, 15, 0.82);
-  box-shadow: var(--shadow-soft);
+  border-color: var(--line-strong);
+  background: rgba(9, 10, 20, 0.88);
   backdrop-filter: blur(18px);
 }
 
+.brand-seal {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(242, 160, 181, 0.75);
+  border-radius: 10px;
+  color: var(--accent);
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+  transform: rotate(-4deg);
+  transition: transform var(--transition), background var(--transition), color var(--transition);
+}
+
+.brand-seal:hover {
+  transform: rotate(4deg) scale(1.06);
+  background: var(--accent);
+  color: var(--ink);
+}
+
 .nav-desktop {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
@@ -184,8 +205,8 @@ watch(() => route.fullPath, closeMenu);
   background: transparent;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   text-align: center;
   transition: color var(--transition), background var(--transition), top var(--transition);
 }
@@ -205,9 +226,9 @@ watch(() => route.fullPath, closeMenu);
 
 .nav-link small {
   color: var(--text-soft);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   transition: color var(--transition);
 }
@@ -215,15 +236,15 @@ watch(() => route.fullPath, closeMenu);
 .nav-link:hover,
 .nav-link.router-link-active {
   background:
-    radial-gradient(circle at 50% 0%, rgba(240, 179, 91, 0.2), transparent 58%),
-    rgba(255, 255, 255, 0.1);
+    radial-gradient(circle at 50% 0%, rgba(242, 160, 181, 0.18), transparent 58%),
+    rgba(242, 236, 223, 0.07);
   color: var(--text);
   top: -4px;
 }
 
 .nav-link:hover small,
 .nav-link.router-link-active small {
-  color: rgba(247, 242, 232, 0.68);
+  color: rgba(242, 236, 223, 0.66);
 }
 
 .nav-link.router-link-active::after {
@@ -260,9 +281,9 @@ watch(() => route.fullPath, closeMenu);
   display: grid;
   gap: 4px;
   padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
-  background: rgba(8, 10, 15, 0.92);
+  background: rgba(9, 10, 20, 0.94);
   box-shadow: var(--shadow-soft);
   opacity: 0;
   pointer-events: none;
@@ -284,14 +305,14 @@ watch(() => route.fullPath, closeMenu);
   padding: 0 10px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
 .tool-link:hover,
 .tool-link.router-link-active {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(242, 236, 223, 0.08);
 }
 
 .menu-btn {
@@ -302,16 +323,16 @@ watch(() => route.fullPath, closeMenu);
   justify-content: center;
   flex-direction: column;
   gap: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(242, 236, 223, 0.05);
   transition: background var(--transition), border-color var(--transition);
 }
 
 .menu-btn:hover,
 .menu-btn.open {
-  border-color: rgba(240, 179, 91, 0.38);
-  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(242, 160, 181, 0.45);
+  background: rgba(242, 236, 223, 0.1);
 }
 
 .menu-btn span {
@@ -345,11 +366,9 @@ watch(() => route.fullPath, closeMenu);
   display: grid;
   gap: 7px;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
-    rgba(8, 10, 15, 0.86);
+  background: rgba(9, 10, 20, 0.9);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(18px);
 }
@@ -361,7 +380,7 @@ watch(() => route.fullPath, closeMenu);
   border-radius: var(--radius);
   padding: 0 14px;
   color: var(--text-muted);
-  font-weight: 800;
+  font-weight: 600;
   transition: background var(--transition), color var(--transition), transform var(--transition);
 }
 
@@ -370,15 +389,14 @@ watch(() => route.fullPath, closeMenu);
   gap: 7px;
   margin-top: 8px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed var(--line-strong);
 }
 
 .mobile-tools > span {
   color: var(--text-soft);
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.74rem;
+  font-weight: 600;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .mobile-link.tool {
@@ -387,7 +405,7 @@ watch(() => route.fullPath, closeMenu);
 
 .mobile-link.router-link-active,
 .mobile-link:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(242, 236, 223, 0.08);
   color: var(--text);
   transform: translateX(2px);
 }
@@ -399,10 +417,16 @@ watch(() => route.fullPath, closeMenu);
 
   .navbar-inner {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     height: 58px;
-    padding: 8px 10px 8px 12px;
+    padding: 8px 10px;
+  }
+
+  .brand-seal {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
   }
 
   .nav-desktop {
