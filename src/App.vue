@@ -3,6 +3,7 @@ import { onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 import { fairyDustCursor, type CursorEffectResult } from "cursor-effects";
 import Navbar from "./components/Navbar.vue";
+import SiteFooter from "./components/SiteFooter.vue";
 import { statisticsService } from "./services/statisticsService";
 
 const route = useRoute();
@@ -72,6 +73,8 @@ onUnmounted(() => {
         </transition>
       </RouterView>
     </main>
+
+    <SiteFooter />
   </div>
 </template>
 
@@ -133,7 +136,6 @@ onUnmounted(() => {
 .page-content {
   position: relative;
   z-index: 1;
-  padding-bottom: 124px;
 }
 
 @media (max-width: 760px) {
@@ -144,8 +146,5 @@ onUnmounted(() => {
     height: 40px;
   }
 
-  .page-content {
-    padding-bottom: 128px;
-  }
 }
 </style>

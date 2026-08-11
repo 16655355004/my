@@ -14,17 +14,6 @@ const links = [
   { label: "留言", meta: "Letters", to: "/messages" },
 ];
 
-const toolLinks = [
-  { label: "图片", to: "/image" },
-  { label: "生图", to: "/generate-image" },
-  { label: "书签", to: "/bookmarks" },
-  { label: "短链", to: "/links" },
-  { label: "教程", to: "/tutorial" },
-  { label: "密钥", to: "/apikeys" },
-  { label: "访问", to: "/visits" },
-  { label: "后台", to: "/admin" },
-];
-
 const closeMenu = () => {
   isMenuOpen.value = false;
   document.body.style.overflow = "";
@@ -78,18 +67,6 @@ watch(() => route.fullPath, closeMenu);
             <small>{{ link.meta }}</small>
           </RouterLink>
         </template>
-
-        <div class="tools-menu">
-          <button class="nav-link tools-trigger" type="button">
-            <span>抽屉</span>
-            <small>Tools</small>
-          </button>
-          <div class="tools-popover">
-            <RouterLink v-for="link in toolLinks" :key="link.label" class="tool-link" :to="link.to">
-              {{ link.label }}
-            </RouterLink>
-          </div>
-        </div>
       </nav>
 
       <button
@@ -116,13 +93,6 @@ watch(() => route.fullPath, closeMenu);
             {{ link.label }}
           </RouterLink>
         </template>
-
-        <div class="mobile-tools">
-          <span>抽屉 · Tools</span>
-          <RouterLink v-for="link in toolLinks" :key="link.label" class="mobile-link tool" :to="link.to">
-            {{ link.label }}
-          </RouterLink>
-        </div>
       </div>
     </div>
   </header>
@@ -144,7 +114,7 @@ watch(() => route.fullPath, closeMenu);
   padding: 8px 8px 8px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: rgba(10, 12, 24, 0.68);
+  background: rgba(10, 12, 24, 0.42);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(14px);
   transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
@@ -153,7 +123,7 @@ watch(() => route.fullPath, closeMenu);
 
 .navbar.scrolled .navbar-inner {
   border-color: var(--line-strong);
-  background: rgba(9, 10, 20, 0.88);
+  background: rgba(9, 10, 20, 0.62);
   backdrop-filter: blur(18px);
 }
 
@@ -183,7 +153,7 @@ watch(() => route.fullPath, closeMenu);
   flex: 1;
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   gap: 6px;
 }
@@ -260,61 +230,6 @@ watch(() => route.fullPath, closeMenu);
   transform: translateX(-50%);
 }
 
-.tools-menu {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  height: 54px;
-}
-
-.tools-menu .nav-link {
-  width: 100%;
-  height: 54px;
-}
-
-.tools-popover {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 0;
-  width: 168px;
-  display: grid;
-  gap: 4px;
-  padding: 8px;
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius);
-  background: rgba(9, 10, 20, 0.94);
-  box-shadow: var(--shadow-soft);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-8px);
-  transition: opacity var(--transition), transform var(--transition);
-}
-
-.tools-menu:hover .tools-popover,
-.tools-menu:focus-within .tools-popover {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-.tool-link {
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 0.86rem;
-  font-weight: 600;
-}
-
-.tool-link:hover,
-.tool-link.router-link-active {
-  color: var(--text);
-  background: rgba(242, 236, 223, 0.08);
-}
-
 .menu-btn {
   display: none;
   width: 42px;
@@ -382,25 +297,6 @@ watch(() => route.fullPath, closeMenu);
   color: var(--text-muted);
   font-weight: 600;
   transition: background var(--transition), color var(--transition), transform var(--transition);
-}
-
-.mobile-tools {
-  display: grid;
-  gap: 7px;
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--line-strong);
-}
-
-.mobile-tools > span {
-  color: var(--text-soft);
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-}
-
-.mobile-link.tool {
-  color: var(--text-soft);
 }
 
 .mobile-link.router-link-active,
