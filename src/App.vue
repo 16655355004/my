@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
-import { emojiCursor, type CursorEffectResult } from "cursor-effects";
+import { fairyDustCursor, type CursorEffectResult } from "cursor-effects";
 import Navbar from "./components/Navbar.vue";
 import { statisticsService } from "./services/statisticsService";
 
@@ -30,9 +30,8 @@ onMounted(() => {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
   if (!prefersReducedMotion && finePointer) {
-    cursorEffect = emojiCursor({
-      emoji: ["🐾", "🐱", "✨"],
-      delay: 26,
+    cursorEffect = fairyDustCursor({
+      colors: ["#f2a0b5", "#a08cff", "#ffd98e", "#f2ecdf"],
     });
   }
 });
