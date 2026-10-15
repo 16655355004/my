@@ -8,6 +8,7 @@ import {
   listApiKeys,
   nextApiKeyId,
   putApiKey,
+  validateApiKey,
   type ApiKey,
 } from "../../_shared/apikeys";
 
@@ -36,13 +37,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
 
     const newKey: ApiKey = {
-      ...body,
+      website: body.website.trim(),
+      mainSite: body.mainSite.trim(),
+      apiKey: body.apiKey.trim(),
       id: await nextApiKeyId(env),
-      balance: Number(body.balance) || 0,
+      balance: body.balance ?? 0,
+      currency: body.currency || "USD",
+      provider: body.provider || "custom",
+      logoUrl: body.logoUrl?.trim() || undefined,
       expiryDate: body.expiryDate || "",
       createdAt: new Date().toISOString(),
     };
 
+    const validationError = validateApiKey(newKey);
+    if (validationError) return jsonResponse({ success: false, error: validationError }, 400);
     await putApiKey(env, newKey);
     return jsonResponse({ success: true, data: newKey });
   } catch (error) {

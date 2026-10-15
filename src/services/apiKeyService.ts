@@ -6,7 +6,11 @@ export interface ApiKey {
     website: string // 官网 (服务名称)
     mainSite: string // 主站 (URL)
     apiKey: string // 秘钥
-    balance: number // 余额 ($)
+    balance: number // 余额
+    currency?: string
+    provider?: string
+    logoUrl?: string
+    balanceUpdatedAt?: string
     expiryDate: string // 有效期 (ISO date string)
     createdAt: string // 添加时间
     updatedAt?: string
@@ -17,6 +21,9 @@ export interface ApiKeyInput {
     mainSite: string
     apiKey: string
     balance: number
+    currency?: string
+    provider?: string
+    logoUrl?: string
     expiryDate: string
 }
 
@@ -70,21 +77,28 @@ class ApiKeyService {
 
     // 处理 API 响应
     private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-        try {
-            const data = await response.json()
-            return data
-        } catch (error) {
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.includes('application/json')) {
             return {
                 success: false,
-                error: 'Failed to parse response'
+                error: `接口返回 ${response.status} ${response.statusText || '非 JSON 响应'}，请确认当前部署包含余额刷新接口`
             }
+        }
+        try {
+            const data = await response.json() as ApiResponse<T>
+            if (!response.ok && !data.error) {
+                return { success: false, error: `请求失败：HTTP ${response.status}` }
+            }
+            return data
+        } catch {
+            return { success: false, error: `接口返回 ${response.status}，但响应格式无效` }
         }
     }
 
     // 秘钥掩码显示 - 显示前3个字符和后6个字符
     maskApiKey(key: string): string {
         if (!key || key.length <= 9) {
-            return key
+            return '••••••••'
         }
         const start = key.substring(0, 3)
         const end = key.substring(key.length - 6)
@@ -205,6 +219,21 @@ class ApiKeyService {
         }
     }
 
+    async refreshBalance(id: number): Promise<ApiResponse<Pick<ApiKey, 'balance' | 'currency' | 'balanceUpdatedAt'>>> {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/apikeys/${id}/balance`, {
+                method: 'POST',
+                headers: this.getHeaders(true),
+            })
+            if (response.status === 404 || response.status === 405) {
+                return { success: false, error: `余额接口尚未生效（HTTP ${response.status}），请将本次 Pages Functions 与前端一起部署；不是密钥校验失败` }
+            }
+            return await this.handleResponse(response)
+        } catch {
+            return { success: false, error: '无法连接余额接口：可能是网络故障或跨域预检失败。请确认新版 Pages Functions 已部署；这不代表 DeepSeek 密钥错误' }
+        }
+    }
+
     // 检查密钥是否过期
     isExpired(expiryDate: string): boolean {
         const expiry = new Date(expiryDate)
@@ -214,6 +243,7 @@ class ApiKeyService {
 
     // 获取密钥状态
     getKeyStatus(expiryDate: string): 'active' | 'expiring' | 'expired' {
+        if (!expiryDate) return 'active'
         const expiry = new Date(expiryDate)
         const now = new Date()
         const daysUntilExpiry = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
@@ -228,8 +258,8 @@ class ApiKeyService {
     }
 
     // 格式化余额显示
-    formatBalance(balance: number): string {
-        return `$${balance.toFixed(2)}`
+    formatBalance(balance: number, currency = 'USD'): string {
+        return new Intl.NumberFormat('zh-CN', { style: 'currency', currency }).format(balance)
     }
 }
 

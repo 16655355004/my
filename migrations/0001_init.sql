@@ -66,6 +66,10 @@ CREATE TABLE IF NOT EXISTS api_keys (
   main_site TEXT NOT NULL,
   api_key TEXT NOT NULL,
   balance REAL NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  provider TEXT NOT NULL DEFAULT 'custom',
+  logo_url TEXT,
+  balance_updated_at TEXT,
   expiry_date TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL,
   updated_at TEXT

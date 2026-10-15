@@ -8,6 +8,7 @@ import {
   deleteApiKey,
   getApiKey,
   putApiKey,
+  validateApiKey,
   type ApiKey,
 } from "../../_shared/apikeys";
 
@@ -31,10 +32,22 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, params })
     const body = await request.json() as Partial<ApiKey>;
     const updated: ApiKey = {
       ...existing,
-      ...body,
+      website: body.website ?? existing.website,
+      mainSite: body.mainSite ?? existing.mainSite,
+      apiKey: body.apiKey ?? existing.apiKey,
+      balance: body.balance ?? existing.balance,
+      currency: body.currency ?? existing.currency,
+      provider: body.provider ?? existing.provider,
+      logoUrl: body.logoUrl ?? existing.logoUrl,
+      expiryDate: body.expiryDate ?? existing.expiryDate,
       id,
       updatedAt: new Date().toISOString(),
+      balanceUpdatedAt: body.apiKey !== undefined && body.apiKey !== existing.apiKey ||
+        body.balance !== undefined && body.balance !== existing.balance ||
+        body.currency !== undefined && body.currency !== existing.currency ? undefined : existing.balanceUpdatedAt,
     };
+    const validationError = validateApiKey(updated);
+    if (validationError) return jsonResponse({ success: false, error: validationError }, 400);
     await putApiKey(env, updated);
     return jsonResponse({ success: true, data: updated });
   } catch (error) {

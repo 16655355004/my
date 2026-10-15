@@ -33,7 +33,8 @@ export default defineConfig(({ mode }) => {
   // Preview configuration
   const preview: PreviewOptions = {
     port: 4173,
-    open: true
+    open: true,
+    proxy
   };
   
   const plugins = [

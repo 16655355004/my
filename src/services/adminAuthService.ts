@@ -8,8 +8,7 @@ export interface AdminAuthData {
   authenticated: boolean
 }
 
-export const getApiBaseUrl = () =>
-  import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'https://www.jisoolove.top' : '')
+export const getApiBaseUrl = () => import.meta.env.VITE_API_BASE_URL || ''
 
 export const verifyAdminToken = async (token: string): Promise<ApiResponse<AdminAuthData>> => {
   const trimmedToken = token.trim()

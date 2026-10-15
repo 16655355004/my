@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import shortLinkService, {
   type LinkRiskAssessment,
   type ShortLinkDailyStats,
@@ -220,6 +220,28 @@ function mergeTopItems(key: "referrers" | "countries") {
   return Array.from(counts.entries()).sort((left, right) => right[1] - left[1]).slice(0, 5);
 }
 
+let restoreBodyScroll: (() => void) | undefined;
+watch(showForm, (isOpen) => {
+  if (isOpen) {
+    const { overflow, paddingRight } = document.body.style;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const bodyPadding = Number.parseFloat(window.getComputedStyle(document.body).paddingRight) || 0;
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${bodyPadding + scrollbarWidth}px`;
+    restoreBodyScroll = () => {
+      document.body.style.overflow = overflow;
+      document.body.style.paddingRight = paddingRight;
+    };
+  } else {
+    restoreBodyScroll?.();
+    restoreBodyScroll = undefined;
+  }
+});
+
+onUnmounted(() => {
+  restoreBodyScroll?.();
+});
+
 let riskTimer: number | undefined;
 watch(() => [formData.value.targetUrl, formData.value.code, editingLink.value?.code], () => {
   riskConfirmed.value = false;
@@ -374,41 +396,45 @@ onMounted(() => {
       </template>
     </div>
 
-    <div v-if="showForm" class="modal-overlay" @click="resetForm">
-      <form class="modal panel" @click.stop @submit.prevent="submitForm">
-        <header>
-          <h2>{{ editingLink ? "编辑短链" : "新建短链" }}</h2>
-          <button type="button" @click="resetForm">关闭</button>
-        </header>
-        <label>标题<input v-model="formData.title" required placeholder="项目首页" /></label>
-        <label>目标 URL<input v-model="formData.targetUrl" type="url" required placeholder="https://example.com" /></label>
-        <div v-if="riskLoading || riskAssessment" class="risk-panel">
-          <span v-if="riskLoading" class="status-pill">检测中</span>
-          <template v-else-if="riskAssessment">
-            <span :class="['status-pill', 'risk', riskAssessment.status]">
-              {{ shortLinkService.riskLabel(riskAssessment.status) }} · {{ riskAssessment.score }}
-            </span>
-            <div class="risk-reasons">
-              <span v-for="reason in riskAssessment.reasons" :key="reason.code" :class="['chip', reason.severity]">{{ reason.message }}</span>
-              <span v-if="riskAssessment.reasons.length === 0" class="chip safe">未发现明显风险</span>
+    <Teleport to="body">
+      <div v-if="showForm" class="modal-overlay" @click="resetForm">
+        <form class="modal panel" role="dialog" aria-modal="true" aria-labelledby="shortlink-form-title" @click.stop @submit.prevent="submitForm">
+          <header>
+            <h2 id="shortlink-form-title">{{ editingLink ? "编辑短链" : "新建短链" }}</h2>
+            <button type="button" @click="resetForm">关闭</button>
+          </header>
+          <div class="modal-body">
+            <label>标题<input v-model="formData.title" required placeholder="项目首页" /></label>
+            <label>目标 URL<input v-model="formData.targetUrl" type="url" required placeholder="https://example.com" /></label>
+            <div v-if="riskLoading || riskAssessment" class="risk-panel">
+              <span v-if="riskLoading" class="status-pill">检测中</span>
+              <template v-else-if="riskAssessment">
+                <span :class="['status-pill', 'risk', riskAssessment.status]">
+                  {{ shortLinkService.riskLabel(riskAssessment.status) }} · {{ riskAssessment.score }}
+                </span>
+                <div class="risk-reasons">
+                  <span v-for="reason in riskAssessment.reasons" :key="reason.code" :class="['chip', reason.severity]">{{ reason.message }}</span>
+                  <span v-if="riskAssessment.reasons.length === 0" class="chip safe">未发现明显风险</span>
+                </div>
+                <label v-if="riskAssessment.status === 'warning'" class="check-line">
+                  <input v-model="riskConfirmed" type="checkbox" /> 我已确认这个警告链接仍然需要保存
+                </label>
+              </template>
             </div>
-            <label v-if="riskAssessment.status === 'warning'" class="check-line">
-              <input v-model="riskConfirmed" type="checkbox" /> 我已确认这个警告链接仍然需要保存
-            </label>
-          </template>
-        </div>
-        <div class="form-row">
-          <label>短码<input v-model="formData.code" :disabled="!!editingLink" placeholder="留空自动生成" /></label>
-          <label>过期时间<input v-model="formData.expiresAt" type="date" /></label>
-        </div>
-        <label>描述<textarea v-model="formData.description" rows="3" placeholder="可选备注"></textarea></label>
-        <label class="check-line"><input v-model="formData.enabled" type="checkbox" /> 启用短链</label>
-        <footer>
-          <button type="button" class="btn btn-ghost" @click="resetForm">取消</button>
-          <button class="btn" type="submit" :disabled="loading || !isFormValid">{{ loading ? "保存中" : "保存" }}</button>
-        </footer>
-      </form>
-    </div>
+            <div class="form-row">
+              <label>短码<input v-model="formData.code" :disabled="!!editingLink" placeholder="留空自动生成" /></label>
+              <label>过期时间<input v-model="formData.expiresAt" type="date" /></label>
+            </div>
+            <label>描述<textarea v-model="formData.description" rows="3" placeholder="可选备注"></textarea></label>
+            <label class="check-line"><input v-model="formData.enabled" type="checkbox" /> 启用短链</label>
+          </div>
+          <footer>
+            <button type="button" class="btn btn-ghost" @click="resetForm">取消</button>
+            <button class="btn" type="submit" :disabled="loading || !isFormValid">{{ loading ? "保存中" : "保存" }}</button>
+          </footer>
+        </form>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -723,13 +749,59 @@ onMounted(() => {
   z-index: 1500;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(12px);
 }
 
 .modal {
   width: min(560px, 100%);
+  min-width: 0;
+  max-height: 100%;
+  max-height: min(100%, calc(100dvh - 40px));
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--bg-strong), var(--bg));
+}
+
+.modal > header,
+.modal > footer {
+  padding: 20px 24px;
+}
+
+.modal > header {
+  border-bottom: 1px solid var(--line);
+}
+
+.modal > footer {
+  border-top: 1px solid var(--line);
+}
+
+.modal-body {
+  display: grid;
+  gap: 16px;
+  min-height: 0;
+  min-width: 0;
+  padding: 20px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-2) transparent;
+}
+
+.modal input,
+.modal textarea,
+.modal label,
+.risk-panel {
+  min-width: 0;
+}
+
+.modal .chip {
+  overflow-wrap: anywhere;
 }
 
 .modal label {
@@ -772,7 +844,7 @@ onMounted(() => {
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
