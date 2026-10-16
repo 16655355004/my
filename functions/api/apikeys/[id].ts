@@ -30,6 +30,10 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, params })
     }
 
     const body = await request.json() as Partial<ApiKey>;
+    const balanceSynced = body.balanceUpdatedAt !== undefined && body.balance !== undefined && body.currency !== undefined;
+    if (balanceSynced && (typeof body.balanceUpdatedAt !== "string" || !Number.isFinite(Date.parse(body.balanceUpdatedAt)))) {
+      return jsonResponse({ success: false, error: "余额更新时间无效" }, 400);
+    }
     const updated: ApiKey = {
       ...existing,
       website: body.website ?? existing.website,
@@ -42,7 +46,8 @@ export const onRequestPut: PagesFunction<Env> = async ({ request, env, params })
       expiryDate: body.expiryDate ?? existing.expiryDate,
       id,
       updatedAt: new Date().toISOString(),
-      balanceUpdatedAt: body.apiKey !== undefined && body.apiKey !== existing.apiKey ||
+      balanceUpdatedAt: balanceSynced ? new Date().toISOString() :
+        body.apiKey !== undefined && body.apiKey !== existing.apiKey ||
         body.balance !== undefined && body.balance !== existing.balance ||
         body.currency !== undefined && body.currency !== existing.currency ? undefined : existing.balanceUpdatedAt,
     };

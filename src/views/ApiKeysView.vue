@@ -112,9 +112,19 @@ const refreshBalance = async (key: ApiKey) => {
   balanceLoading.value.add(key.id);
   delete balanceErrors.value[key.id];
   try {
-    const result = await apiKeyService.refreshBalance(key.id);
-    if (result.success && result.data) { Object.assign(key, result.data); notice.value = `${key.website} 余额已同步`; }
-    else balanceErrors.value[key.id] = result.error || "余额刷新失败，原余额已保留";
+    const result = await apiKeyService.refreshBalance(key);
+    if (result.success && result.data) {
+      const previousKey = key.apiKey;
+      const saved = await apiKeyService.updateApiKey(key.id, {
+        balance: result.data.balance,
+        currency: result.data.currency,
+        balanceUpdatedAt: result.data.balanceUpdatedAt,
+      });
+      if (key.apiKey !== previousKey) return;
+      Object.assign(key, result.data);
+      if (saved.success) notice.value = `${key.website} 官方余额已查询并保存`;
+      else balanceErrors.value[key.id] = `官方余额查询成功，当前显示最新结果，但本站保存失败：${saved.error || '请稍后重试'}。刷新页面后可能恢复旧记录。`;
+    } else balanceErrors.value[key.id] = result.error || "余额刷新失败，原余额已保留";
   } finally { balanceLoading.value.delete(key.id); }
 };
 const deleteKey = async (key: ApiKey) => {

@@ -79,10 +79,12 @@ class ApiKeyService {
     private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
         const contentType = response.headers.get('content-type') || ''
         if (!contentType.includes('application/json')) {
-            return {
-                success: false,
-                error: `接口返回 ${response.status} ${response.statusText || '非 JSON 响应'}，请确认当前部署包含余额刷新接口`
-            }
+            const ray = response.headers.get('cf-ray')
+            const reference = ray ? `，请求标识：${ray}` : ''
+            const message = response.status >= 500
+                ? '服务或网关返回了非 JSON 错误响应，需检查 Cloudflare Functions 日志及代理，不能据此判断密钥错误或接口未部署'
+                : '接口返回了非 JSON 响应，请检查请求地址和服务响应'
+            return { success: false, error: `HTTP ${response.status}：${message}${reference}` }
         }
         try {
             const data = await response.json() as ApiResponse<T>
@@ -219,18 +221,40 @@ class ApiKeyService {
         }
     }
 
-    async refreshBalance(id: number): Promise<ApiResponse<Pick<ApiKey, 'balance' | 'currency' | 'balanceUpdatedAt'>>> {
+    async refreshBalance(key: ApiKey): Promise<ApiResponse<Pick<ApiKey, 'balance' | 'currency' | 'balanceUpdatedAt'>>> {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 15000)
         try {
-            const response = await fetch(`${this.baseUrl}/api/apikeys/${id}/balance`, {
-                method: 'POST',
-                headers: this.getHeaders(true),
+            const response = await fetch('https://api.deepseek.com/user/balance', {
+                method: 'GET',
+                headers: { Authorization: `Bearer ${key.apiKey.trim()}`, Accept: 'application/json' },
+                credentials: 'omit',
+                redirect: 'error',
+                signal: controller.signal,
             })
-            if (response.status === 404 || response.status === 405) {
-                return { success: false, error: `余额接口尚未生效（HTTP ${response.status}），请将本次 Pages Functions 与前端一起部署；不是密钥校验失败` }
+            if (!response.ok) {
+                const message = response.status === 401 ? 'DeepSeek 密钥无效或已失效' :
+                    response.status === 429 ? 'DeepSeek 查询过于频繁，请稍后重试' : 'DeepSeek 官方余额查询失败'
+                return { success: false, error: `${message}（HTTP ${response.status}）` }
             }
-            return await this.handleResponse(response)
+            const data: unknown = await response.json()
+            if (!data || typeof data !== 'object' || !('balance_infos' in data) || !Array.isArray(data.balance_infos)) {
+                return { success: false, error: 'DeepSeek 返回的余额数据格式无效' }
+            }
+            const balances = data.balance_infos.filter((item): item is { currency: string; total_balance: string } =>
+                item && typeof item === 'object' && ['CNY', 'USD'].includes(item.currency) &&
+                typeof item.total_balance === 'string' && item.total_balance.trim() !== '' &&
+                Number.isFinite(Number(item.total_balance)))
+            const balance = balances.find((item) => item.currency === key.currency) || balances[0]
+            if (!balance) return { success: false, error: 'DeepSeek 未返回有效的账户余额' }
+            return { success: true, data: {
+                balance: Number(balance.total_balance), currency: balance.currency,
+                balanceUpdatedAt: new Date().toISOString(),
+            } }
         } catch {
-            return { success: false, error: '无法连接余额接口：可能是网络故障或跨域预检失败。请确认新版 Pages Functions 已部署；这不代表 DeepSeek 密钥错误' }
+            return { success: false, error: controller.signal.aborted ? 'DeepSeek 官方余额查询超时，原余额已保留' : '无法直连 DeepSeek 官方接口，请检查网络、代理或浏览器跨域提示' }
+        } finally {
+            clearTimeout(timer)
         }
     }
 
