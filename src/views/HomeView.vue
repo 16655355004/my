@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
+import AgentTour from "../components/AgentTour.vue";
 import ProjectLinks from "../components/ProjectLinks.vue";
 import WebsiteStatistics from "../components/WebsiteStatistics.vue";
 import { statisticsService } from "../services/statisticsService";
@@ -134,6 +135,8 @@ onUnmounted(() => {
         <WebsiteStatistics />
       </div>
     </section>
+
+    <AgentTour />
   </div>
 </template>
 

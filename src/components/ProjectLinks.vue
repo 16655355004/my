@@ -2,11 +2,11 @@
 const projects = [
   {
     id: "video-player",
-    title: "视频空间",
-    desc: "长视频、剪辑和观看入口，都收在这个安静的放映厅里。",
-    url: "https://video.jisoolove.top",
+    title: "QQ群解析",
+    desc: "把群号贴进来，剩下的解析和跳转都交给它。",
+    url: "https://qq.jisoolove.top",
     no: "TICKET 01",
-    seat: "video.jisoolove.top",
+    seat: "qq.jisoolove.top",
     action: "入场",
   },
   {
