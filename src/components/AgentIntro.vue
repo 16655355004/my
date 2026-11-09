@@ -17,6 +17,7 @@ const BOX_SPECS: BoxSpec[] = [
   { sel: ".journal-title", label: "title", fill: "title" },
   { sel: ".journal-script", label: "script", fill: "line" },
   { sel: ".journal-intro", label: "body", fill: "lines" },
+  { sel: ".journal-sign", label: "by", fill: "lines" },
   { sel: ".journal-visitor", label: "stat", fill: "line" },
   { sel: ".journal-actions .btn", label: "cta", fill: "line", all: true },
 ];
@@ -44,12 +45,15 @@ function play() {
   const root = rootRef.value;
   if (!root) return;
 
+  const startedAt = performance.now();
   const items = boxes.value;
   // 真实内容先藏起来（保留布局），框画好就地写进去
   items.forEach((box) => {
     box.el.style.visibility = "hidden";
     hiddenEls.push(box.el);
   });
+
+  const carets = Array.from(root.querySelectorAll<HTMLElement>(".ai-caret"));
 
   const { timeline: tl, drawEnd, cursorEls } = playLanes(root, items, {
     onFilled: (box) => {
@@ -62,8 +66,11 @@ function play() {
         gsap.to(sketch.querySelectorAll(".wf-bar"), { opacity: 0, duration: 0.22, ease: "power1.out" });
       }
 
-      revealBox(box, () => {
-        if (sketch) gsap.to(sketch, { opacity: 0, duration: 0.32, ease: "power1.out" });
+      revealBox(box, {
+        caret: carets[box.agent] ?? null,
+        onDone: () => {
+          if (sketch) gsap.to(sketch, { opacity: 0, duration: 0.32, ease: "power1.out" });
+        },
       });
     },
   });
@@ -98,7 +105,8 @@ function play() {
 
   tl.call(() => {
     progress.value = 100;
-    hudText.value = "这一页写好了";
+    const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
+    hudText.value = `构建完成 · ${items.length} 个区块 · ${seconds}s`;
   }, undefined, endAt - 0.2);
 
   tl.to(root, { opacity: 0, duration: 0.55, ease: "power2.inOut" }, endAt);

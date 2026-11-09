@@ -44,6 +44,13 @@ const visitorLine = computed(() => {
   return `你是今天路过这里的第 ${todayVisitors.value} 个人。`;
 });
 
+// 用页面自身的 Last-Modified：静态站每次发布就是一次内容更新
+const updatedLabel = computed(() => {
+  const stamp = new Date(document.lastModified);
+  if (Number.isNaN(stamp.getTime())) return "";
+  return stamp.toLocaleDateString("zh-CN", { month: "long", day: "numeric" });
+});
+
 const navigateToSection = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 };
@@ -111,7 +118,14 @@ onUnmounted(() => {
             和一个随时可以留下字迹的地方。慢慢看，不着急。
           </p>
 
-          <p class="journal-visitor">✦ {{ visitorLine }}</p>
+          <p class="journal-sign">
+            我是空空，一个人维护这些页面。写后端居多，也顺手写前端，
+            喜欢把东西做得安静一点、慢一点。
+          </p>
+
+          <p class="journal-visitor">
+            ✦ {{ visitorLine }}<template v-if="updatedLabel"> · 本页更新于 {{ updatedLabel }}</template>
+          </p>
 
           <div class="journal-actions">
             <button class="btn" type="button" @click="navigateToSection('projects')">翻到作品那页</button>
@@ -238,6 +252,15 @@ onUnmounted(() => {
   color: var(--accent-3);
   font-size: 0.96rem;
   letter-spacing: 0.04em;
+}
+
+.journal-sign {
+  max-width: 620px;
+  margin-top: 16px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(242, 160, 181, 0.32);
+  color: var(--text-soft);
+  font-size: 0.94rem;
 }
 
 .journal-actions {

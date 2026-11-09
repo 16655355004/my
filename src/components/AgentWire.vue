@@ -43,6 +43,15 @@ const barStyle = (bar: ReturnType<typeof barsFor>[number]) => ({
       <span class="ai-guide-v"></span>
     </div>
 
+    <div
+      v-for="agent in AGENTS"
+      :key="`caret-${agent.name}`"
+      class="ai-caret"
+      :style="{ color: agent.color }"
+    >
+      <span class="ai-caret-bar"></span>
+    </div>
+
     <div v-for="agent in AGENTS" :key="agent.name" class="ai-cursor" :style="{ color: agent.color }">
       <svg class="ai-cursor-arrow" width="20" height="22" viewBox="0 0 20 22" fill="none">
         <path
@@ -70,6 +79,29 @@ const barStyle = (bar: ReturnType<typeof barsFor>[number]) => ({
   position: absolute;
   border: 1px dashed rgba(242, 236, 223, 0.3);
   border-radius: 6px;
+}
+
+/* 四角留两个 L 形角标，图纸那种感觉 */
+.wf-box::before,
+.wf-box::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-style: solid;
+  border-color: rgba(242, 236, 223, 0.45);
+}
+
+.wf-box::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.wf-box::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
 }
 
 .wf-tag {
@@ -186,6 +218,45 @@ const barStyle = (bar: ReturnType<typeof barsFor>[number]) => ({
 .ai-cursor.flip .ai-cursor-tag {
   right: 15px;
   left: auto;
+}
+
+/* 写字时的笔尖 */
+.ai-caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 16px;
+  opacity: 0;
+  will-change: transform;
+}
+
+.ai-caret-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: ai-caret-blink 0.9s steps(1) infinite;
+}
+
+/* 触屏没有鼠标，光标和定位线只会碍事 */
+@media (pointer: coarse) {
+  .ai-cursor,
+  .ai-guide {
+    display: none;
+  }
+}
+
+@keyframes ai-caret-blink {
+  0%,
+  62% {
+    opacity: 1;
+  }
+  63%,
+  100% {
+    opacity: 0.14;
+  }
 }
 
 @keyframes wf-shimmer {

@@ -66,6 +66,8 @@ async function build(): Promise<void> {
     return;
   }
 
+  const carets = Array.from(root.querySelectorAll<HTMLElement>(".ai-caret"));
+
   const { timeline: tl, drawEnd, cursorEls } = playLanes(root, boxes.value, {
     startDelay: 0.18,
     onFilled: (box) => {
@@ -78,8 +80,11 @@ async function build(): Promise<void> {
         gsap.to(sketch.querySelectorAll(".wf-bar"), { opacity: 0, duration: 0.22, ease: "power1.out" });
       }
 
-      revealBox(box, () => {
-        if (sketch) gsap.to(sketch, { opacity: 0, duration: 0.32, ease: "power1.out" });
+      revealBox(box, {
+        caret: carets[box.agent] ?? null,
+        onDone: () => {
+          if (sketch) gsap.to(sketch, { opacity: 0, duration: 0.32, ease: "power1.out" });
+        },
       });
     },
   });

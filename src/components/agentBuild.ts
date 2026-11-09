@@ -166,6 +166,8 @@ export function playLanes(root: HTMLElement, boxes: WireBox[], options: LaneOpti
   const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
   const lanes: gsap.core.Timeline[] = [];
   const startDelay = options.startDelay ?? 0.4;
+  // 挑一个框演一次「先画歪、再改回来」，整场太顺反而假
+  const mistakeId = boxes.length > 5 ? boxes[Math.floor(boxes.length * 0.62)].id : -1;
 
   AGENTS.forEach((_, agentIndex) => {
     const lane = boxes.filter((box) => box.agent === agentIndex);
@@ -221,6 +223,17 @@ export function playLanes(root: HTMLElement, boxes: WireBox[], options: LaneOpti
 
       if (tag) laneTl.to(tag, { opacity: 1, y: 0, duration: 0.18 }, t + 0.14);
       t += 0.17;
+
+      // 画歪一次：尺寸差一截，停一下再改回正确尺寸
+      if (box.id === mistakeId) {
+        const wrongW = Math.max(40, Math.round(box.w * 0.62));
+        const wrongH = Math.max(24, Math.round(box.h * 0.78));
+        laneTl.to(el, { width: wrongW, height: wrongH, duration: 0.16, ease: "power2.in" }, t);
+        laneTl.to(cursor, { x: clampX(box.x + wrongW), duration: 0.16, ease: "power2.in" }, t);
+        laneTl.to(el, { width: box.w, height: box.h, duration: 0.24, ease: "back.out(1.6)" }, t + 0.46);
+        laneTl.to(cursor, { x: clampX(box.x + box.w - 8), duration: 0.24, ease: "power2.out" }, t + 0.46);
+        t += 0.72;
+      }
 
       // 填内容：骨架条一根一根长出来，同时把真实元素逐块露出来
       const bars = Array.from(el.querySelectorAll<HTMLElement>(".wf-bar"));
@@ -296,7 +309,20 @@ function measureLineBoxes(el: HTMLElement, base: DOMRect): LineBox[] {
  * 像被一笔一笔写上去：笔迹沿行从左到右推进，写完一行才写下一行。
  * 布局不动，只用一个由行框拼出来的 clip-path 控制「写到哪了」。
  */
-export function writeIn(el: HTMLElement, onDone?: () => void): void {
+export interface WriteOptions {
+  /** 元素在舞台坐标系里的左上角，用来定位笔尖 */
+  originX?: number;
+  originY?: number;
+  caret?: HTMLElement | null;
+  onDone?: () => void;
+}
+
+/**
+ * 像被一笔一笔写上去：笔迹沿行从左到右推进，写完一行才写下一行。
+ * 布局不动，只用一个由行框拼出来的 clip-path 控制「写到哪了」。
+ */
+export function writeIn(el: HTMLElement, options: WriteOptions = {}): void {
+  const { originX = 0, originY = 0, caret = null, onDone } = options;
   const base = el.getBoundingClientRect();
   const lines = measureLineBoxes(el, base);
 
@@ -308,14 +334,27 @@ export function writeIn(el: HTMLElement, onDone?: () => void): void {
   const totalWidth = lines.reduce((sum, line) => sum + (line.right - line.left), 0);
   const state = { p: 0 };
 
+  const moveCaret = (x: number, y: number, height: number) => {
+    if (!caret) return;
+    caret.style.transform = `translate3d(${originX + x}px, ${originY + y - 2}px, 0)`;
+    caret.style.height = `${height + 5}px`;
+    caret.style.opacity = "1";
+  };
+
   const apply = () => {
     let remaining = totalWidth * state.p;
     const parts: string[] = [];
+    let penX = lines[0].left;
+    let penY = lines[0].top;
+    let penH = lines[0].height;
 
     for (const line of lines) {
       const width = line.right - line.left;
       const shown = Math.min(width, remaining);
       remaining -= shown;
+      penX = line.left + shown;
+      penY = line.top;
+      penH = line.height;
 
       if (shown > 0.5) {
         const top = line.top - 2;
@@ -328,6 +367,7 @@ export function writeIn(el: HTMLElement, onDone?: () => void): void {
     }
 
     el.style.clipPath = parts.length ? `path("${parts.join(" ")}")` : "inset(0% 100% 0% 0%)";
+    moveCaret(penX, penY, penH);
   };
 
   apply();
@@ -338,6 +378,7 @@ export function writeIn(el: HTMLElement, onDone?: () => void): void {
     onUpdate: apply,
     onComplete: () => {
       el.style.removeProperty("clip-path");
+      if (caret) caret.style.opacity = "0";
       onDone?.();
     },
   });
@@ -351,10 +392,10 @@ export function clearReveal(el: HTMLElement) {
 }
 
 /** 文字块写字，整块容器（卡片/面板）直接淡入 */
-export function revealBox(box: WireBox, onDone?: () => void): void {
+export function revealBox(box: WireBox, options: WriteOptions = {}): void {
   if (box.fill === "none" || box.fill === "rail" || box.fill === "pills") {
-    gsap.fromTo(box.el, { opacity: 0 }, { opacity: 1, duration: 0.32, ease: "power1.out", clearProps: "opacity", onComplete: onDone });
+    gsap.fromTo(box.el, { opacity: 0 }, { opacity: 1, duration: 0.32, ease: "power1.out", clearProps: "opacity", onComplete: options.onDone });
     return;
   }
-  writeIn(box.el, onDone);
+  writeIn(box.el, { ...options, originX: box.x, originY: box.y });
 }

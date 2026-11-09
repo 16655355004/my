@@ -10,9 +10,30 @@ import { statisticsService } from "./services/statisticsService";
 const route = useRoute();
 let cursorEffect: CursorEffectResult | null = null;
 
-// 首屏进入首页时，先演一段「AI 正在把这页搭出来」，再揭幕
+const INTRO_KEY = "kongkong-intro-played";
+
+const hasSeenIntro = () => {
+  try {
+    return sessionStorage.getItem(INTRO_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const finishIntro = () => {
+  showIntro.value = false;
+  try {
+    sessionStorage.setItem(INTRO_KEY, "1");
+  } catch {
+    // 隐私模式下写不进去就算了，下次再看一遍
+  }
+};
+
+// 首屏进入首页时演一段「AI 正在把这页搭出来」；同一会话里再来就直接给页面
 const showIntro = ref(
-  route.path === "/" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  route.path === "/" &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    !hasSeenIntro(),
 );
 
 // 固定种子的伪随机，保证每次渲染星星位置一致
@@ -50,7 +71,7 @@ onUnmounted(() => {
 
 <template>
   <div class="app-shell">
-    <AgentIntro v-if="showIntro" @done="showIntro = false" />
+    <AgentIntro v-if="showIntro" @done="finishIntro" />
 
     <div class="night-sky" aria-hidden="true">
       <div class="sky-wash"></div>
